@@ -347,6 +347,10 @@ def check_compiler(compiler, language, target):
             if info.type in ('clang', 'gcc'):
                 # We're on Clang or GCC, enable C++17 and add GNU extensions.
                 append_flag('-std=gnu++17')
+            elif info.type == 'clang-cl':
+                # clang-cl uses MSVC-style flags
+                if '/std:c++17' not in flags:
+                    flags.append('/std:c++17')
             else:
                 # We're on MSVC; enable C++17 language mode.
                 append_flag('-std:c++17')
