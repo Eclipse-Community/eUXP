@@ -14,6 +14,7 @@ extern LazyLogModule gMediaDecoderLog;
 #define LOG(arg, ...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, ("VideoPlaybackStats::%s: " arg, __func__, ##__VA_ARGS__))
 
 VideoPlaybackStats::VideoPlaybackStats()
+  : mMutex("VideoPlaybackStats::mMutex")
 {
   LOG("VideoPlaybackStats created");
 }

@@ -14,7 +14,8 @@ extern LazyLogModule gMediaDecoderLog;
 #define LOG(arg, ...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, ("FramePool::%s: " arg, __func__, ##__VA_ARGS__))
 
 FramePool::FramePool(size_t aMaxFrames)
-  : mMaxPoolSize(aMaxFrames > 0 ? aMaxFrames : 16)
+  : mMutex("FramePool::mMutex")
+  , mMaxPoolSize(aMaxFrames > 0 ? aMaxFrames : 16)
 {
   LOG("FramePool created with max size: %zu", mMaxPoolSize);
 }

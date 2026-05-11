@@ -75,7 +75,6 @@ XPIDL_MODULE = 'dom_media'
 EXPORTS += [
     'AbstractMediaDecoder.h',
     'AccurateSeekTask.h',
-    'AdaptiveBufferingPolicy.cpp',
     'ADTSDecoder.h',
     'ADTSDemuxer.h',
     'AudioBufferUtils.h',
@@ -189,6 +188,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'AccurateSeekTask.cpp',
+    'AdaptiveBufferingPolicy.cpp',
     'ADTSDecoder.cpp',
     'ADTSDemuxer.cpp',
     'AudioCaptureStream.cpp',
@@ -207,6 +207,7 @@ UNIFIED_SOURCES += [
     'DOMMediaStream.cpp',
     'EncodedBufferCache.cpp',
     'FileBlockCache.cpp',
+    'FramePool.cpp',
     'GetUserMediaRequest.cpp',
     'GraphDriver.cpp',
     'Latency.cpp',

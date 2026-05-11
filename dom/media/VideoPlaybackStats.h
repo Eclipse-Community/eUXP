@@ -11,6 +11,8 @@
 #include "mozilla/TimeStamp.h"
 #include "TimeUnits.h"
 
+class nsAString;
+
 namespace mozilla {
 
 /**
@@ -61,7 +63,6 @@ public:
   };
 
   VideoPlaybackStats();
-  ~VideoPlaybackStats();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoPlaybackStats)
 
@@ -113,6 +114,7 @@ public:
   void GetDebugInfo(nsAString& aOutput) const;
 
 private:
+  ~VideoPlaybackStats();
   mutable Mutex mMutex;
   PlaybackStats mStats;
   
