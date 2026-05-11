@@ -75,6 +75,7 @@ XPIDL_MODULE = 'dom_media'
 EXPORTS += [
     'AbstractMediaDecoder.h',
     'AccurateSeekTask.h',
+    'AdaptiveBufferingPolicy.cpp',
     'ADTSDecoder.h',
     'ADTSDemuxer.h',
     'AudioBufferUtils.h',
@@ -221,7 +222,6 @@ UNIFIED_SOURCES += [
     'MediaFormatReader.cpp',
     'MediaInfo.cpp',
     'MediaManager.cpp',
-    'AdaptiveBufferingPolicy.cpp',
     'MediaPrefs.cpp',
     'MediaRecorder.cpp',
     'MediaResource.cpp',
