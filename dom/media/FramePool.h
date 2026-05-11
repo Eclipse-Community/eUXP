@@ -31,7 +31,8 @@ class Image;
 class FramePool {
 public:
   explicit FramePool(size_t aMaxFrames = 16);
-  ~FramePool();
+  private:
+    ~FramePool();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FramePool)
 
@@ -73,18 +74,18 @@ public:
   };
 
   Stats GetStats() const {
-    MutexAutoLock lock(mMutex);
-    return {mFramePool.length(), mTotalAllocated, mFramesReused, mPeakPoolSize};
+     MutexAutoLock lock(mMutex);
+     return {mFramePool.Length(), mTotalAllocated, mFramesReused, mPeakPoolSize};
   }
 
   /**
    * Reset statistics counters.
    */
   void ResetStats() {
-    MutexAutoLock lock(mMutex);
-    mFramesReused = 0;
-    mTotalAllocated = 0;
-    mPeakPoolSize = 0;
+      MutexAutoLock lock(mMutex);
+      mFramesReused = 0;
+      mTotalAllocated = 0;
+      mPeakPoolSize = 0;
   }
 
 private:
