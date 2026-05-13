@@ -1032,18 +1032,6 @@ function loadManifestFromDir(aDir) {
  *         Throws with |jetpacksdk:true| if a Jetpack files were found
  *         if Jetpack its self isn't built.
  */
-function loadManifestFromZipReader(aZipReader) {
-  // If WebExtension but not install.rdf throw an error
-  if (aZipReader.hasEntry(FILE_WEBEXT_MANIFEST)) {
-    if (!aZipReader.hasEntry(FILE_INSTALL_MANIFEST)) {
-      throw {
-        name: "UnsupportedExtension",
-        message: Services.appinfo.name + " does not support WebExtensions",
-        webext: true
-      };
-    }
-  }
-
 #ifndef MOZ_JETPACK
   // If Jetpack is not built throw an error
   if (aZipReader.hasEntry(FILE_JETPACK_MANIFEST_1) ||
