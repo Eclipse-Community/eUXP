@@ -4911,8 +4911,6 @@ AddonInstall.prototype = {
 #endif
       } else {
         logger.warn("Invalid XPI", e);
-        logger.error(`[DEBUG] Corrupt XPI file detected: ${e.name || 'Unknown'}: ${e.message || 'No message'} at ${e.fileName || 'unknown file'}:${e.lineNumber || '?'}`);
-        logger.error(`[DEBUG] Full error: ${JSON.stringify(e, null, 2)}`);
         this.error = AddonManager.ERROR_CORRUPT_FILE;
       }
       aCallback(this);
@@ -5557,9 +5555,6 @@ AddonInstall.prototype = {
             this.downloadFailed(AddonManager.ERROR_JETPACKSDK_FILE, e);
 #endif
           } else {
-            logger.error(`[DEBUG] Corrupt file during download: ${e.name || 'Unknown'}: ${e.message || 'No message'} at ${e.fileName || 'unknown file'}:${e.lineNumber || '?'}`);
-            logger.error(`[DEBUG] Download file path: ${this.sourceURI ? this.sourceURI.spec : 'unknown'}`);
-            logger.error(`[DEBUG] Full error: ${JSON.stringify(e, null, 2)}`);
             this.downloadFailed(AddonManager.ERROR_CORRUPT_FILE, e);
           }
         }
