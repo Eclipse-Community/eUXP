@@ -99,8 +99,9 @@ this.runtime = class extends ExtensionAPI {
         },
 
         getBrowserInfo: function() {
-          const {name, vendor, version, appBuildID} = Services.appinfo;
-          const info = {name, vendor, version, buildID: appBuildID};
+          const {name, vendor, appBuildID} = Services.appinfo;
+          // Spoof Firefox 128 exclusively for WebExtensions
+          const info = {name, vendor, version: "128.0", buildID: appBuildID};
           return Promise.resolve(info);
         },
 
