@@ -69,6 +69,8 @@ jobs:
           C:\mozilla-build\start-shell.bat ls /d
           C:\mozilla-build\start-shell.bat echo '/d/a'
           C:\mozilla-build\start-shell.bat ls /d/a
+          C:\mozilla-build\start-shell.bat echo '/d/a/eUXP'
+          C:\mozilla-build\start-shell.bat echo '/d/a/eUXP'
 
       - name: mach configure
         run: |
