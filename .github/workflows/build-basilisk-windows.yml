@@ -74,23 +74,23 @@ jobs:
 
       - name: mach configure
         run: |
-          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/basilisk configure
+          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk configure
         shell: pwsh
 
       - name: mach build
         run: |
-          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/basilisk build
+          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk build
         shell: pwsh
 
       - name: mach package
         run: |
-          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/basilisk package
+          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk package
         shell: pwsh
 
       - name: mach installer if release branch
         shell: pwsh
         run: |
-          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/basilisk installer
+          C:\mozilla-build\start-shell.bat /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk/platform/.github/workflows/build-basilisk-windows/mach-passthrough-windows.sh /d/a/${{ github.event.repository.name }}/${{ github.event.repository.name }}/basilisk installer
 
       - uses: actions/upload-artifact@v4
         with:
