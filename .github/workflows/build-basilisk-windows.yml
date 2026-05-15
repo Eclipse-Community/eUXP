@@ -50,7 +50,7 @@ jobs:
 
       - name: Clone Basilisk and insert eUXP platform
         run: |
-          git clone -b basilisk https://repo.palemoon.org/Basilisk-Dev/Basilisk basilisk
+          git clone -b euxp https://repo.palemoon.org/Basilisk-Dev/Basilisk basilisk
           Remove-Item -Recurse -Force .\basilisk\platform
           Move-Item -Path .\euxp -Destination .\basilisk\platform
         shell: pwsh
