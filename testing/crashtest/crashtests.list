@@ -57,8 +57,6 @@ include ../../layout/xul/crashtests/crashtests.list
 include ../../layout/xul/grid/crashtests/crashtests.list
 include ../../layout/xul/tree/crashtests/crashtests.list
 
-include ../../media/libpng/crashtests/crashtests.list
-
 include ../../netwerk/test/crashtests/crashtests.list
 
 include ../../parser/htmlparser/tests/crashtests/crashtests.list
