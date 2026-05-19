@@ -322,7 +322,18 @@ WinTaskbar::RegisterAppUserModelID() {
   if (!GetAppUserModelID(uid))
     return false;
 
-  return SUCCEEDED(SetCurrentProcessExplicitAppUserModelID(uid.get()));
+  HMODULE shell32 = ::LoadLibraryW(L"shell32.dll");
+  if (!shell32) {
+    return false;
+  }
+
+  auto setAppId = reinterpret_cast<SetCurrentProcessExplicitAppUserModelIDPtr>(
+    ::GetProcAddress(shell32, "SetCurrentProcessExplicitAppUserModelID"));
+  if (!setAppId) {
+    return false;
+  }
+
+  return SUCCEEDED(setAppId(uid.get()));
 }
 
 NS_IMETHODIMP
