@@ -1074,6 +1074,9 @@ uprv_convertToPosix(uint32_t hostid, char *posixID, int32_t posixIDCapacity, UEr
         char16_t windowsLocaleName[LOCALE_NAME_MAX_LENGTH] = {};
 
         // Note: LOCALE_ALLOW_NEUTRAL_NAMES was enabled in Windows7+, prior versions did not handle neutral (no-region) locale names.
+    #ifndef LOCALE_ALLOW_NEUTRAL_NAMES
+    #define LOCALE_ALLOW_NEUTRAL_NAMES 0
+    #endif
         tmpLen = LCIDToLocaleName(hostid, (PWSTR)windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
         if (tmpLen > 1) {
             int32_t i = 0;
