@@ -366,26 +366,107 @@ typedef _Atomic(uintptr_t) mi_atomic_guard_t;
 
 #if defined(_WIN32)
 
+// Vista fallback: since SRW locks are Win7+ only, we use a discriminated struct
+// with a nested union to safely hold both lock types
+#define MI_LOCK_TYPE_SRWLOCK 0
+#define MI_LOCK_TYPE_CRITICAL 1
+
 typedef struct mi_lock_s {
-  SRWLOCK mutex;    // slim reader-writer lock
+  int type;  // Discriminator
+  union {
+    SRWLOCK srwlock;
+    CRITICAL_SECTION critical;
+  } handle;
 } mi_lock_t;
 
-#define MI_LOCK_INITIALIZER   { SRWLOCK_INIT }
+// Note: initialize with mi_lock_init(), not MI_LOCK_INITIALIZER
+#define MI_LOCK_INITIALIZER   { MI_LOCK_TYPE_SRWLOCK, {0} }
+
+// Helper to determine if SRW locks are available on this system
+static inline bool mi_srwlock_available(void) {
+  static int available = -1;  // -1=unknown, 0=no, 1=yes
+  if (available < 0) {
+    HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+    available = (GetProcAddress(kernel32, "TryAcquireSRWLockExclusive") != NULL) ? 1 : 0;
+  }
+  return available == 1;
+}
+
+typedef BOOLEAN (WINAPI *mi_try_acquire_srwlock_exclusive_fn)(PSRWLOCK);
+typedef void (WINAPI *mi_acquire_srwlock_exclusive_fn)(PSRWLOCK);
+typedef void (WINAPI *mi_release_srwlock_exclusive_fn)(PSRWLOCK);
+
+static inline mi_try_acquire_srwlock_exclusive_fn mi_try_acquire_srwlock_exclusive(void) {
+  static mi_try_acquire_srwlock_exclusive_fn fn = []() {
+    HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+    return reinterpret_cast<mi_try_acquire_srwlock_exclusive_fn>(
+        GetProcAddress(kernel32, "TryAcquireSRWLockExclusive"));
+  }();
+  return fn;
+}
+
+static inline mi_acquire_srwlock_exclusive_fn mi_acquire_srwlock_exclusive(void) {
+  static mi_acquire_srwlock_exclusive_fn fn = []() {
+    HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+    return reinterpret_cast<mi_acquire_srwlock_exclusive_fn>(
+        GetProcAddress(kernel32, "AcquireSRWLockExclusive"));
+  }();
+  return fn;
+}
+
+static inline mi_release_srwlock_exclusive_fn mi_release_srwlock_exclusive(void) {
+  static mi_release_srwlock_exclusive_fn fn = []() {
+    HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+    return reinterpret_cast<mi_release_srwlock_exclusive_fn>(
+        GetProcAddress(kernel32, "ReleaseSRWLockExclusive"));
+  }();
+  return fn;
+}
 
 static inline bool mi_lock_try_acquire(mi_lock_t* lock) {
-  return TryAcquireSRWLockExclusive(&lock->mutex);
+  if (lock->type == MI_LOCK_TYPE_CRITICAL) {
+    return TryEnterCriticalSection(&lock->handle.critical) != 0;
+  }
+  mi_try_acquire_srwlock_exclusive_fn fn = mi_try_acquire_srwlock_exclusive();
+  return fn && fn(&lock->handle.srwlock);
 }
+
 static inline void mi_lock_acquire(mi_lock_t* lock) {
-  AcquireSRWLockExclusive(&lock->mutex);
+  if (lock->type == MI_LOCK_TYPE_CRITICAL) {
+    EnterCriticalSection(&lock->handle.critical);
+  } else {
+    mi_acquire_srwlock_exclusive_fn fn = mi_acquire_srwlock_exclusive();
+    if (fn) {
+      fn(&lock->handle.srwlock);
+    }
+  }
 }
+
 static inline void mi_lock_release(mi_lock_t* lock) {
-  ReleaseSRWLockExclusive(&lock->mutex);
+  if (lock->type == MI_LOCK_TYPE_CRITICAL) {
+    LeaveCriticalSection(&lock->handle.critical);
+  } else {
+    mi_release_srwlock_exclusive_fn fn = mi_release_srwlock_exclusive();
+    if (fn) {
+      fn(&lock->handle.srwlock);
+    }
+  }
 }
+
 static inline void mi_lock_init(mi_lock_t* lock) {
-  InitializeSRWLock(&lock->mutex);
+  if (mi_srwlock_available()) {
+    lock->type = MI_LOCK_TYPE_SRWLOCK;
+    InitializeSRWLock(&lock->handle.srwlock);
+  } else {
+    lock->type = MI_LOCK_TYPE_CRITICAL;
+    InitializeCriticalSection(&lock->handle.critical);
+  }
 }
+
 static inline void mi_lock_done(mi_lock_t* lock) {
-  (void)(lock);
+  if (lock->type == MI_LOCK_TYPE_CRITICAL) {
+    DeleteCriticalSection(&lock->handle.critical);
+  }
 }
 
 #elif defined(MI_USE_PTHREADS)
