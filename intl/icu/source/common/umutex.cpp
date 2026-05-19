@@ -49,6 +49,18 @@ U_NAMESPACE_BEGIN
 
 namespace {
 #if defined(_WIN32)
+struct WindowsMutex {
+    CRITICAL_SECTION cs;
+
+    WindowsMutex() {
+        InitializeCriticalSection(&cs);
+    }
+
+    ~WindowsMutex() {
+        DeleteCriticalSection(&cs);
+    }
+};
+
 struct InitMutex {
     CRITICAL_SECTION cs;
 
@@ -133,15 +145,29 @@ static void U_CALLCONV umtx_init() {
 U_CDECL_END
 
 
+#if defined(_WIN32)
+void *UMutex::getMutex() {
+    void *retPtr = fMutex.load(std::memory_order_acquire);
+    if (retPtr == nullptr) {
+        std::call_once(*pInitFlag, umtx_init);
+        AutoCriticalSection guard(initMutex->cs);
+        retPtr = fMutex.load(std::memory_order_acquire);
+        if (retPtr == nullptr) {
+            retPtr = new WindowsMutex();
+            fMutex = retPtr;
+            fListLink = gListHead;
+            gListHead = this;
+        }
+    }
+    U_ASSERT(retPtr != nullptr);
+    return retPtr;
+}
+#else
 std::mutex *UMutex::getMutex() {
     std::mutex *retPtr = fMutex.load(std::memory_order_acquire);
     if (retPtr == nullptr) {
         std::call_once(*pInitFlag, umtx_init);
-#if defined(_WIN32)
-        AutoCriticalSection guard(initMutex->cs);
-#else
         std::lock_guard<std::mutex> guard(*initMutex);
-#endif
         retPtr = fMutex.load(std::memory_order_acquire);
         if (retPtr == nullptr) {
             fMutex = new(fStorage) std::mutex();
@@ -153,13 +179,33 @@ std::mutex *UMutex::getMutex() {
     U_ASSERT(retPtr != nullptr);
     return retPtr;
 }
+#endif
+
+#if defined(_WIN32)
+void UMutex::lock() {
+    WindowsMutex *m = static_cast<WindowsMutex*>(fMutex.load(std::memory_order_acquire));
+    if (m == nullptr) {
+        m = static_cast<WindowsMutex*>(getMutex());
+    }
+    EnterCriticalSection(&m->cs);
+}
+
+void UMutex::unlock() {
+    WindowsMutex *m = static_cast<WindowsMutex*>(fMutex.load(std::memory_order_relaxed));
+    LeaveCriticalSection(&m->cs);
+}
+#endif
 
 UMutex *UMutex::gListHead = nullptr;
 
 void UMutex::cleanup() {
     UMutex *next = nullptr;
     for (UMutex *m = gListHead; m != nullptr; m = next) {
-        (*m->fMutex).~mutex();
+#if defined(_WIN32)
+    delete static_cast<WindowsMutex*>(m->fMutex.load(std::memory_order_relaxed));
+#else
+    (*m->fMutex).~mutex();
+#endif
         m->fMutex = nullptr;
         next = m->fListLink;
         m->fListLink = nullptr;
