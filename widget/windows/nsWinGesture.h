@@ -10,8 +10,6 @@
  * nsWinGesture - Touch input handling for tablet displays.
  */
 
-#include "nsdefs.h"
-// Ensure gesture/touch types are defined (require Windows 7+)
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0601)
 #  undef _WIN32_WINNT
 #  define _WIN32_WINNT 0x0601
@@ -20,11 +18,102 @@
 #  undef WINVER
 #  define WINVER 0x0601
 #endif
-#include <winuser.h>
+#include "nsdefs.h"
 #include <tpcshrd.h>
 #include "nsPoint.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TouchEvents.h"
+#include <math.h>
+
+// Some builds pull in windows.h before WINVER/_WIN32_WINNT are raised,
+// which hides Win7+ touch/gesture declarations. Provide compatibility
+// declarations so this code still compiles; functions are resolved at runtime.
+#ifndef WM_GESTURE
+#  define WM_GESTURE 0x0119
+#endif
+#ifndef WM_GESTURENOTIFY
+#  define WM_GESTURENOTIFY 0x011A
+#endif
+#ifndef WM_TOUCH
+#  define WM_TOUCH 0x0240
+#endif
+
+#ifndef TOUCHEVENTF_MOVE
+typedef HANDLE HTOUCHINPUT;
+typedef struct tagTOUCHINPUT {
+  LONG x;
+  LONG y;
+  HANDLE hSource;
+  DWORD dwID;
+  DWORD dwFlags;
+  DWORD dwMask;
+  DWORD dwTime;
+  ULONG_PTR dwExtraInfo;
+  DWORD cxContact;
+  DWORD cyContact;
+} TOUCHINPUT, *PTOUCHINPUT;
+
+#  define TOUCHEVENTF_MOVE 0x0001
+#  define TOUCHEVENTF_DOWN 0x0002
+#  define TOUCHEVENTF_UP 0x0004
+#  define TOUCHINPUTMASKF_CONTACTAREA 0x0004
+#  define TWF_WANTPALM 0x00000002
+#  define TOUCH_COORD_TO_PIXEL(l) ((l) / 100)
+#endif
+
+#ifndef GID_BEGIN
+typedef HANDLE HGESTUREINFO;
+typedef struct tagGESTUREINFO {
+  UINT cbSize;
+  DWORD dwFlags;
+  DWORD dwID;
+  HWND hwndTarget;
+  POINTS ptsLocation;
+  DWORD dwInstanceID;
+  DWORD dwSequenceID;
+  ULONGLONG ullArguments;
+  UINT cbExtraArgs;
+} GESTUREINFO, *PGESTUREINFO;
+
+typedef struct tagGESTURENOTIFYSTRUCT {
+  UINT cbSize;
+  DWORD dwFlags;
+  HWND hwndTarget;
+  POINTS ptsLocation;
+  DWORD dwInstanceID;
+} GESTURENOTIFYSTRUCT, *PGESTURENOTIFYSTRUCT;
+
+typedef struct tagGESTURECONFIG {
+  DWORD dwID;
+  DWORD dwWant;
+  DWORD dwBlock;
+} GESTURECONFIG, *PGESTURECONFIG;
+
+#  define GID_BEGIN 1
+#  define GID_END 2
+#  define GID_ZOOM 3
+#  define GID_PAN 4
+#  define GID_ROTATE 5
+#  define GID_TWOFINGERTAP 6
+#  define GID_PRESSANDTAP 7
+
+#  define GC_ZOOM 0x00000001
+#  define GC_PAN 0x00000001
+#  define GC_PAN_WITH_SINGLE_FINGER_VERTICALLY 0x00000002
+#  define GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY 0x00000004
+#  define GC_PAN_WITH_GUTTER 0x00000008
+#  define GC_PAN_WITH_INERTIA 0x00000010
+#  define GC_ROTATE 0x00000001
+#  define GC_TWOFINGERTAP 0x00000001
+#  define GC_PRESSANDTAP 0x00000001
+
+#  define GF_BEGIN 0x00000001
+#  define GF_INERTIA 0x00000002
+#  define GF_END 0x00000004
+
+#  define GID_ROTATE_ANGLE_FROM_ARGUMENT(arg) \
+    ((((double)(arg)) / 65535.0) * 4.0 * M_PI - 2.0 * M_PI)
+#endif
 
 // WM_TABLET_QUERYSYSTEMGESTURESTATUS return values
 #define TABLET_ROTATE_GESTURE_ENABLE    0x02000000
