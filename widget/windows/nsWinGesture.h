@@ -11,6 +11,15 @@
  */
 
 #include "nsdefs.h"
+// Ensure gesture/touch types are defined (require Windows 7+)
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0601)
+#  undef _WIN32_WINNT
+#  define _WIN32_WINNT 0x0601
+#endif
+#if !defined(WINVER) || (WINVER < 0x0601)
+#  undef WINVER
+#  define WINVER 0x0601
+#endif
 #include <winuser.h>
 #include <tpcshrd.h>
 #include "nsPoint.h"
