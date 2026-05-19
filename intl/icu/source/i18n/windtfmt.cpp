@@ -143,10 +143,17 @@ static UErrorCode GetEquivalentWindowsLocaleName(const Locale& locale, UnicodeSt
         // This means that it will fail for locales where ICU has a completely different
         // name (like ku vs ckb), and it will also not work for alternate sort locale
         // names like "de-DE-u-co-phonebk".
-        
+
         // TODO: We could add some sort of exception table for cases like ku vs ckb.
 
-        int length = ResolveLocaleName(bcp47Tag, windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName));
+#ifndef LOCALE_ALLOW_NEUTRAL_NAMES
+#define LOCALE_ALLOW_NEUTRAL_NAMES 0
+#endif
+        int length = 0;
+        LCID lcid = LocaleNameToLCID(bcp47Tag, LOCALE_ALLOW_NEUTRAL_NAMES);
+        if (lcid != 0) {
+            length = LCIDToLocaleName(lcid, windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
+        }
 
         if (length > 0)
         {

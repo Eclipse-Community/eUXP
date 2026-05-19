@@ -190,7 +190,14 @@ static UErrorCode GetEquivalentWindowsLocaleName(const Locale& locale, UnicodeSt
 
         // TODO: We could add some sort of exception table for cases like ku vs ckb.
 
-        int length = ResolveLocaleName(bcp47Tag, windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName));
+#ifndef LOCALE_ALLOW_NEUTRAL_NAMES
+#define LOCALE_ALLOW_NEUTRAL_NAMES 0
+#endif
+        int length = 0;
+        LCID lcid = LocaleNameToLCID(bcp47Tag, LOCALE_ALLOW_NEUTRAL_NAMES);
+        if (lcid != 0) {
+            length = LCIDToLocaleName(lcid, windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
+        }
 
         if (length > 0)
         {
