@@ -136,8 +136,27 @@ TaskbarPreview::Invalidate() {
   if (!nsUXThemeData::CheckForCompositor())
     return NS_OK;
 
+  // DwmInvalidateIconicBitmaps is Win7+
+  typedef HRESULT(WINAPI* DwmInvalidateIconicBitmapsFn)(HWND hwnd);
+  
+  static DwmInvalidateIconicBitmapsFn dwm_invalidate = nullptr;
+  static bool tried_load = false;
+  
+  if (!tried_load) {
+    tried_load = true;
+    HMODULE dwmapi = ::GetModuleHandleW(L"dwmapi.dll");
+    if (dwmapi) {
+      dwm_invalidate = reinterpret_cast<DwmInvalidateIconicBitmapsFn>(
+          ::GetProcAddress(dwmapi, "DwmInvalidateIconicBitmaps"));
+    }
+  }
+  
+  if (!dwm_invalidate) {
+    return NS_OK;  // Vista: just skip
+  }
+
   HWND previewWindow = PreviewWindow();
-  return FAILED(DwmInvalidateIconicBitmaps(previewWindow))
+  return FAILED(dwm_invalidate(previewWindow))
        ? NS_ERROR_FAILURE
        : NS_OK;
 }
@@ -281,14 +300,34 @@ TaskbarPreview::GetWindowHook() {
 
 void
 TaskbarPreview::EnableCustomDrawing(HWND aHWND, bool aEnable) {
+  // DwmSetWindowAttribute is Win7+, may fail silently on Vista
+  typedef HRESULT(WINAPI* DwmSetWindowAttributeFn)(
+      HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
+  
+  static DwmSetWindowAttributeFn dwm_set_attr = nullptr;
+  static bool tried_load = false;
+  
+  if (!tried_load) {
+    tried_load = true;
+    HMODULE dwmapi = ::GetModuleHandleW(L"dwmapi.dll");
+    if (dwmapi) {
+      dwm_set_attr = reinterpret_cast<DwmSetWindowAttributeFn>(
+          ::GetProcAddress(dwmapi, "DwmSetWindowAttribute"));
+    }
+  }
+  
+  if (!dwm_set_attr) {
+    return;  // Vista: DWM not available
+  }
+  
   BOOL enabled = aEnable;
-  DwmSetWindowAttribute(
+  dwm_set_attr(
       aHWND,
       DWMWA_FORCE_ICONIC_REPRESENTATION,
       &enabled,
       sizeof(enabled));
 
-  DwmSetWindowAttribute(
+  dwm_set_attr(
       aHWND,
       DWMWA_HAS_ICONIC_BITMAP,
       &enabled,
@@ -387,13 +426,44 @@ TaskbarPreviewCallback::Done(nsISupports *aCanvas, bool aDrawBorder) {
 
   DWORD flags = aDrawBorder ? DWM_SIT_DISPLAYFRAME : 0;
   HRESULT hr;
+  
+  // DwmSetIconicLivePreviewBitmap and DwmSetIconicThumbnail are Win7+
+  // Use runtime lookup to fail gracefully on Vista
+  typedef HRESULT(WINAPI* DwmSetIconicLivePreviewBitmapFn)(
+      HWND hwnd, HBITMAP hbmp, POINT* pptClient, DWORD dwSITFlags);
+  typedef HRESULT(WINAPI* DwmSetIconicThumbnailFn)(
+      HWND hwnd, HBITMAP hbmp, DWORD dwSITFlags);
+  
+  static DwmSetIconicLivePreviewBitmapFn dwm_set_preview = nullptr;
+  static DwmSetIconicThumbnailFn dwm_set_thumbnail = nullptr;
+  static bool tried_load = false;
+  
+  if (!tried_load) {
+    tried_load = true;
+    HMODULE dwmapi = ::GetModuleHandleW(L"dwmapi.dll");
+    if (dwmapi) {
+      dwm_set_preview = reinterpret_cast<DwmSetIconicLivePreviewBitmapFn>(
+          ::GetProcAddress(dwmapi, "DwmSetIconicLivePreviewBitmap"));
+      dwm_set_thumbnail = reinterpret_cast<DwmSetIconicThumbnailFn>(
+          ::GetProcAddress(dwmapi, "DwmSetIconicThumbnail"));
+    }
+  }
+  
   if (!mIsThumbnail) {
-    POINT pptClient = { 0, 0 };
-    hr = DwmSetIconicLivePreviewBitmap(mPreview->PreviewWindow(),
-                                       hBitmap, &pptClient, flags);
+    if (dwm_set_preview) {
+      POINT pptClient = { 0, 0 };
+      hr = dwm_set_preview(mPreview->PreviewWindow(),
+                          hBitmap, &pptClient, flags);
+    } else {
+      hr = S_OK;  // Vista: just skip, not an error
+    }
   } else {
-    hr = DwmSetIconicThumbnail(mPreview->PreviewWindow(),
-                               hBitmap, flags);
+    if (dwm_set_thumbnail) {
+      hr = dwm_set_thumbnail(mPreview->PreviewWindow(),
+                            hBitmap, flags);
+    } else {
+      hr = S_OK;  // Vista: just skip, not an error
+    }
   }
   MOZ_ASSERT(SUCCEEDED(hr));
   mozilla::Unused << hr;
