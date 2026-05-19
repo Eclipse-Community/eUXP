@@ -13,8 +13,8 @@
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h"
+#include "WMF.h"
 #include "mfapi.h"
-#include <mfobjects.h>
 #include "gfxPrefs.h"
 #include "MFTDecoder.h"
 #include "DriverCrashGuard.h"
@@ -626,7 +626,7 @@ IUnknown*
 D3D11DXVA2Manager::GetDXVADeviceManager()
 {
   MutexAutoLock lock(mLock);
-  return mDXGIDeviceManager.get();
+  return static_cast<IUnknown*>(mDXGIDeviceManager.get());
 }
 
 HRESULT
