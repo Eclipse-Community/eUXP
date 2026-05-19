@@ -30,6 +30,9 @@ const CLSID CLSID_VideoProcessorMFT =
 };
 
 const GUID MF_XVP_PLAYBACK_MODE =
+// The size we use for our synchronization surface.
+// 16x16 is the size recommended by Microsoft (in the D3D9ExDXGISharedSurf sample) that works
+// best to avoid driver bugs.
 {
   0x3c5d293f,
   0xad67,
@@ -513,6 +516,7 @@ DXVA2Manager::CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
   return nullptr;
 }
 
+#if WINVER >= 0x0601
 class D3D11DXVA2Manager : public DXVA2Manager
 {
 public:
@@ -915,6 +919,14 @@ DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
     return nullptr;
   }
 
+  #else
+  DXVA2Manager* DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
+                                             nsACString& aFailureReason)
+  {
+    aFailureReason.AssignLiteral("D3D11 DXVA is not available on Windows Vista");
+    return nullptr;
+  }
+  #endif
   nsAutoPtr<D3D11DXVA2Manager> manager(new D3D11DXVA2Manager());
   HRESULT hr = manager->Init(aKnowsCompositor, aFailureReason);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
