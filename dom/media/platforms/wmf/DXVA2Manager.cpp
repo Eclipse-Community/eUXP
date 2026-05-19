@@ -905,6 +905,8 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   return S_OK;
 }
 
+#endif // WINVER >= 0x0601
+
 /* static */
 DXVA2Manager*
 DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
