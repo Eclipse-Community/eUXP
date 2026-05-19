@@ -149,19 +149,21 @@
 #define SCTP_INP_INFO_RLOCK_ASSERT()
 #define SCTP_INP_INFO_WLOCK_ASSERT()
 #else
+/* Vista+ fallback: always use CRITICAL_SECTION for compatibility */
 #define SCTP_INP_INFO_LOCK_INIT() \
-	InitializeSRWLock(&SCTP_BASE_INFO(ipi_ep_mtx))
-#define SCTP_INP_INFO_LOCK_DESTROY()
+	InitializeCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
+#define SCTP_INP_INFO_LOCK_DESTROY() \
+	DeleteCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_RLOCK() \
-	AcquireSRWLockShared(&SCTP_BASE_INFO(ipi_ep_mtx))
+	EnterCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_TRYLOCK() \
-	TryAcquireSRWLockShared(&SCTP_BASE_INFO(ipi_ep_mtx))
+	TryEnterCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_WLOCK() \
-	AcquireSRWLockExclusive(&SCTP_BASE_INFO(ipi_ep_mtx))
+	EnterCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_RUNLOCK() \
-	ReleaseSRWLockShared(&SCTP_BASE_INFO(ipi_ep_mtx))
+	LeaveCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_WUNLOCK() \
-	ReleaseSRWLockExclusive(&SCTP_BASE_INFO(ipi_ep_mtx))
+	LeaveCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_LOCK_ASSERT()
 #define SCTP_INP_INFO_RLOCK_ASSERT()
 #define SCTP_INP_INFO_WLOCK_ASSERT()
@@ -552,17 +554,19 @@
 #define SCTP_IPI_ADDR_LOCK_ASSERT()
 #define SCTP_IPI_ADDR_WLOCK_ASSERT()
 #else
+/* address list locks - Vista+ fallback to CRITICAL_SECTION */
 #define SCTP_IPI_ADDR_INIT() \
-	InitializeSRWLock(&SCTP_BASE_INFO(ipi_addr_mtx))
-#define SCTP_IPI_ADDR_DESTROY()
+	InitializeCriticalSection(&SCTP_BASE_INFO(ipi_addr_mtx))
+#define SCTP_IPI_ADDR_DESTROY() \
+	DeleteCriticalSection(&SCTP_BASE_INFO(ipi_addr_mtx))
 #define SCTP_IPI_ADDR_RLOCK() \
-	AcquireSRWLockShared(&SCTP_BASE_INFO(ipi_addr_mtx))
+	EnterCriticalSection(&SCTP_BASE_INFO(ipi_addr_mtx))
 #define SCTP_IPI_ADDR_RUNLOCK() \
-	ReleaseSRWLockShared(&SCTP_BASE_INFO(ipi_addr_mtx))
+	LeaveCriticalSection(&SCTP_BASE_INFO(ipi_addr_mtx))
 #define SCTP_IPI_ADDR_WLOCK() \
-	AcquireSRWLockExclusive(&SCTP_BASE_INFO(ipi_addr_mtx))
+	EnterCriticalSection(&SCTP_BASE_INFO(ipi_addr_mtx))
 #define SCTP_IPI_ADDR_WUNLOCK() \
-	ReleaseSRWLockExclusive(&SCTP_BASE_INFO(ipi_addr_mtx))
+	LeaveCriticalSection(&SCTP_BASE_INFO(ipi_addr_mtx))
 #define SCTP_IPI_ADDR_LOCK_ASSERT()
 #define SCTP_IPI_ADDR_WLOCK_ASSERT()
 #endif
