@@ -910,6 +910,7 @@ DXVA2Manager*
 DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
                               nsACString& aFailureReason)
 {
+#if WINVER >= 0x0601
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
   uint32_t dxvaLimit = gfxPrefs::PDMWMFMaxDXVAVideos();
@@ -919,19 +920,15 @@ DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
     return nullptr;
   }
 
-  #else
-  DXVA2Manager* DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
-                                             nsACString& aFailureReason)
-  {
-    aFailureReason.AssignLiteral("D3D11 DXVA is not available on Windows Vista");
-    return nullptr;
-  }
-  #endif
   nsAutoPtr<D3D11DXVA2Manager> manager(new D3D11DXVA2Manager());
   HRESULT hr = manager->Init(aKnowsCompositor, aFailureReason);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return manager.forget();
+#else
+  aFailureReason.AssignLiteral("D3D11 DXVA is not available on Windows Vista");
+  return nullptr;
+#endif
 }
 
 DXVA2Manager::DXVA2Manager()
