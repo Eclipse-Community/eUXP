@@ -109,6 +109,7 @@ enum class WinBuild : uint32_t {
   Win10v21H1 = 19043,
   Win10v21H2 = 19044,
   Win10v22H2 = 19045,
+  Win2022 = 20348,
   Win11RTM = 22000,
   Win11v22H2 = 22621,
   Win11v23H2 = 22631,
@@ -121,6 +122,13 @@ inline bool
 IsWindowsBuildOrLater(WinBuild aBuild) {
   uint32_t build = static_cast<uint32_t>(aBuild);
   return IsWindows10BuildOrLater(build);
+}
+
+// Windows Vista
+MOZ_ALWAYS_INLINE bool
+IsWindowsVistaOrLater()
+{
+  return IsWindowsVersionOrLater(0x06000000ul);
 }
 
 // Windows 7

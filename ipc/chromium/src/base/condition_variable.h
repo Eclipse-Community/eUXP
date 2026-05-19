@@ -104,7 +104,9 @@ class ConditionVariable {
 
 #if defined(OS_WIN)
   CONDITION_VARIABLE cv_;
+  bool use_critical_section_;
   SRWLOCK* const srwlock_;
+  CRITICAL_SECTION* const critical_section_;
 #elif defined(OS_POSIX)
   pthread_cond_t condition_;
   pthread_mutex_t* user_mutex_;

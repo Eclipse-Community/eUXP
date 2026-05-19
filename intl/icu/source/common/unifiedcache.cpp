@@ -13,15 +13,66 @@
 #include "unifiedcache.h"
 
 #include <algorithm>      // For std::max()
-#include <mutex>
 
 #include "uassert.h"
 #include "uhash.h"
 #include "ucln_cmn.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <mutex>
+#endif
+
 static icu::UnifiedCache *gCache = nullptr;
+#if defined(_WIN32)
+struct CacheMutex {
+    CRITICAL_SECTION cs;
+
+    CacheMutex() {
+        InitializeCriticalSection(&cs);
+    }
+
+    ~CacheMutex() {
+        DeleteCriticalSection(&cs);
+    }
+};
+
+struct CacheConditionVariable {
+    CONDITION_VARIABLE cv;
+
+    CacheConditionVariable() {
+        InitializeConditionVariable(&cv);
+    }
+
+    void notify_all() {
+        WakeAllConditionVariable(&cv);
+    }
+};
+
+class AutoCriticalSection {
+public:
+    explicit AutoCriticalSection(CRITICAL_SECTION &criticalSection)
+        : criticalSection_(&criticalSection) {
+        EnterCriticalSection(criticalSection_);
+    }
+
+    ~AutoCriticalSection() {
+        LeaveCriticalSection(criticalSection_);
+    }
+
+    CRITICAL_SECTION *get() const { return criticalSection_; }
+
+private:
+    CRITICAL_SECTION *criticalSection_;
+};
+
+static CacheMutex *gCacheMutex = nullptr;
+static CacheConditionVariable *gInProgressValueAddedCond;
+#else
 static std::mutex *gCacheMutex = nullptr;
 static std::condition_variable *gInProgressValueAddedCond;
+#endif
 static icu::UInitOnce gCacheInitOnce {};
 
 static const int32_t MAX_EVICT_ITERATIONS = 10;
@@ -34,9 +85,9 @@ static UBool U_CALLCONV unifiedcache_cleanup() {
     gCacheInitOnce.reset();
     delete gCache;
     gCache = nullptr;
-    gCacheMutex->~mutex();
+    delete gCacheMutex;
     gCacheMutex = nullptr;
-    gInProgressValueAddedCond->~condition_variable();
+    delete gInProgressValueAddedCond;
     gInProgressValueAddedCond = nullptr;
     return true;
 }
@@ -72,8 +123,13 @@ static void U_CALLCONV cacheInit(UErrorCode &status) {
     ucln_common_registerCleanup(
             UCLN_COMMON_UNIFIED_CACHE, unifiedcache_cleanup);
 
+#if defined(_WIN32)
+    gCacheMutex = new CacheMutex();
+    gInProgressValueAddedCond = new CacheConditionVariable();
+#else
     gCacheMutex = STATIC_NEW(std::mutex);
     gInProgressValueAddedCond = STATIC_NEW(std::condition_variable);
+#endif
     gCache = new UnifiedCache(status);
     if (gCache == nullptr) {
         status = U_MEMORY_ALLOCATION_ERROR;
@@ -135,28 +191,48 @@ void UnifiedCache::setEvictionPolicy(
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     fMaxUnused = count;
     fMaxPercentageOfInUse = percentageOfInUseItems;
 }
 
 int32_t UnifiedCache::unusedCount() const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     return uhash_count(fHashtable) - fNumValuesInUse;
 }
 
 int64_t UnifiedCache::autoEvictedCount() const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     return fAutoEvictedCount;
 }
 
 int32_t UnifiedCache::keyCount() const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     return uhash_count(fHashtable);
 }
 
 void UnifiedCache::flush() const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
 
     // Use a loop in case cache items that are flushed held hard references to
     // other cache items making those additional cache items eligible for
@@ -165,7 +241,11 @@ void UnifiedCache::flush() const {
 }
 
 void UnifiedCache::handleUnreferencedObject() const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     --fNumValuesInUse;
     _runEvictionSlice();
 }
@@ -184,7 +264,11 @@ void UnifiedCache::dump() {
 }
 
 void UnifiedCache::dumpContents() const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     _dumpContents();
 }
 
@@ -224,7 +308,11 @@ UnifiedCache::~UnifiedCache() {
         // Now all that should be left in the cache are entries that refer to
         // each other and entries with hard references from outside the cache.
         // Nothing we can do about these so proceed to wipe out the cache.
+#if defined(_WIN32)
+        AutoCriticalSection lock(gCacheMutex->cs);
+#else
         std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
         _flush(true);
     }
     uhash_close(fHashtable);
@@ -325,7 +413,11 @@ void UnifiedCache::_putIfAbsentAndGet(
         const CacheKeyBase &key,
         const SharedObject *&value,
         UErrorCode &status) const {
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::lock_guard<std::mutex> lock(*gCacheMutex);
+#endif
     const UHashElement *element = uhash_find(fHashtable, &key);
     if (element != nullptr && !_inProgress(element)) {
         _fetch(element, value, status);
@@ -350,14 +442,22 @@ UBool UnifiedCache::_poll(
         UErrorCode &status) const {
     U_ASSERT(value == nullptr);
     U_ASSERT(status == U_ZERO_ERROR);
+#if defined(_WIN32)
+    AutoCriticalSection lock(gCacheMutex->cs);
+#else
     std::unique_lock<std::mutex> lock(*gCacheMutex);
+#endif
     const UHashElement *element = uhash_find(fHashtable, &key);
 
     // If the hash table contains an inProgress placeholder entry for this key,
     // this means that another thread is currently constructing the value object.
     // Loop, waiting for that construction to complete.
      while (element != nullptr && _inProgress(element)) {
+#if defined(_WIN32)
+        U_ASSERT(SleepConditionVariableCS(&gInProgressValueAddedCond->cv, lock.get(), INFINITE));
+#else
          gInProgressValueAddedCond->wait(lock);
+#endif
          element = uhash_find(fHashtable, &key);
     }
 
