@@ -16,9 +16,8 @@ import errno
 import re
 import logging
 from time import localtime
-from datetime import datetime
 from MozZipFile import ZipFile
-from io import StringIO
+from cStringIO import StringIO
 from collections import defaultdict
 
 from mozbuild.preprocessor import Preprocessor
@@ -44,7 +43,6 @@ class ZipEntry(object):
         self._zipfile = zipfile
         self._name = name
         self._inner = StringIO()
-        self.needs_bytes = False
 
     def write(self, content):
         '''Append the given content to this zip entry'''
@@ -62,7 +60,7 @@ def getModTime(aPath):
     if not os.path.isfile(aPath):
         return 0
     mtime = os.stat(aPath).st_mtime
-    return int(mtime)
+    return localtime(mtime)
 
 
 class JarManifestEntry(object):
@@ -97,8 +95,8 @@ class DeprecatedJarManifest(Exception): pass
 
 class JarManifestParser(object):
 
-    ignore = re.compile(r'\s*(\#.*)?$')
-    jarline = re.compile(r'''
+    ignore = re.compile('\s*(\#.*)?$')
+    jarline = re.compile('''
         (?:
             (?:\[(?P<base>[\w\d.\-\_\\\/{}@]+)\]\s*)? # optional [base/path]
             (?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:    # filename.jar:
@@ -106,17 +104,16 @@ class JarManifestParser(object):
             (?:\s*(\#.*)?)                           # comment
         )\s*$                                        # whitespaces
         ''', re.VERBOSE)
-    relsrcline = re.compile(r'relativesrcdir\s+(?P<relativesrcdir>.+?):')
-    regline = re.compile(r'\%\s+(.*)$')
-    entryre = r'(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
+    relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
+    regline = re.compile('\%\s+(.*)$')
+    entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
     entryline = re.compile(entryre
-                           + r'(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@\*]+)\))?\s*$'
+                           + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@\*]+)\))?\s*$'
                            )
 
     def __init__(self):
         self._current_jar = None
         self._jars = []
-        self.needs_bytes = False
 
     def write(self, line):
         # A Preprocessor instance feeds the parser through calls to this method.
@@ -214,7 +211,6 @@ class JarMaker(object):
         self.relativesrcdir = None
         self.rootManifestAppId = None
         self._seen_output = set()
-        self.needs_bytes = False
 
     def getCommandLineParser(self):
         '''Get a optparse.OptionParser for jarmaker.
@@ -306,9 +302,9 @@ class JarMaker(object):
         '''updateManifest replaces the % in the chrome registration entries
         with the given chrome base path, and updates the given manifest file.
         '''
-        myregister = dict.fromkeys([s.replace('%',
-            chromebasepath) for s in register])
-        addEntriesToListFile(manifestPath, iter(myregister.keys()))
+        myregister = dict.fromkeys(map(lambda s: s.replace('%',
+            chromebasepath), register))
+        addEntriesToListFile(manifestPath, myregister.iterkeys())
 
     def makeJar(self, infile, jardir):
         '''makeJar is the main entry point to JarMaker.
@@ -326,7 +322,7 @@ class JarMaker(object):
         elif self.relativesrcdir:
             self.localedirs = \
                 self.generateLocaleDirs(self.relativesrcdir)
-        if isinstance(infile, str):
+        if isinstance(infile, basestring):
             logging.info('processing ' + infile)
             self.sourcedirs.append(_normpath(os.path.dirname(infile)))
         pp = self.pp.clone()
@@ -376,11 +372,10 @@ class JarMaker(object):
             jarfilepath = jarfile + '.jar'
             try:
                 os.makedirs(os.path.dirname(jarfilepath))
-            except OSError as error:
+            except OSError, error:
                 if error.errno != errno.EEXIST:
                     raise
             jf = ZipFile(jarfilepath, 'a', lock=True)
-            jf.needs_bytes = True
             outHelper = self.OutputHelper_jar(jf)
         else:
             outHelper = getattr(self, 'OutputHelper_'
@@ -459,7 +454,7 @@ class JarMaker(object):
 
         if e.preprocess:
             outf = outHelper.getOutput(out)
-            inf = open(realsrc, 'r', encoding='utf-8', errors='replace')
+            inf = open(realsrc)
             pp = self.pp.clone()
             if src[-4:] == '.css':
                 pp.setMarker('%')
@@ -494,8 +489,7 @@ class JarMaker(object):
         def getDestModTime(self, aPath):
             try:
                 info = self.jarfile.getinfo(aPath)
-                dt = datetime(*info.date_time)
-                return int(dt.timestamp())
+                return info.date_time
             except:
                 return 0
 
@@ -520,12 +514,10 @@ class JarMaker(object):
             # remove previous link or file
             try:
                 os.remove(out)
-            except OSError as e:
+            except OSError, e:
                 if e.errno != errno.ENOENT:
                     raise
-            fh = open(out, 'wb')
-            fh.needs_bytes = True
-            return fh
+            return open(out, 'wb')
 
         def ensureDirFor(self, name):
             out = os.path.join(self.basepath, name)
@@ -533,7 +525,7 @@ class JarMaker(object):
             if not os.path.isdir(outdir):
                 try:
                     os.makedirs(outdir)
-                except OSError as error:
+                except OSError, error:
                     if error.errno != errno.EEXIST:
                         raise
             return out
@@ -549,7 +541,7 @@ class JarMaker(object):
             # remove previous link or file
             try:
                 os.remove(out)
-            except OSError as e:
+            except OSError, e:
                 if e.errno != errno.ENOENT:
                     raise
             if sys.platform != 'win32':

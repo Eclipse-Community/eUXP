@@ -52,7 +52,7 @@ def attributeReturnType(a, macro):
     else:
         ret = macro
     if a.must_use:
-        ret = "[[nodiscard]] " + ret
+        ret = "MOZ_MUST_USE " + ret
     return ret
 
 
@@ -90,7 +90,7 @@ def methodReturnType(m, macro):
     else:
         ret = macro
     if m.must_use:
-        ret = "[[nodiscard]] " + ret
+        ret = "MOZ_MUST_USE " + ret
     return ret
 
 
@@ -410,7 +410,7 @@ def write_interface(iface, fd):
 
     names = uuid_decoder.match(iface.attributes.uuid).groupdict()
     m3str = names['m3'] + names['m4']
-    names['m3joined'] = ", ".join(["0x%s" % m3str[i:i+2] for i in range(0, 16, 2)])
+    names['m3joined'] = ", ".join(["0x%s" % m3str[i:i+2] for i in xrange(0, 16, 2)])
 
     if iface.name[2] == 'I':
         implclass = iface.name[:2] + iface.name[3:]

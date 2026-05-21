@@ -54,8 +54,7 @@ def create_new_paste(contents):
     """
     import re
     if sys.version_info < (3, 0):
-        from urllib.request import urlopen
-        from urllib.parse import urlencode
+        from urllib import urlopen, urlencode
     else:
         from urllib.request import urlopen
         from urllib.parse import urlencode

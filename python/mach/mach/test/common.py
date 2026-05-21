@@ -4,7 +4,7 @@
 
 from __future__ import unicode_literals
 
-from io import StringIO
+from StringIO import StringIO
 import os
 import unittest
 

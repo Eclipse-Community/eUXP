@@ -7,7 +7,7 @@ Filename globbing like the python glob module with minor differences:
 """
 
 import os, re, fnmatch
-from . import util
+import util
 
 _globcheck = re.compile('[[*?]')
 
@@ -62,7 +62,7 @@ def globpattern(dir, pattern):
                   if not leaf.startswith('.')]
 
     leaves = fnmatch.filter(leaves, pattern)
-    leaves = [l for l in leaves if os.path.exists(util.normaljoin(dir, l))]
+    leaves = filter(lambda l: os.path.exists(util.normaljoin(dir, l)), leaves)
 
     leaves.sort()
     return leaves

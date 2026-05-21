@@ -57,7 +57,7 @@ else:
 
     def _copyfile(src, dest):
         # False indicates `dest` should be overwritten if it exists already.
-        if isinstance(src, str) and isinstance(dest, str):
+        if isinstance(src, unicode) and isinstance(dest, unicode):
             _CopyFileW(src, dest, False)
         elif isinstance(src, str) and isinstance(dest, str):
             _CopyFileA(src, dest, False)
@@ -92,8 +92,6 @@ class Dest(object):
         if self.mode != 'w':
             self.file = open(self.path, 'wb')
             self.mode = 'w'
-        if isinstance(data, str):
-            data = data.encode('utf-8')
         return self.file.write(data)
 
     def exists(self):
@@ -147,13 +145,13 @@ class BaseFile(object):
         # - keep file type (e.g. S_IFREG)
         ret = stat.S_IFMT(mode)
         # - expand user read and execute permissions to everyone
-        if mode & 0o400:
-            ret |= 0o444
-        if mode & 0o100:
-            ret |= 0o111
+        if mode & 0400:
+            ret |= 0444
+        if mode & 0100:
+            ret |= 0111
         # - keep user write permissions
-        if mode & 0o200:
-            ret |= 0o200
+        if mode & 0200:
+            ret |= 0200
         # - leave away sticky bit, setuid, setgid
         return ret
 
@@ -166,7 +164,7 @@ class BaseFile(object):
         disabled when skip_if_older is False.
         Returns whether a copy was actually performed (True) or not (False).
         '''
-        if isinstance(dest, str):
+        if isinstance(dest, basestring):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
@@ -187,12 +185,12 @@ class BaseFile(object):
             else:
                 # Ensure the file is always created
                 if not dest.exists():
-                    dest.write(b'')
+                    dest.write('')
                 shutil.copyfileobj(self.open(), dest)
             return True
 
         src = self.open()
-        copy_content = b''
+        copy_content = ''
         while True:
             dest_content = dest.read(32768)
             src_content = src.read(32768)
@@ -260,11 +258,11 @@ class ExecutableFile(File):
     '''
     def copy(self, dest, skip_if_older=True):
         real_dest = dest
-        if not isinstance(dest, str):
+        if not isinstance(dest, basestring):
             fd, dest = mkstemp()
             os.close(fd)
             os.remove(dest)
-        assert isinstance(dest, str)
+        assert isinstance(dest, basestring)
         # If File.copy didn't actually copy because dest is newer, check the
         # file sizes. If dest is smaller, it means it is already stripped and
         # elfhacked, so we can skip.
@@ -301,18 +299,16 @@ class AbsoluteSymlinkFile(File):
         File.__init__(self, path)
 
     def copy(self, dest, skip_if_older=True):
-        assert isinstance(dest, str)
-        from buildconfig import substs
+        assert isinstance(dest, basestring)
 
         # The logic in this function is complicated by the fact that symlinks
-        # aren't universally supported, and are explicitly disabled when 
-        # NSDISTMODE is set to copy. So, where symlinks aren't supported, we
+        # aren't universally supported. So, where symlinks aren't supported, we
         # fall back to file copying. Keep in mind that symlink support is
         # per-filesystem, not per-OS.
 
         # Handle the simple case where symlinks are definitely not supported by
-        # falling back to file copy. 
-        if not hasattr(os, 'symlink') or substs.get('NSDISTMODE') == 'copy':
+        # falling back to file copy.
+        if not hasattr(os, 'symlink'):
             return File.copy(self, dest, skip_if_older=skip_if_older)
 
         # Always verify the symlink target path exists.
@@ -404,7 +400,7 @@ class ExistingFile(BaseFile):
         self.required = required
 
     def copy(self, dest, skip_if_older=True):
-        if isinstance(dest, str):
+        if isinstance(dest, basestring):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
@@ -436,7 +432,7 @@ class PreprocessedFile(BaseFile):
         '''
         Invokes the preprocessor to create the destination file.
         '''
-        if isinstance(dest, str):
+        if isinstance(dest, basestring):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
@@ -499,10 +495,7 @@ class GeneratedFile(BaseFile):
         self.content = content
 
     def open(self):
-        open_content = self.content
-        if isinstance(open_content, str):
-            open_content = open_content.encode('utf-8')
-        return BytesIO(open_content)
+        return BytesIO(self.content)
 
 
 class DeflatedFile(BaseFile):
@@ -570,7 +563,7 @@ class XPTFile(GeneratedFile):
         the individual XPTs to link.
         skip_if_older is ignored.
         '''
-        if isinstance(dest, str):
+        if isinstance(dest, basestring):
             dest = Dest(dest)
         assert isinstance(dest, Dest)
 
@@ -648,9 +641,8 @@ class ManifestFile(BaseFile):
         Return a file-like object allowing to read() the serialized content of
         the manifest.
         '''
-        data = ''.join('%s\n' % e.rebase(self._base)
-                               for e in self._entries)
-        return BytesIO(data.encode('utf-8'))
+        return BytesIO(''.join('%s\n' % e.rebase(self._base)
+                               for e in self._entries))
 
     def __iter__(self):
         '''
@@ -1022,7 +1014,7 @@ class ComposedFinder(BaseFinder):
         from mozpack.copier import FileRegistry
         self.files = FileRegistry()
 
-        for base, finder in sorted(finders.items()):
+        for base, finder in sorted(finders.iteritems()):
             if self.files.contains(base):
                 self.files.remove(base)
             for p, f in finder.find(''):

@@ -14,10 +14,9 @@ from zipfile import (
     ZIP_DEFLATED,
 )
 from collections import OrderedDict
-from urllib.parse import urlparse, ParseResult
+from urlparse import urlparse, ParseResult
 import mozpack.path as mozpath
 from mozbuild.util import memoize
-from functools import reduce
 
 JAR_STORED = ZIP_STORED
 JAR_DEFLATED = ZIP_DEFLATED
@@ -72,7 +71,7 @@ class JarStruct(object):
         an instance with empty fields.
         '''
         assert self.MAGIC and isinstance(self.STRUCT, OrderedDict)
-        self.size_fields = set(t for t in self.STRUCT.values()
+        self.size_fields = set(t for t in self.STRUCT.itervalues()
                                if not t in JarStruct.TYPE_MAPPING)
         self._values = {}
         if data:
@@ -94,7 +93,7 @@ class JarStruct(object):
         # For all fields used as other fields sizes, keep track of their value
         # separately.
         sizes = dict((t, 0) for t in self.size_fields)
-        for name, t in self.STRUCT.items():
+        for name, t in self.STRUCT.iteritems():
             if t in JarStruct.TYPE_MAPPING:
                 value, size = JarStruct.get_data(t, data[offset:])
             else:
@@ -113,7 +112,7 @@ class JarStruct(object):
         Initialize an instance with empty fields.
         '''
         self.signature = self.MAGIC
-        for name, t in self.STRUCT.items():
+        for name, t in self.STRUCT.iteritems():
             if name in self.size_fields:
                 continue
             self._values[name] = 0 if t in JarStruct.TYPE_MAPPING else ''
@@ -138,9 +137,9 @@ class JarStruct(object):
         from self.STRUCT.
         '''
         serialized = struct.pack('<I', self.signature)
-        sizes = dict((t, name) for name, t in self.STRUCT.items()
+        sizes = dict((t, name) for name, t in self.STRUCT.iteritems()
                      if not t in JarStruct.TYPE_MAPPING)
-        for name, t in self.STRUCT.items():
+        for name, t in self.STRUCT.iteritems():
             if t in JarStruct.TYPE_MAPPING:
                 format, size = JarStruct.TYPE_MAPPING[t]
                 if name in sizes:
@@ -149,10 +148,7 @@ class JarStruct(object):
                     value = self[name]
                 serialized += struct.pack('<' + format, value)
             else:
-                value = self[name]
-                if isinstance(value, str):
-                    value = value.encode('utf-8')
-                serialized += value
+                serialized += self[name]
         return serialized
 
     @property
@@ -162,7 +158,7 @@ class JarStruct(object):
         variable length fields.
         '''
         size = JarStruct.TYPE_MAPPING['uint32'][1]
-        for name, type in self.STRUCT.items():
+        for name, type in self.STRUCT.iteritems():
             if type in JarStruct.TYPE_MAPPING:
                 size += JarStruct.TYPE_MAPPING[type][1]
             else:
@@ -183,7 +179,7 @@ class JarStruct(object):
         return key in self._values
 
     def __iter__(self):
-        return iter(self._values.items())
+        return self._values.iteritems()
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__,
@@ -377,7 +373,7 @@ class JarReader(object):
         entries = self.entries
         if not entries:
             return JAR_STORED
-        return max(f['compression'] for f in entries.values())
+        return max(f['compression'] for f in entries.itervalues())
 
     @property
     def entries(self):
@@ -393,7 +389,7 @@ class JarReader(object):
             preload = JarStruct.get_data('uint32', self._data)[0]
         entries = OrderedDict()
         offset = self._cdir_end['cdir_offset']
-        for e in range(self._cdir_end['cdir_entries']):
+        for e in xrange(self._cdir_end['cdir_entries']):
             entry = JarCdirEntry(self._data[offset:])
             offset += entry.size
             # Creator host system. 0 is MSDOS, 3 is Unix
@@ -404,7 +400,7 @@ class JarReader(object):
             xattr = entry['external_attr']
             # Skip directories
             if (host == 0 and xattr & 0x10) or (host == 3 and
-                                                xattr & (0o40000 << 16)):
+                                                xattr & (040000 << 16)):
                 continue
             entries[entry['filename']] = entry
             if entry['offset'] < preload:
@@ -455,7 +451,7 @@ class JarReader(object):
             for file in jarReader:
                 ...
         '''
-        for entry in self.entries.values():
+        for entry in self.entries.itervalues():
             yield self._getreader(entry)
 
     def __getitem__(self, name):
@@ -550,7 +546,7 @@ class JarWriter(object):
         headers = {}
         preload_size = 0
         # Prepare central directory entries
-        for entry, content in self._contents.values():
+        for entry, content in self._contents.itervalues():
             header = JarLocalFileHeader()
             for name in entry.STRUCT:
                 if name in header:
@@ -565,7 +561,7 @@ class JarWriter(object):
         end['disk_entries'] = len(self._contents)
         end['cdir_entries'] = end['disk_entries']
         end['cdir_size'] = reduce(lambda x, y: x + y[0].size,
-                                  list(self._contents.values()), 0)
+                                  self._contents.values(), 0)
         # On optimized archives, store the preloaded size and the central
         # directory entries, followed by the first end of central directory.
         if self._optimize:
@@ -574,18 +570,18 @@ class JarWriter(object):
             if preload_size:
                 preload_size += offset
             self._data.write(struct.pack('<I', preload_size))
-            for entry, _ in self._contents.values():
+            for entry, _ in self._contents.itervalues():
                 entry['offset'] += offset
                 self._data.write(entry.serialize())
             self._data.write(end.serialize())
         # Store local file entries followed by compressed data
-        for entry, content in self._contents.values():
+        for entry, content in self._contents.itervalues():
             self._data.write(headers[entry].serialize())
             self._data.write(content)
         # On non optimized archives, store the central directory entries.
         if not self._optimize:
             end['cdir_offset'] = offset
-            for entry, _ in self._contents.values():
+            for entry, _ in self._contents.itervalues():
                 self._data.write(entry.serialize())
         # Store the end of central directory.
         self._data.write(end.serialize())
@@ -641,7 +637,7 @@ class JarWriter(object):
             # Set creator host system (upper byte of creator_version)
             # to 3 (Unix) so mode is honored when there is one.
             entry['creator_version'] |= 3 << 8
-            entry['external_attr'] = (mode & 0xFFFF) << 16
+            entry['external_attr'] = (mode & 0xFFFF) << 16L
         if deflater.compressed:
             entry['min_version'] = 20  # Version 2.0 supports deflated streams
             entry['general_flag'] = 2  # Max compression

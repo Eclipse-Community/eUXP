@@ -28,7 +28,7 @@ class Configuration(DescriptorProvider):
 
         # Read the configuration file.
         glbl = {}
-        exec(compile(open(filename, "rb").read(), filename, 'exec'), glbl)
+        execfile(filename, glbl)
         config = glbl['DOMInterfaces']
 
         # Build descriptors for all the interfaces we have in the parse data.
@@ -115,7 +115,7 @@ class Configuration(DescriptorProvider):
             self.descriptorsByName[desc.interface.identifier.name] = desc
 
         # Keep the descriptor list sorted for determinism.
-        self.descriptors.sort(key=lambda x: x.name)
+        self.descriptors.sort(lambda x, y: cmp(x.name, y.name))
 
 
         self.descriptorsByFile = {}
@@ -177,7 +177,8 @@ class Configuration(DescriptorProvider):
                                 # unions for the file where we previously found
                                 # them.
                                 unionsForFilename = self.unionsPerFilename[f]
-                                unionsForFilename = [u for u in unionsForFilename if u.name != t.name]
+                                unionsForFilename = filter(lambda u: u.name != t.name,
+                                                           unionsForFilename)
                                 if len(unionsForFilename) == 0:
                                     del self.unionsPerFilename[f]
                                 else:
@@ -197,7 +198,7 @@ class Configuration(DescriptorProvider):
         # Collect up our filters, because we may have a webIDLFile filter that
         # we always want to apply first.
         tofilter = []
-        for key, val in filters.items():
+        for key, val in filters.iteritems():
             if key == 'webIDLFile':
                 # Special-case this part to make it fast, since most of our
                 # getDescriptors calls are conditioned on a webIDLFile.  We may
@@ -237,17 +238,17 @@ class Configuration(DescriptorProvider):
                 getter = (lambda attrName: lambda x: getattr(x, attrName))(key)
             tofilter.append((getter, val))
         for f in tofilter:
-            curr = [x for x in curr if f[0](x) == f[1]]
+            curr = filter(lambda x: f[0](x) == f[1], curr)
         return curr
 
     def getEnums(self, webIDLFile):
-        return [e for e in self.enums if e.filename() == webIDLFile]
+        return filter(lambda e: e.filename() == webIDLFile, self.enums)
 
     def getDictionaries(self, webIDLFile):
-        return [d for d in self.dictionaries if d.filename() == webIDLFile]
+        return filter(lambda d: d.filename() == webIDLFile, self.dictionaries)
 
     def getCallbacks(self, webIDLFile):
-        return [c for c in self.callbacks if c.filename() == webIDLFile]
+        return filter(lambda c: c.filename() == webIDLFile, self.callbacks)
 
     def getDescriptor(self, interfaceName):
         """
@@ -518,7 +519,7 @@ class Descriptor(DescriptorProvider):
                 if config == '*':
                     iface = self.interface
                     while iface:
-                        add('all', [m.name for m in iface.members], attribute)
+                        add('all', map(lambda m: m.name, iface.members), attribute)
                         iface = iface.parent
                 else:
                     add('all', [config], attribute)
@@ -570,7 +571,7 @@ class Descriptor(DescriptorProvider):
 
     @property
     def prototypeNameChain(self):
-        return [self.getDescriptor(p).name for p in self.prototypeChain]
+        return map(lambda p: self.getDescriptor(p).name, self.prototypeChain)
 
     @property
     def parentPrototypeName(self):

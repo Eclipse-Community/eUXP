@@ -5,14 +5,14 @@
 
 """output formats for Talos"""
 
-from . import filter
+import filter
 import json
-from . import utils
+import utils
 
 from mozlog import get_proxy_logger
 
 # NOTE: we have a circular dependency with output.py when we import results
-from . import results as TalosResults
+import results as TalosResults
 
 LOG = get_proxy_logger()
 
@@ -128,7 +128,7 @@ class Output(object):
             # counters results_aux data
             counter_subtests = []
             for cd in test.all_counter_results:
-                for name, vals in list(cd.items()):
+                for name, vals in cd.items():
                     # We want to add the xperf data as talos_counters
                     # exclude counters whose values are tuples (bad for
                     # graphserver)

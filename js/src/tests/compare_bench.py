@@ -15,7 +15,7 @@ def avg(seq):
 
 def compare(current, baseline):
     percent_speedups = []
-    for key, current_result in current.items():
+    for key, current_result in current.iteritems():
         try:
             baseline_result = baseline[key]
         except KeyError:
