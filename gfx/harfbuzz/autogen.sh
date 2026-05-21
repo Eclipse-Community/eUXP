@@ -7,24 +7,24 @@ test -n "$srcdir" || srcdir=.
 olddir=`pwd`
 cd $srcdir
 
-#printf "checking for ragel... "
-#which ragel || {
-#	echo "You need to install ragel... See http://www.complang.org/ragel/"
-#	exit 1
-#}
+echo -n "checking for ragel... "
+which ragel || {
+	echo "You need to install ragel... See http://www.complang.org/ragel/"
+	exit 1
+}
 
-printf "checking for pkg-config... "
+echo -n "checking for pkg-config... "
 which pkg-config || {
 	echo "*** No pkg-config found, please install it ***"
 	exit 1
 }
 
-printf "checking for libtoolize... "
+echo -n "checking for libtoolize... "
 which glibtoolize || which libtoolize || {
 	echo "*** No libtoolize (libtool) found, please install it ***"
 	exit 1
 }
-printf "checking for gtkdocize... "
+echo -n "checking for gtkdocize... "
 if which gtkdocize ; then
 	gtkdocize --copy || exit 1
 else
@@ -32,7 +32,7 @@ else
 	echo "EXTRA_DIST = " > gtk-doc.make
 fi
 
-printf "checking for autoreconf... "
+echo -n "checking for autoreconf... "
 which autoreconf || {
 	echo "*** No autoreconf (autoconf) found, please install it ***"
 	exit 1
@@ -42,7 +42,5 @@ echo "running autoreconf --force --install --verbose"
 autoreconf --force --install --verbose || exit $?
 
 cd $olddir
-test -n "$NOCONFIGURE" || {
-	echo "running configure $@"
-	"$srcdir/configure" "$@"
-}
+echo "running configure $@"
+test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
