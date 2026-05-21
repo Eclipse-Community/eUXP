@@ -13,7 +13,7 @@ class StatusHandler(reader.LogHandler):
             lambda: defaultdict(lambda: defaultdict(int))))
 
     def test_id(self, test):
-        if type(test) in (str, str):
+        if type(test) in (str, unicode):
             return test
         else:
             return tuple(test)
@@ -46,9 +46,9 @@ def _filter(results_cmp):
     def inner(statuses):
         rv = defaultdict(lambda: defaultdict(dict))
 
-        for run_info, tests in statuses.items():
-            for test, subtests in tests.items():
-                for name, results in subtests.items():
+        for run_info, tests in statuses.iteritems():
+            for test, subtests in tests.iteritems():
+                for name, results in subtests.iteritems():
                     if results_cmp(results):
                         rv[run_info][test][name] = results
 
@@ -62,29 +62,29 @@ filter_stable = _filter(lambda x: len(x) == 1)
 def group_results(data):
     rv = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
-    for run_info, tests in data.items():
-        for test, subtests in tests.items():
-            for name, results in subtests.items():
-                for status, number in results.items():
+    for run_info, tests in data.iteritems():
+        for test, subtests in tests.iteritems():
+            for name, results in subtests.iteritems():
+                for status, number in results.iteritems():
                     rv[test][name][status] += number
     return rv
 
 
 def print_results(data):
-    for run_info, tests in data.items():
+    for run_info, tests in data.iteritems():
         run_str = " ".join("%s:%s" % (k, v) for k, v in run_info) if run_info else "No Run Info"
-        print(run_str)
-        print("=" * len(run_str))
+        print run_str
+        print "=" * len(run_str)
         print_run(tests)
 
 
 def print_run(tests):
     for test, subtests in sorted(tests.items()):
-        print("\n" + str(test))
-        print("-" * len(test))
-        for name, results in subtests.items():
-            print("[%s]: %s" % (name if name is not None else "",
-                                " ".join("%s (%i)" % (k, v) for k, v in results.items())))
+        print "\n" + str(test)
+        print "-" * len(test)
+        for name, results in subtests.iteritems():
+            print "[%s]: %s" % (name if name is not None else "",
+                                " ".join("%s (%i)" % (k, v) for k, v in results.iteritems()))
 
 
 def get_parser(add_help=True):
@@ -106,7 +106,7 @@ def main(**kwargs):
         unstable = group_results(unstable)
 
     if kwargs["json"]:
-        print(json.dumps(unstable))
+        print json.dumps(unstable)
     else:
         if not kwargs["group"]:
             print_results(unstable)

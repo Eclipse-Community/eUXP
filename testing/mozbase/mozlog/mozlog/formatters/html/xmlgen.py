@@ -28,14 +28,14 @@ if sys.version_info >= (3, 0):
     def u(s):
         return s
 
-    def str(x):
+    def unicode(x):
         if hasattr(x, '__unicode__'):
             return x.__unicode__()
         return str(x)
 else:
     def u(s):
-        return str(s)
-    str = str
+        return unicode(s)
+    unicode = unicode
 
 
 class NamespaceMetaclass(type):
@@ -68,10 +68,10 @@ class Tag(list):
         self.attr = self.Attr(**kwargs)
 
     def __unicode__(self):
-        return self.str(indent=0)
+        return self.unicode(indent=0)
     __str__ = __unicode__
 
-    def str(self, indent=2):
+    def unicode(self, indent=2):
         l = []
         SimpleUnicodeVisitor(l.append, indent).visit(self)
         return u("").join(l)
@@ -89,7 +89,7 @@ Namespace = NamespaceMetaclass('Namespace', (object, ), {
 
 class HtmlTag(Tag):
 
-    def str(self, indent=2):
+    def unicode(self, indent=2):
         l = []
         HtmlVisitor(l.append, indent, shortempty=False).visit(self)
         return u("").join(l)
@@ -106,7 +106,7 @@ class html(Namespace):
         'colgroup,comment,dd,del,dfn,dir,div,dl,dt,em,embed,'
         'fieldset,font,form,frameset,h1,h2,h3,h4,h5,h6,head,html,'
         'i,iframe,img,input,ins,kbd,label,legend,li,link,listing,'
-        'map,menu,meta,multicol,nobr,noembed,noframes,'
+        'map,marquee,menu,meta,multicol,nobr,noembed,noframes,'
         'noscript,object,ol,optgroup,option,p,pre,q,s,script,'
         'select,small,span,strike,strong,style,sub,sup,table,'
         'tbody,td,textarea,tfoot,th,thead,title,tr,tt,u,ul,xmp,'
@@ -116,7 +116,7 @@ class html(Namespace):
     class Style(object):
 
         def __init__(self, **kw):
-            for x, y in list(kw.items()):
+            for x, y in kw.items():
                 x = x.replace('_', '-')
                 setattr(self, x, y)
 
@@ -160,7 +160,7 @@ class SimpleUnicodeVisitor(object):
     # to avoid clashes with the tag name object
     def __object(self, obj):
         # self.write(obj)
-        self.write(escape(str(obj)))
+        self.write(escape(unicode(obj)))
 
     def raw(self, obj):
         self.write(obj.uniobj)
@@ -217,7 +217,7 @@ class SimpleUnicodeVisitor(object):
             if isinstance(value, raw):
                 insert = value.uniobj
             else:
-                insert = escape(str(value))
+                insert = escape(unicode(value))
             return ' %s="%s"' % (name, insert)
 
     def getstyle(self, tag):
@@ -227,7 +227,7 @@ class SimpleUnicodeVisitor(object):
         except AttributeError:
             return []
         else:
-            stylelist = [x + ': ' + y for x, y in list(styledict.items())]
+            stylelist = [x + ': ' + y for x, y in styledict.items()]
             return [u(' style="%s"') % u('; ').join(stylelist)]
 
     def _issingleton(self, tagname):
@@ -270,14 +270,14 @@ class _escape:
             u('"'): u('&quot;'), u('<'): u('&lt;'), u('>'): u('&gt;'),
             u('&'): u('&amp;'), u("'"): u('&apos;'),
         }
-        self.charef_rex = re.compile(u("|").join(list(self.escape.keys())))
+        self.charef_rex = re.compile(u("|").join(self.escape.keys()))
 
     def _replacer(self, match):
         return self.escape[match.group(0)]
 
     def __call__(self, ustring):
         """ xml-escape the given unicode string. """
-        ustring = str(ustring)
+        ustring = unicode(ustring)
         return self.charef_rex.sub(self._replacer, ustring)
 
 escape = _escape()

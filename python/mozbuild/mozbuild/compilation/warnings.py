@@ -123,18 +123,18 @@ class WarningsDatabase(object):
 
     def __len__(self):
         i = 0
-        for value in list(self._files.values()):
+        for value in self._files.values():
             i += len(value['warnings'])
 
         return i
 
     def __iter__(self):
-        for value in list(self._files.values()):
+        for value in self._files.values():
             for warning in value['warnings']:
                 yield warning
 
     def __contains__(self, item):
-        for value in list(self._files.values()):
+        for value in self._files.values():
             for warning in value['warnings']:
                 if warning == item:
                     return True
@@ -144,7 +144,7 @@ class WarningsDatabase(object):
     @property
     def warnings(self):
         """All the CompilerWarning instances in this database."""
-        for value in list(self._files.values()):
+        for value in self._files.values():
             for w in value['warnings']:
                 yield w
 
@@ -152,7 +152,7 @@ class WarningsDatabase(object):
         """Returns a mapping of warning types to their counts."""
 
         types = {}
-        for value in list(self._files.values()):
+        for value in self._files.values():
             for warning in value['warnings']:
                 if dirpath and not mozpath.normsep(warning['filename']).startswith(dirpath):
                     continue
@@ -210,7 +210,7 @@ class WarningsDatabase(object):
         """
 
         # Need to calculate up front since we are mutating original object.
-        filenames = list(self._files.keys())
+        filenames = self._files.keys()
         for filename in filenames:
             if not os.path.exists(filename):
                 del self._files[filename]
@@ -229,10 +229,10 @@ class WarningsDatabase(object):
         obj = {'files': {}}
 
         # All this hackery because JSON can't handle sets.
-        for k, v in self._files.items():
+        for k, v in self._files.iteritems():
             obj['files'][k] = {}
 
-            for k2, v2 in v.items():
+            for k2, v2 in v.iteritems():
                 normalized = v2
 
                 if k2 == 'warnings':
@@ -249,8 +249,8 @@ class WarningsDatabase(object):
         self._files = obj['files']
 
         # Normalize data types.
-        for filename, value in self._files.items():
-            for k, v in value.items():
+        for filename, value in self._files.iteritems():
+            for k, v in value.iteritems():
                 if k != 'warnings':
                     continue
 
@@ -264,7 +264,7 @@ class WarningsDatabase(object):
 
     def load_from_file(self, filename):
         """Load the database from a file."""
-        with open(filename, 'r', encoding='utf-8') as fh:
+        with open(filename, 'rb') as fh:
             self.deserialize(fh)
 
     def save_to_file(self, filename):
@@ -275,7 +275,7 @@ class WarningsDatabase(object):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-        with open(filename, 'w') as fh:
+        with open(filename, 'wb') as fh:
             self.serialize(fh)
 
 

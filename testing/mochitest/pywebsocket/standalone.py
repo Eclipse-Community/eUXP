@@ -155,13 +155,13 @@ It may execute arbitrary Python code or external programs. It should not be
 used outside a firewall.
 """
 
-import http.server
-import http.server
-import http.server
-import socketserver
-import configparser
+import BaseHTTPServer
+import CGIHTTPServer
+import SimpleHTTPServer
+import SocketServer
+import ConfigParser
 import base64
-import http.client
+import httplib
 import logging
 import logging.handlers
 import optparse
@@ -347,8 +347,7 @@ class _StandaloneSSLConnection(object):
 
         try:
             return self._connection.recv(bufsize)
-        except OpenSSL.SSL.SysCallError as e:
-            err, message = e.args
+        except OpenSSL.SSL.SysCallError, (err, message):
             if err == -1:
                 # Suppress "unexpected EOF" exception. See the OpenSSL document
                 # for SSL_get_error.
@@ -376,13 +375,13 @@ def _alias_handlers(dispatcher, websock_handlers_map_file):
             try:
                 dispatcher.add_resource_path_alias(
                     m.group(1), m.group(2))
-            except dispatch.DispatchException as e:
+            except dispatch.DispatchException, e:
                 logging.error(str(e))
     finally:
         fp.close()
 
 
-class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """HTTPServer specialized for WebSocket."""
 
     # Overrides SocketServer.ThreadingMixIn.daemon_threads
@@ -416,7 +415,7 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         self.__ws_is_shut_down = threading.Event()
         self.__ws_serving = False
 
-        socketserver.BaseServer.__init__(
+        SocketServer.BaseServer.__init__(
             self, (options.server_host, options.port), WebSocketRequestHandler)
 
         # Expose the options object to allow handler objects access it. We name
@@ -452,7 +451,7 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
             family, socktype, proto, canonname, sockaddr = addrinfo
             try:
                 socket_ = socket.socket(family, socktype)
-            except Exception as e:
+            except Exception, e:
                 self._logger.info('Skip by failure: %r', e)
                 continue
             server_options = self.websocket_server_options
@@ -490,7 +489,7 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
                 socket_.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 socket_.bind(self.server_address)
-            except Exception as e:
+            except Exception, e:
                 self._logger.info('Skip by failure: %r', e)
                 socket_.close()
                 failed_sockets.append(socketinfo)
@@ -519,7 +518,7 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
             self._logger.info('Listen on: %r', addrinfo)
             try:
                 socket_.listen(self.request_queue_size)
-            except Exception as e:
+            except Exception, e:
                 self._logger.info('Skip by failure: %r', e)
                 socket_.close()
                 failed_sockets.append(socketinfo)
@@ -570,7 +569,7 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
             if server_options.tls_module == _TLS_BY_STANDARD_MODULE:
                 try:
                     accepted_socket.do_handshake()
-                except ssl.SSLError as e:
+                except ssl.SSLError, e:
                     self._logger.debug('%r', e)
                     raise
 
@@ -609,7 +608,7 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
                 # TODO(tyoshino): Convert all kinds of errors.
                 try:
                     accepted_socket.do_handshake()
-                except OpenSSL.SSL.Error as e:
+                except OpenSSL.SSL.Error, e:
                     # Set errno part to 1 (SSL_ERROR_SSL) like the ssl module
                     # does.
                     self._logger.debug('%r', e)
@@ -653,11 +652,11 @@ class WebSocketServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         self.__ws_is_shut_down.wait()
 
 
-class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
+class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
     """CGIHTTPRequestHandler specialized for WebSocket."""
 
     # Use httplib.HTTPMessage instead of mimetools.Message.
-    MessageClass = http.client.HTTPMessage
+    MessageClass = httplib.HTTPMessage
 
     def setup(self):
         """Override SocketServer.StreamRequestHandler.setup to wrap rfile
@@ -673,7 +672,7 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
         # Call superclass's setup to prepare rfile, wfile, etc. See setup
         # definition on the root class SocketServer.StreamRequestHandler to
         # understand what this does.
-        http.server.CGIHTTPRequestHandler.setup(self)
+        CGIHTTPServer.CGIHTTPRequestHandler.setup(self)
 
         self.rfile = memorizingfile.MemorizingFile(
             self.rfile,
@@ -691,7 +690,7 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
             self.is_executable = self._options.is_executable_method
 
         # This actually calls BaseRequestHandler.__init__.
-        http.server.CGIHTTPRequestHandler.__init__(
+        CGIHTTPServer.CGIHTTPRequestHandler.__init__(
             self, request, client_address, server)
 
     def parse_request(self):
@@ -712,7 +711,7 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
         # handling (self.path, self.command, self.requestline, etc. See also
         # how _StandaloneRequest's members are implemented using these
         # attributes).
-        if not http.server.CGIHTTPRequestHandler.parse_request(self):
+        if not CGIHTTPServer.CGIHTTPRequestHandler.parse_request(self):
             return False
 
         if self._options.use_basic_auth:
@@ -773,7 +772,7 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
                                   self.path)
                 self._logger.info('Fallback to CGIHTTPRequestHandler')
                 return True
-        except dispatch.DispatchException as e:
+        except dispatch.DispatchException, e:
             self._logger.info('Dispatch failed for error: %s', e)
             self.send_error(e.status)
             return False
@@ -789,14 +788,14 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
                     self._options.dispatcher,
                     allowDraft75=self._options.allow_draft75,
                     strict=self._options.strict)
-            except handshake.VersionException as e:
+            except handshake.VersionException, e:
                 self._logger.info('Handshake failed for version error: %s', e)
                 self.send_response(common.HTTP_STATUS_BAD_REQUEST)
                 self.send_header(common.SEC_WEBSOCKET_VERSION_HEADER,
                                  e.supported_versions)
                 self.end_headers()
                 return False
-            except handshake.HandshakeException as e:
+            except handshake.HandshakeException, e:
                 # Handshake for ws(s) failed.
                 self._logger.info('Handshake failed for error: %s', e)
                 self.send_error(e.status)
@@ -804,7 +803,7 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
 
             request._dispatcher = self._options.dispatcher
             self._options.dispatcher.transfer_data(request)
-        except handshake.AbortedByUserException as e:
+        except handshake.AbortedByUserException, e:
             self._logger.info('Aborted: %s', e)
         return False
 
@@ -832,7 +831,7 @@ class WebSocketRequestHandler(http.server.CGIHTTPRequestHandler):
         rather than a CGI script.
         """
 
-        if http.server.CGIHTTPRequestHandler.is_cgi(self):
+        if CGIHTTPServer.CGIHTTPRequestHandler.is_cgi(self):
             if '..' in self.path:
                 return False
             # strip query parameter from request path
@@ -1045,14 +1044,14 @@ def _parse_args_and_config(args):
     if temporary_options.config_file:
         try:
             config_fp = open(temporary_options.config_file, 'r')
-        except IOError as e:
+        except IOError, e:
             logging.critical(
                 'Failed to open configuration file %r: %r',
                 temporary_options.config_file,
                 e)
             sys.exit(1)
 
-        config_parser = configparser.SafeConfigParser()
+        config_parser = ConfigParser.SafeConfigParser()
         config_parser.readfp(config_fp)
         config_fp.close()
 
@@ -1173,7 +1172,7 @@ def _main(args=None):
 
         server = WebSocketServer(options)
         server.serve_forever()
-    except Exception as e:
+    except Exception, e:
         logging.critical('mod_pywebsocket: %s' % e)
         logging.critical('mod_pywebsocket: %s' % util.get_stack_trace())
         sys.exit(1)

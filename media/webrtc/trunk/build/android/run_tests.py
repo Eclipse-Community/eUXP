@@ -220,8 +220,10 @@ class TestSharder(BaseTestSharder):
       if not rebaseline:
         disabled_list = test.GetDisabledTests()
         # Only includes tests that do not have any match in the disabled list.
-        all_tests = [t for t in all_tests if not any([fnmatch.fnmatch(t, disabled_pattern)
-                                    for disabled_pattern in disabled_list])]
+        all_tests = filter(lambda t:
+                           not any([fnmatch.fnmatch(t, disabled_pattern)
+                                    for disabled_pattern in disabled_list]),
+                           all_tests)
       self.tests = all_tests
 
   def CreateShardedTestRunner(self, device, index):
@@ -290,8 +292,8 @@ def _RunATestSuite(options):
       buildbot_emulators.append(buildbot_emulator)
       attached_devices.append(buildbot_emulator.device)
     # Wait for all emulators to boot completed.
-    list(map(lambda buildbot_emulator: buildbot_emulator.ConfirmLaunch(True),
-        buildbot_emulators))
+    map(lambda buildbot_emulator: buildbot_emulator.ConfirmLaunch(True),
+        buildbot_emulators)
   elif options.test_device:
     attached_devices = [options.test_device]
   else:
@@ -368,9 +370,9 @@ def Dispatch(options):
 
 def ListTestSuites():
   """Display a list of available test suites."""
-  print('Available test suites are:')
+  print 'Available test suites are:'
   for test_suite in _TEST_SUITES:
-    print(test_suite)
+    print test_suite
 
 
 def main(argv):
@@ -425,7 +427,7 @@ def main(argv):
 
   options, args = option_parser.parse_args(argv)
   if len(args) > 1:
-    print('Unknown argument:', args[1:])
+    print 'Unknown argument:', args[1:]
     option_parser.print_usage()
     sys.exit(1)
   run_tests_helper.SetLogLevel(options.verbose_count)

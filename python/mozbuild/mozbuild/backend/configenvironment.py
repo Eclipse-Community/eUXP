@@ -7,16 +7,20 @@ from __future__ import absolute_import
 import os
 import sys
 
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
-from types import ModuleType
+from collections import Iterable
+from types import StringTypes, ModuleType
 
 import mozpack.path as mozpath
 
 from mozbuild.util import ReadOnlyDict
 from mozbuild.shellutil import quote as shell_quote
+
+
+if sys.version_info.major == 2:
+    text_type = unicode
+else:
+    text_type = str
+
 
 class BuildConfig(object):
     """Represents the output of configure."""
@@ -47,7 +51,7 @@ class BuildConfig(object):
             mod.__file__ = path
             sys.modules['config.status'] = mod
 
-            with open(path, 'rb') as fh:
+            with open(path, 'rt') as fh:
                 source = fh.read()
                 code_cache[path] = (
                     mtime,
@@ -138,7 +142,7 @@ class ConfigEnvironment(object):
             shell_quote(self.defines[name]).replace('$', '$$'))
             for name in sorted(global_defines)])
         def serialize(obj):
-            if isinstance(obj, str):
+            if isinstance(obj, StringTypes):
                 return obj
             if isinstance(obj, Iterable):
                 return ' '.join(obj)
@@ -166,22 +170,26 @@ class ConfigEnvironment(object):
         self.substs_unicode = {}
 
         def decode(v):
-            if not isinstance(v, str):
+            if not isinstance(v, text_type):
                 try:
                     return v.decode('utf-8')
                 except UnicodeDecodeError:
                     return v.decode('utf-8', 'replace')
 
-        for k, v in list(self.substs.items()):
-            if not isinstance(v, str):
+        for k, v in self.substs.items():
+            if not isinstance(v, StringTypes):
                 if isinstance(v, Iterable):
                     type(v)(decode(i) for i in v)
-            elif not isinstance(v, str):
+            elif not isinstance(v, text_type):
                 v = decode(v)
 
             self.substs_unicode[k] = v
 
         self.substs_unicode = ReadOnlyDict(self.substs_unicode)
+
+    @property
+    def is_artifact_build(self):
+        return self.substs.get('MOZ_ARTIFACT_BUILDS', False)
 
     @staticmethod
     def from_config_status(path):

@@ -11,7 +11,7 @@ import logging
 import os
 import site
 import sys
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 import difflib
 
 FAILURE_CODE = 1
@@ -40,10 +40,10 @@ def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
 
 def readConfig(configfile, keys=[], required=[]):
     c = {}
-    exec(compile(open(configfile, "rb").read(), configfile, 'exec'), c)
+    execfile(configfile, c)
     for k in keys:
         c = c[k]
-    items = list(c.keys())
+    items = c.keys()
     err = False
     for key in required:
         if key not in items:
@@ -126,7 +126,7 @@ def get_mozconfig(path, options):
     else:
         url = make_hg_url(options.hghost, options.branch, 'http',
                     options.revision, path)
-        return urllib.request.urlopen(url).readlines()
+        return urllib2.urlopen(url).readlines()
 
 if __name__ == '__main__':
     from optparse import OptionParser

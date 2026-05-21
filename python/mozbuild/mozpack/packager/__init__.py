@@ -50,7 +50,7 @@ class Component(object):
         '''
         Split [1, 2, 3, 4, 5, 6, 7] into [(1, 2, 3), (4, 5, 6)].
         '''
-        return list(zip(*[iter(lst)] * 3))
+        return zip(*[iter(lst)] * 3)
 
     KEY_VALUE_RE = re.compile(r'''
         \s*                 # optional whitespace.
@@ -100,7 +100,7 @@ class Component(object):
         component = splits[0].strip()
         if not component:
             raise ValueError('No component found')
-        if not re.match(r'[a-zA-Z0-9_\-]+$', component):
+        if not re.match('[a-zA-Z0-9_\-]+$', component):
             raise ValueError('Bad component name ' + component)
         options = Component._split_options(splits[1]) if len(splits) > 1 else {}
         return component, options
@@ -118,7 +118,7 @@ class Component(object):
         destdir = options.pop('destdir', '')
         if options:
             errors.fatal('Malformed manifest: options %s not recognized'
-                         % list(options.keys()))
+                         % options.keys())
         return Component(name, destdir=destdir)
 
 
@@ -266,8 +266,7 @@ class SimplePackager(object):
             self._file_queue.append(self.formatter.add, path, file)
             if mozpath.basename(path) == 'install.rdf':
                 addon = True
-                raw = file.open().read()
-                install_rdf = raw.decode('utf-8')
+                install_rdf = file.open().read()
                 if self.UNPACK_ADDON_RE.search(install_rdf):
                     addon = 'unpacked'
                 self._addons[mozpath.dirname(path)] = addon
@@ -283,11 +282,7 @@ class SimplePackager(object):
             b = mozpath.normsep(file.path)
             if b.endswith('/' + path) or b == path:
                 base = os.path.normpath(b[:-len(path)])
-        fh = file.open()
-        data = fh.read()
-
-        text = data.decode('utf-8')
-        for e in parse_manifest(base, path, text.splitlines(True)):
+        for e in parse_manifest(base, path, file.open()):
             # ManifestResources need to be given after ManifestChrome, so just
             # put all ManifestChrome in a separate queue to make them first.
             if isinstance(e, ManifestChrome):
@@ -333,7 +328,7 @@ class SimplePackager(object):
 
         bases = self.get_bases()
         broken_bases = sorted(
-            m for m, includer in self._included_manifests.items()
+            m for m, includer in self._included_manifests.iteritems()
             if mozpath.basedir(m, bases) != mozpath.basedir(includer, bases))
         for m in broken_bases:
             errors.fatal('"%s" is included from "%s", which is outside "%s"' %

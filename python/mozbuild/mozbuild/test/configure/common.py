@@ -16,7 +16,7 @@ from mozbuild.configure import ConfigureSandbox
 from mozbuild.util import ReadOnlyNamespace
 from mozpack import path as mozpath
 
-from io import StringIO
+from StringIO import StringIO
 from which import WhichError
 
 from buildconfig import (
@@ -78,10 +78,10 @@ class ConfigureTestSandbox(ConfigureSandbox):
         self._search_path = environ.get('PATH', '').split(os.pathsep)
 
         self._subprocess_paths = {
-            mozpath.abspath(k): v for k, v in paths.items() if v
+            mozpath.abspath(k): v for k, v in paths.iteritems() if v
         }
 
-        paths = list(paths.keys())
+        paths = paths.keys()
 
         environ = dict(environ)
         if 'CONFIG_SHELL' not in environ:
@@ -89,7 +89,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
             self._subprocess_paths[environ['CONFIG_SHELL']] = self.shell
             paths.append(environ['CONFIG_SHELL'])
         self._environ = copy.copy(environ)
-        self._subprocess_paths[mozpath.join(topsrcdir, 'build/win32/vswhere.exe')] = self.vswhere
+
         vfs = ConfigureTestVFS(paths)
 
         os_path = {
@@ -215,8 +215,6 @@ class ConfigureTestSandbox(ConfigureSandbox):
             return self._subprocess_paths[script](stdin, args[1:])
         return 127, '', 'File not found'
 
-    def vswhere(self, stdin, args):
-        return 0, '[]', ''
 
 class BaseConfigureTest(unittest.TestCase):
     HOST = 'x86_64-pc-linux-gnu'
