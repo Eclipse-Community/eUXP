@@ -124,6 +124,8 @@ public:
     return false;
   }
 
+  void MemoryPressure();
+
   virtual void QueueNavigationTimingEntry() = 0;
 
 protected:
@@ -137,8 +139,6 @@ protected:
 
   void ClearUserEntries(const Optional<nsAString>& aEntryName,
                         const nsAString& aEntryType);
-
-  virtual nsISupports* GetAsISupports() = 0;
 
   virtual void DispatchBufferFullEvent() = 0;
 
@@ -169,11 +169,14 @@ protected:
   nsTObserverArray<PerformanceObserver*> mObservers;
 
 protected:
-  nsTArray<RefPtr<PerformanceEntry>> mUserEntries;
-  nsTArray<RefPtr<PerformanceEntry>> mResourceEntries;
+  static const uint64_t kDefaultResourceTimingBufferSize = 1500;
+
+  // When kDefaultResourceTimingBufferSize is increased or removed, these should
+  // be changed to use SegmentedVector
+  AutoTArray<RefPtr<PerformanceEntry>, kDefaultResourceTimingBufferSize> mUserEntries;
+  AutoTArray<RefPtr<PerformanceEntry>, kDefaultResourceTimingBufferSize> mResourceEntries;
 
   uint64_t mResourceTimingBufferSize;
-  static const uint64_t kDefaultResourceTimingBufferSize = 16384;
   bool mPendingNotificationObserversTask;
 
   RefPtr<PerformanceService> mPerformanceService;

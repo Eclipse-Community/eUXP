@@ -69,11 +69,6 @@ protected:
 
   void CreateNavigationTimingEntry();
 
-  nsISupports* GetAsISupports() override
-  {
-    return this;
-  }
-
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
   DOMHighResTimeStamp
