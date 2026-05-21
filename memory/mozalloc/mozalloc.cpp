@@ -35,20 +35,6 @@
 extern "C" MOZ_MEMORY_API char *strdup_impl(const char *);
 extern "C" MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 
-#elif defined(MOZ_MIMALLOC)
-#include "mimalloc.h"
-
-#define malloc_impl mi_malloc
-#define posix_memalign_impl mi_posix_memalign
-#define calloc_impl mi_calloc
-#define realloc_impl mi_realloc
-#define free_impl mi_free
-#define memalign_impl mi_memalign
-#define valloc_impl mi_valloc
-#define malloc_usable_size_impl mi_usable_size
-#define strdup_impl mi_strdup
-#define strndup_impl mi_strndup
-
 #else
 // When jemalloc is disabled, or when building the static runtime variant,
 // we need not to use the suffixes.
@@ -145,6 +131,17 @@ moz_xstrndup(const char* str, size_t strsize)
 
 #if defined(HAVE_POSIX_MEMALIGN)
 int
+moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
+{
+    int err = posix_memalign_impl(ptr, alignment, size);
+    if (MOZ_UNLIKELY(err && ENOMEM == err)) {
+        mozalloc_handle_oom(size);
+        return moz_xposix_memalign(ptr, alignment, size);
+    }
+    // else: (0 == err) or (EINVAL == err)
+    return err;
+}
+int
 moz_posix_memalign(void **ptr, size_t alignment, size_t size)
 {
     int code = posix_memalign_impl(ptr, alignment, size);
@@ -201,9 +198,7 @@ moz_malloc_usable_size(void *ptr)
     if (!ptr)
         return 0;
 
-#if defined(MOZ_MIMALLOC)
-    return malloc_usable_size_impl(ptr);
-#elif defined(XP_DARWIN)
+#if defined(XP_DARWIN)
     return malloc_size(ptr);
 #elif defined(HAVE_MALLOC_USABLE_SIZE) || defined(MOZ_MEMORY)
     return malloc_usable_size_impl(ptr);

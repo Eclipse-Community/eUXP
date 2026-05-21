@@ -49,7 +49,4 @@ LOCAL_INCLUDES += [
     '/memory/build',
 ]
 
-if CONFIG['MOZ_MIMALLOC']:
-    LOCAL_INCLUDES += ['/memory/mimalloc/include']
-
 DIST_INSTALL = True

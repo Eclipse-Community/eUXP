@@ -31,11 +31,15 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
-#if defined(MOZ_MIMALLOC) && !defined(MOZ_GLUE_IN_PROGRAM)
-#  include "mimalloc.h"
-#endif
-
 #define MOZALLOC_HAVE_XMALLOC
+
+/* Workaround build problem with Sun Studio 12 */
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#  undef [[nodiscard]]
+#  define [[nodiscard]]
+#  undef MOZ_ALLOCATOR
+#  define MOZ_ALLOCATOR
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -48,20 +52,12 @@ extern "C" {
  * ours.
  */
 #ifndef free_impl
-#  if defined(MOZ_MIMALLOC) && !defined(MOZ_GLUE_IN_PROGRAM)
-#    define free_impl mi_free
-#  else
-#    define free_impl free
-#  endif
-#  define free_impl_
+#define free_impl free
+#define free_impl_
 #endif
 #ifndef malloc_impl
-#  if defined(MOZ_MIMALLOC) && !defined(MOZ_GLUE_IN_PROGRAM)
-#    define malloc_impl mi_malloc
-#  else
-#    define malloc_impl malloc
-#  endif
-#  define malloc_impl_
+#define malloc_impl malloc
+#define malloc_impl_
 #endif
 
 /*
@@ -99,7 +95,10 @@ MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
 
 
 #if defined(HAVE_POSIX_MEMALIGN)
-MFBT_API __attribute__ ((warn_unused_result))
+MFBT_API [[nodiscard]]
+int moz_xposix_memalign(void **ptr, size_t alignment, size_t size);
+
+MFBT_API [[nodiscard]]
 int moz_posix_memalign(void **ptr, size_t alignment, size_t size);
 #endif /* if defined(HAVE_POSIX_MEMALIGN) */
 
@@ -153,11 +152,14 @@ MFBT_API void* moz_xvalloc(size_t size)
 
 #if defined(_MSC_VER)
 /*
- * Suppress build warning spam (issue #2281).
+ * Suppress build warning spam (bug 578546).
  */
-#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS noexcept(true)
-#define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS noexcept(false)
+#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS
+#define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS
 #elif __cplusplus >= 201103
+/*
+ * C++11 has deprecated exception-specifications in favour of |noexcept|.
+ */
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS noexcept(true)
 #define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS noexcept(false)
 #else
