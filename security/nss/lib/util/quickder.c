@@ -92,11 +92,6 @@ definite_length_decoder(const unsigned char* buf,
         }
     }
 
-    if ((tag & SEC_ASN1_TAGNUM_MASK) == SEC_ASN1_NULL && data_length != 0) {
-        /* The DER encoding of NULL has no contents octets */
-        return NULL;
-    }
-
     if (data_length > (buf_length - used_length)) {
         /* The decoded length exceeds the available buffer */
         return NULL;
@@ -754,18 +749,15 @@ DecodeItem(void* dest,
                     switch (tagnum) {
                         /* special cases of primitive types */
                         case SEC_ASN1_INTEGER: {
+                            /* remove leading zeroes if the caller requested
+                               siUnsignedInteger
+                               This is to allow RSA key operations to work */
                             SECItem* destItem = (SECItem*)((char*)dest +
                                                            templateEntry->offset);
                             if (destItem && (siUnsignedInteger == destItem->type)) {
-                                /* A leading 0 is only allowed when a value
-                                 * would otherwise be interpreted as negative. */
-                                if (temp.len > 1 && temp.data[0] == 0) {
+                                while (temp.len > 1 && temp.data[0] == 0) { /* leading 0 */
                                     temp.data++;
                                     temp.len--;
-                                    if (!(temp.data[0] & 0x80)) {
-                                        PORT_SetError(SEC_ERROR_BAD_DER);
-                                        rv = SECFailure;
-                                    }
                                 }
                             }
                             break;

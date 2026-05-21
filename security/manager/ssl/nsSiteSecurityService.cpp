@@ -20,7 +20,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "plstr.h"
 #include "mozilla/Logging.h"
 #include "prnetdb.h"

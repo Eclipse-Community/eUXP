@@ -6,7 +6,7 @@
 #ifndef BRNameMatchingPolicy_h
 #define BRNameMatchingPolicy_h
 
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 
 namespace mozilla { namespace psm {
 

@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This code is made available to you under your choice of the following sets
  * of licensing terms:
  */
@@ -192,6 +191,18 @@ inline unsigned int DaysBeforeYear(unsigned int year) {
 
 static const size_t MAX_DIGEST_SIZE_IN_BYTES = 512 / 8;  // sha-512
 
+Result DigestSignedData(TrustDomain& trustDomain,
+                        const der::SignedDataWithSignature& signedData,
+                        /*out*/ uint8_t (&digestBuf)[MAX_DIGEST_SIZE_IN_BYTES],
+                        /*out*/ der::PublicKeyAlgorithm& publicKeyAlg,
+                        /*out*/ SignedDigest& signedDigest);
+
+Result VerifySignedDigest(TrustDomain& trustDomain,
+                          der::PublicKeyAlgorithm publicKeyAlg,
+                          const SignedDigest& signedDigest,
+                          Input signerSubjectPublicKeyInfo);
+
+// Combines DigestSignedData and VerifySignedDigest
 Result VerifySignedData(TrustDomain& trustDomain,
                         const der::SignedDataWithSignature& signedData,
                         Input signerSubjectPublicKeyInfo);
@@ -247,21 +258,7 @@ Result CheckSubjectPublicKeyInfo(Input subjectPublicKeyInfo,
 #else
 #error Unsupported compiler for MOZILLA_PKIX_UNREACHABLE_DEFAULT.
 #endif
-
-inline size_t DigestAlgorithmToSizeInBytes(DigestAlgorithm digestAlgorithm) {
-  switch (digestAlgorithm) {
-    case DigestAlgorithm::sha1:
-      return 160 / 8;
-    case DigestAlgorithm::sha256:
-      return 256 / 8;
-    case DigestAlgorithm::sha384:
-      return 384 / 8;
-    case DigestAlgorithm::sha512:
-      return 512 / 8;
-      MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
-  }
 }
-}  // namespace pkix
-}  // namespace mozilla
+}  // namespace mozilla::pkix
 
 #endif  // mozilla_pkix_pkixutil_h

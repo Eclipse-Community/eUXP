@@ -23,7 +23,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "secerr.h"
@@ -335,7 +335,7 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
     // PK11_FindObjectForCert(nssCert, nullptr, slot);
     // create the cert and key safes
     keySafe = SEC_PKCS12CreateUnencryptedSafe(ecx);
-    if (!SEC_PKCS12IsEncryptionAllowed()) {
+    if (!SEC_PKCS12IsEncryptionAllowed() || PK11_IsFIPS()) {
       certSafe = keySafe;
     } else {
       certSafe = SEC_PKCS12CreatePasswordPrivSafe(ecx, &unicodePw,

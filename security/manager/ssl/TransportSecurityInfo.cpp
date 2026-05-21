@@ -23,7 +23,7 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "secerr.h"
 
 //#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 

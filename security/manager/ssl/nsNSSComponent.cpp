@@ -12,7 +12,9 @@
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "certdb.h"
+#ifdef MOZ_SECURITY_SQLSTORE
 #include "mozStorageCID.h"
+#endif
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
@@ -43,7 +45,7 @@
 #include "nsXULAppAPI.h"
 #include "nss.h"
 #include "p12plcy.h"
-#include "mozpkix/pkixnss.h"
+#include "pkix/pkixnss.h"
 #include "secerr.h"
 #include "secmod.h"
 #include "ssl.h"
@@ -170,7 +172,7 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
   case nssInitFailed:
     NS_ASSERTION(loading, "Bad call to EnsureNSSInitialized(nssInitFailed)");
     loading = false;
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
 
   case nssShutdown:
     PR_AtomicSet(&haveLoaded, 0);
@@ -1126,9 +1128,13 @@ nsNSSComponent::LoadLoadableRoots()
   nsAutoString modName;
   nsresult rv = GetPIPNSSBundleString("RootCertModuleName", modName);
   if (NS_FAILED(rv)) {
-    // If we want to be able to stop using string bundles in PSM, we'll have to
-    // hard-code the string and only use the localized version when displaying
-    // it to the user, so this is a step in that direction anyway.
+    // When running Cpp unit tests on Android, this will fail because string
+    // bundles aren't available (see bug 1311077, bug 1228175 comment 12, and
+    // bug 929655). Because the module name is really only for display purposes,
+    // we can just hard-code the value here. Furthermore, if we want to be able
+    // to stop using string bundles in PSM in this way, we'll have to hard-code
+    // the string and only use the localized version when displaying it to the
+    // user, so this is a step in that direction anyway.
     modName.AssignLiteral("Builtin Roots Module");
   }
 
@@ -1699,11 +1705,17 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
            ("Could not get nsILocalFileWin for profile directory.\n"));
     return NS_ERROR_FAILURE;
   }
+#ifdef MOZ_SECURITY_SQLSTORE
   // SQLite always takes UTF-8 file paths regardless of the current system
   // code page.
   nsAutoString u16ProfilePath;
   rv = profileFileWin->GetCanonicalPath(u16ProfilePath);
   CopyUTF16toUTF8(u16ProfilePath, aProfilePath);
+#else
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  rv = profileFileWin->GetNativeCanonicalPath(aProfilePath);
+#endif
 #else
   // On non-Windows, just get the native profile path.
   rv = profileFile->GetNativePath(aProfilePath);
@@ -1968,11 +1980,13 @@ nsNSSComponent::Init()
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
+#ifdef MOZ_SECURITY_SQLSTORE
   // To avoid an sqlite3_config race in NSS init, we require the storage service to get initialized first.
   nsCOMPtr<nsISupports> storageService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
   if (!storageService) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+#endif
 
   nsresult rv = NS_OK;
 

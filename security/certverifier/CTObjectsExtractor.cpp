@@ -12,8 +12,8 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Vector.h"
-#include "mozpkix/pkixnss.h"
-#include "mozpkix/pkixutil.h"
+#include "pkix/pkixnss.h"
+#include "pkix/pkixutil.h"
 
 namespace mozilla { namespace ct {
 
