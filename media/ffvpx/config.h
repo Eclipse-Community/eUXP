@@ -30,6 +30,10 @@
 #undef HAVE_LIBC_MSVCRT
 #define HAVE_LIBC_MSVCRT 0
 #endif
+#if defined(_MSC_VER)
+#undef av_restrict
+#define av_restrict __restrict
+#endif
 #elif defined(XP_DARWIN)
 #if defined(__aarch64__)
 #include "config_darwin_aarch64.h"
