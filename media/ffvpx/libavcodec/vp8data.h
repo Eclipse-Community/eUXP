@@ -316,6 +316,12 @@ static const uint8_t vp8_pred4x4_prob_intra[10][10][9] = {
     },
 };
 
+static const int8_t vp8_segmentid_tree[][2] = {
+    {  1,  2 },
+    { -0, -1 }, // '00', '01'
+    { -2, -3 }, // '10', '11'
+};
+
 static const uint8_t vp8_coeff_band[16] = {
     0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7
 };
@@ -339,8 +345,26 @@ static const uint8_t vp8_dct_cat1_prob[] = {
 static const uint8_t vp8_dct_cat2_prob[] = {
     165, 145, 0
 };
+static const uint8_t vp8_dct_cat3_prob[] = {
+    173, 148, 140, 0
+};
+static const uint8_t vp8_dct_cat4_prob[] = {
+    176, 155, 140, 135, 0
+};
+static const uint8_t vp8_dct_cat5_prob[] = {
+    180, 157, 141, 134, 130, 0
+};
+static const uint8_t vp8_dct_cat6_prob[] = {
+    254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0
+};
 
-extern const uint8_t *const ff_vp8_dct_cat_prob[];
+// only used for cat3 and above; cat 1 and 2 are referenced directly
+const uint8_t *const ff_vp8_dct_cat_prob[] = {
+    vp8_dct_cat3_prob,
+    vp8_dct_cat4_prob,
+    vp8_dct_cat5_prob,
+    vp8_dct_cat6_prob,
+};
 
 static const uint8_t vp8_token_default_probs[4][8][3][NUM_DCT_TOKENS - 1] = {
     {

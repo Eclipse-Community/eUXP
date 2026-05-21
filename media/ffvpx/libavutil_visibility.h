@@ -8,13 +8,20 @@
 #ifndef MOZILLA_AVUTIL_VISIBILITY_H
 #define MOZILLA_AVUTIL_VISIBILITY_H
 
+// We need to preemptively include <stdlib.h> before anyone[1] has a chance
+// to include <limits.h>. We do this to avoid a Linux clang build error, in
+// -ffreestanding mode, which happens when limits.h defines MB_LEN_MAX to some
+// value that is different from what stdlib.h expects. If we include stdlib.h
+// before limits.h, then they don't get a chance to interact badly.
+//
+// [1] (e.g. libavutil/common.h, which is indirectly included by log.h below.)
+#include <stdlib.h>
+
 #pragma GCC visibility push(default)
 #include "libavutil/cpu.h"
-#include "libavutil/mem.h"
 
 // We need av_log() to be visible so we can enable assertions in libavcodec.
 #include "libavutil/log.h"
-#include "libavcodec/packet.h"
 
 #pragma GCC visibility pop
 

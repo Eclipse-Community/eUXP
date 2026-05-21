@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include "avassert.h"
 #include "avstring.h"
 #include "bprint.h"
+#include "common.h"
 #include "compat/va_copy.h"
 #include "error.h"
-#include "macros.h"
 #include "mem.h"
 
 #define av_bprint_room(buf) ((buf)->size - FFMIN((buf)->len, (buf)->size))
@@ -71,7 +71,7 @@ void av_bprint_init(AVBPrint *buf, unsigned size_init, unsigned size_max)
     unsigned size_auto = (char *)buf + sizeof(*buf) -
                          buf->reserved_internal_buffer;
 
-    if (size_max == AV_BPRINT_SIZE_AUTOMATIC)
+    if (size_max == 1)
         size_max = size_auto;
     buf->str      = buf->reserved_internal_buffer;
     buf->len      = 0;
@@ -84,11 +84,6 @@ void av_bprint_init(AVBPrint *buf, unsigned size_init, unsigned size_max)
 
 void av_bprint_init_for_buffer(AVBPrint *buf, char *buffer, unsigned size)
 {
-    if (size == 0) {
-        av_bprint_init(buf, 0, AV_BPRINT_SIZE_COUNT_ONLY);
-        return;
-    }
-
     buf->str      = buffer;
     buf->len      = 0;
     buf->size     = size;
@@ -250,8 +245,10 @@ int av_bprint_finalize(AVBPrint *buf, char **ret_str)
                 str = buf->str;
             buf->str = NULL;
         } else {
-            str = av_memdup(buf->str, real_size);
-            if (!str)
+            str = av_malloc(real_size);
+            if (str)
+                memcpy(str, buf->str, real_size);
+            else
                 ret = AVERROR(ENOMEM);
         }
         *ret_str = str;
@@ -284,35 +281,6 @@ void av_bprint_escape(AVBPrint *dstbuf, const char *src, const char *special_cha
                 av_bprint_chars(dstbuf, *src, 1);
         }
         av_bprint_chars(dstbuf, '\'', 1);
-        break;
-
-    case AV_ESCAPE_MODE_XML:
-        /* escape XML non-markup character data as per 2.4 by default: */
-        /*  [^<&]* - ([^<&]* ']]>' [^<&]*) */
-
-        /* additionally, given one of the AV_ESCAPE_FLAG_XML_* flags, */
-        /* escape those specific characters as required. */
-        for (; *src; src++) {
-            switch (*src) {
-            case '&' : av_bprintf(dstbuf, "%s", "&amp;");  break;
-            case '<' : av_bprintf(dstbuf, "%s", "&lt;");   break;
-            case '>' : av_bprintf(dstbuf, "%s", "&gt;");   break;
-            case '\'':
-                if (!(flags & AV_ESCAPE_FLAG_XML_SINGLE_QUOTES))
-                    goto XML_DEFAULT_HANDLING;
-
-                av_bprintf(dstbuf, "%s", "&apos;");
-                break;
-            case '"' :
-                if (!(flags & AV_ESCAPE_FLAG_XML_DOUBLE_QUOTES))
-                    goto XML_DEFAULT_HANDLING;
-
-                av_bprintf(dstbuf, "%s", "&quot;");
-                break;
-XML_DEFAULT_HANDLING:
-            default: av_bprint_chars(dstbuf, *src, 1);
-            }
-        }
         break;
 
     /* case AV_ESCAPE_MODE_BACKSLASH or unknown mode */

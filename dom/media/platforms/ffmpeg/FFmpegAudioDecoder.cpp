@@ -6,8 +6,6 @@
 #include "mozilla/TaskQueue.h"
 
 #include "FFmpegAudioDecoder.h"
-#include "FFmpegUtils.h"
-#include "FFmpegLog.h"
 #include "TimeUnits.h"
 
 #define MAX_CHANNELS 16
@@ -46,7 +44,9 @@ FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext()
   // isn't implemented.
   mCodecContext->thread_count = 1;
   // FFmpeg takes this as a suggestion for what format to use for audio samples.
-  mCodecContext->request_sample_fmt = AV_SAMPLE_FMT_FLT;
+  // LibAV 0.8 produces rubbish float interleaved samples, request 16 bits audio.
+  mCodecContext->request_sample_fmt =
+    (mLib->mVersion == 53) ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;
 }
 
 static AlignedAudioBuffer
@@ -119,19 +119,11 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 MediaResult
 FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 {
-  AVPacket* packet;
-#if LIBAVCODEC_VERSION_MAJOR >= 61
-  packet = mLib->av_packet_alloc();
-  auto freePacket =
-    MakeScopeExit([&] { mLib->av_packet_free(&packet); });
-#else
-  AVPacket packet_mem;
-  packet = &packet_mem;
-  mLib->av_init_packet(packet);
-#endif
+  AVPacket packet;
+  mLib->av_init_packet(&packet);
 
-  packet->data = const_cast<uint8_t*>(aSample->Data());
-  packet->size = aSample->Size();
+  packet.data = const_cast<uint8_t*>(aSample->Data());
+  packet.size = aSample->Size();
 
   if (!PrepareFrame()) {
     return MediaResult(
@@ -142,51 +134,16 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
   int64_t samplePosition = aSample->mOffset;
   media::TimeUnit pts = media::TimeUnit::FromMicroseconds(aSample->mTime);
 
-  while (packet->size > 0) {
-    int decoded = false;
-    int bytesConsumed = -1;
-#if LIBAVCODEC_VERSION_MAJOR == 58
-	bytesConsumed =
-      mLib->avcodec_decode_audio4(mCodecContext, mFrame, &decoded, packet);
+  while (packet.size > 0) {
+    int decoded;
+    int bytesConsumed =
+      mLib->avcodec_decode_audio4(mCodecContext, mFrame, &decoded, &packet);
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("FFmpeg audio error:%d", bytesConsumed));
     }
-#else
-#define AVRESULT_OK 0
-    int ret = mLib->avcodec_send_packet(mCodecContext, packet);
-    switch (ret) {
-      case AVRESULT_OK:
-        bytesConsumed = packet->size;
-        break;
-      case AVERROR(EAGAIN):
-        break;
-      case AVERROR_EOF:
-        FFMPEG_LOG("End of stream.");
-        return MediaResult(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
-                           RESULT_DETAIL("End of stream"));
-      default:
-        NS_WARNING("FFmpeg audio decoder error.");
-        return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                           RESULT_DETAIL("FFmpeg audio error"));
-    }
-
-    ret = mLib->avcodec_receive_frame(mCodecContext, mFrame);
-    switch (ret) {
-      case AVRESULT_OK:
-        decoded = true;
-        break;
-      case AVERROR(EAGAIN):
-        break;
-      case AVERROR_EOF: {
-        FFMPEG_LOG("End of stream.");
-        return MediaResult(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
-                           RESULT_DETAIL("End of stream"));
-      }
-    }
-#endif
 
     if (decoded) {
       if (mFrame->format != AV_SAMPLE_FMT_FLT &&
@@ -200,7 +157,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
           RESULT_DETAIL(
             "FFmpeg audio decoder outputs unsupported audio format"));
       }
-      uint32_t numChannels = ChannelCount(mCodecContext);
+      uint32_t numChannels = mCodecContext->channels;
       AudioConfig::ChannelLayout layout(numChannels);
       if (!layout.IsValid()) {
         return MediaResult(
@@ -239,13 +196,9 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
           RESULT_DETAIL("Invalid count of accumulated audio samples"));
       }
     }
-    // The packet wasn't sent to ffmpeg, another attempt will happen next
-    // iteration.
-    if (bytesConsumed != -1) {
-	  packet->data += bytesConsumed;
-	  packet->size -= bytesConsumed;
-	  samplePosition += bytesConsumed;
-    }
+    packet.data += bytesConsumed;
+    packet.size -= bytesConsumed;
+    samplePosition += bytesConsumed;
   }
   return NS_OK;
 }
@@ -262,11 +215,9 @@ FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
 {
   if (aMimeType.EqualsLiteral("audio/mpeg")) {
     return AV_CODEC_ID_MP3;
-  }
-  if (aMimeType.EqualsLiteral("audio/flac")) {
+  } else if (aMimeType.EqualsLiteral("audio/flac")) {
     return AV_CODEC_ID_FLAC;
-  }
-  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
+  } else if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
     return AV_CODEC_ID_AAC;
   }
 
