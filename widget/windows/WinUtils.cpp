@@ -1862,14 +1862,14 @@ IsWindows10TabletMode()
 }
 
 static bool
-GetAutoRotationState(AR_STATE* aRotationState)
+GetAutoRotationState(AR_STATE_CUSTOM* aRotationState)
 {
-  typedef BOOL (WINAPI* GetAutoRotationStateFunc)(PAR_STATE pState);
+  typedef BOOL (WINAPI* GetAutoRotationStateFunc)(PAR_STATE_CUSTOM pState);
   static GetAutoRotationStateFunc get_auto_rotation_state_func =
       reinterpret_cast<GetAutoRotationStateFunc>(::GetProcAddress(
           GetModuleHandleW(L"user32.dll"), "GetAutoRotationState"));
   if (get_auto_rotation_state_func) {
-    ZeroMemory(aRotationState, sizeof(AR_STATE));
+    ZeroMemory(aRotationState, sizeof(AR_STATE_CUSTOM));
     return get_auto_rotation_state_func(aRotationState);
   }
   return false;
@@ -1904,10 +1904,10 @@ IsTabletDevice()
   // If the device is not supporting rotation, it's unlikely to be a tablet,
   // a convertible or a detachable. See:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/dn629263(v=vs.85).aspx
-  AR_STATE rotation_state;
+  AR_STATE_CUSTOM rotation_state;
   if (GetAutoRotationState(&rotation_state) &&
-      ((rotation_state & AR_NOT_SUPPORTED) || (rotation_state & AR_LAPTOP) ||
-       (rotation_state & AR_NOSENSOR))) {
+      ((rotation_state & AR_NOT_SUPPORTED_CUSTOM) || (rotation_state & AR_LAPTOP_CUSTOM) ||
+       (rotation_state & AR_NOSENSOR_CUSTOM))) {
     return false;
   }
 
