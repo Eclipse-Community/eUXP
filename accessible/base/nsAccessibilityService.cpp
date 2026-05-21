@@ -44,9 +44,7 @@
 #ifdef XP_WIN
 #include "mozilla/a11y/Compatibility.h"
 #include "mozilla/dom/ContentChild.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "HTMLWin32ObjectAccessible.h"
-#endif
 #include "mozilla/StaticPtr.h"
 #endif
 
@@ -57,9 +55,7 @@
 #include "nsImageFrame.h"
 #include "nsIObserverService.h"
 #include "nsLayoutUtils.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginFrame.h"
-#endif
 #include "SVGGeometryFrame.h"
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
@@ -72,6 +68,7 @@
 #include "mozilla/Services.h"
 #include "nsDeckFrame.h"
 
+#ifdef MOZ_XUL
 #include "XULAlertAccessible.h"
 #include "XULColorPickerAccessible.h"
 #include "XULComboboxAccessible.h"
@@ -82,8 +79,9 @@
 #include "XULSliderAccessible.h"
 #include "XULTabAccessible.h"
 #include "XULTreeGridAccessibleWrap.h"
+#endif
 
-#if (defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
 #include "nsNPAPIPluginInstance.h"
 #endif
 
@@ -435,7 +433,6 @@ private:
 NS_IMPL_ISUPPORTS(PluginTimerCallBack, nsITimerCallback)
 #endif
 
-#ifdef MOZ_ENABLE_NPAPI
 already_AddRefed<Accessible>
 nsAccessibilityService::CreatePluginAccessible(nsPluginFrame* aFrame,
                                                nsIContent* aContent,
@@ -498,7 +495,6 @@ nsAccessibilityService::CreatePluginAccessible(nsPluginFrame* aFrame,
 
   return nullptr;
 }
-#endif // MOZ_ENABLE_NPAPI
 
 void
 nsAccessibilityService::DeckPanelSwitched(nsIPresShell* aPresShell,
@@ -1360,6 +1356,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   }
 
   RefPtr<Accessible> accessible;
+#ifdef MOZ_XUL
   // XUL controls
   if (role.EqualsLiteral("xul:alert")) {
     accessible = new XULAlertAccessible(aContent, aDoc);
@@ -1518,6 +1515,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new XULToolbarButtonAccessible(aContent, aDoc);
 
   }
+#endif // MOZ_XUL
 
   return accessible.forget();
 }
@@ -1644,13 +1642,11 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
     case eOuterDocType:
       newAcc = new OuterDocAccessible(aContent, document);
       break;
-#ifdef MOZ_ENABLE_NPAPI
     case ePluginType: {
       nsPluginFrame* pluginFrame = do_QueryFrame(aFrame);
       newAcc = CreatePluginAccessible(pluginFrame, aContent, aContext);
       break;
     }
-#endif
     case eTextLeafType:
       newAcc = new TextLeafAccessibleWrap(aContent, document);
       break;
@@ -1743,6 +1739,7 @@ nsAccessibilityService::HasAccessible(nsIDOMNode* aDOMNode)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private (DON'T put methods here)
 
+#ifdef MOZ_XUL
 already_AddRefed<Accessible>
 nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
                                                    DocAccessible* aDoc)
@@ -1772,6 +1769,7 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
     new XULTreeGridAccessibleWrap(aContent, aDoc, treeFrame);
   return accessible.forget();
 }
+#endif
 
 nsAccessibilityService*
 GetOrCreateAccService(uint32_t aNewConsumer)

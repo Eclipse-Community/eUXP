@@ -44,6 +44,8 @@ ia2AccessibleTableCell::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleTableCell::get_table(IUnknown** aTable)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aTable)
     return E_INVALIDARG;
 
@@ -59,11 +61,15 @@ ia2AccessibleTableCell::get_table(IUnknown** aTable)
   *aTable = static_cast<IAccessible*>(wrap);
   (*aTable)->AddRef();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_columnExtent(long* aSpan)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aSpan)
     return E_INVALIDARG;
 
@@ -74,12 +80,16 @@ ia2AccessibleTableCell::get_columnExtent(long* aSpan)
   *aSpan = mTableCell->ColExtent();
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_columnHeaderCells(IUnknown*** aCellAccessibles,
                                               long* aNColumnHeaderCells)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aCellAccessibles || !aNColumnHeaderCells)
     return E_INVALIDARG;
 
@@ -106,11 +116,15 @@ ia2AccessibleTableCell::get_columnHeaderCells(IUnknown*** aCellAccessibles,
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_columnIndex(long* aColIdx)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aColIdx)
     return E_INVALIDARG;
 
@@ -120,11 +134,15 @@ ia2AccessibleTableCell::get_columnIndex(long* aColIdx)
 
   *aColIdx = mTableCell->ColIdx();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_rowExtent(long* aSpan)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aSpan)
     return E_INVALIDARG;
 
@@ -134,12 +152,16 @@ ia2AccessibleTableCell::get_rowExtent(long* aSpan)
 
   *aSpan = mTableCell->RowExtent();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_rowHeaderCells(IUnknown*** aCellAccessibles,
                                            long* aNRowHeaderCells)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aCellAccessibles || !aNRowHeaderCells)
     return E_INVALIDARG;
 
@@ -165,11 +187,15 @@ ia2AccessibleTableCell::get_rowHeaderCells(IUnknown*** aCellAccessibles,
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_rowIndex(long* aRowIdx)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aRowIdx)
     return E_INVALIDARG;
 
@@ -179,6 +205,8 @@ ia2AccessibleTableCell::get_rowIndex(long* aRowIdx)
 
   *aRowIdx = mTableCell->RowIdx();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -187,6 +215,8 @@ ia2AccessibleTableCell::get_rowColumnExtents(long* aRowIdx, long* aColIdx,
                                              long* aColExtents,
                                              boolean* aIsSelected)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aRowIdx || !aColIdx || !aRowExtents || !aColExtents || !aIsSelected)
     return E_INVALIDARG;
 
@@ -202,11 +232,15 @@ ia2AccessibleTableCell::get_rowColumnExtents(long* aRowIdx, long* aColIdx,
   *aIsSelected = mTableCell->Selected();
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleTableCell::get_isSelected(boolean* aIsSelected)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aIsSelected)
     return E_INVALIDARG;
 
@@ -216,4 +250,6 @@ ia2AccessibleTableCell::get_isSelected(boolean* aIsSelected)
 
   *aIsSelected = mTableCell->Selected();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }

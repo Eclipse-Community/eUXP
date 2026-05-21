@@ -15,7 +15,7 @@ EXPORTS.mozilla.a11y += [
     'MsaaIdGenerator.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AccessibleWrap.cpp',
     'ApplicationAccessibleWrap.cpp',
     'ARIAGridAccessibleWrap.cpp',
@@ -31,19 +31,20 @@ SOURCES += [
     'nsWinUtils.cpp',
     'Platform.cpp',
     'RootAccessibleWrap.cpp',
-    'ServiceProvider.cpp',
     'TextLeafAccessibleWrap.cpp',
-    'XULListboxAccessibleWrap.cpp',
-    'XULMenuAccessibleWrap.cpp',
-    'XULTreeGridAccessibleWrap.cpp',
 ]
 
-if CONFIG['MOZ_ENABLE_NPAPI']:
-    SOURCES += [
-        'HTMLWin32ObjectAccessible.cpp',
+# This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
+SOURCES += [
+    'ServiceProvider.cpp',
+]
+
+if CONFIG['MOZ_XUL']:
+    UNIFIED_SOURCES += [
+        'XULListboxAccessibleWrap.cpp',
+        'XULMenuAccessibleWrap.cpp',
+        'XULTreeGridAccessibleWrap.cpp',
     ]
-
-
 
 LOCAL_INCLUDES += [
     '/accessible/base',

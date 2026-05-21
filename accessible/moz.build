@@ -21,9 +21,11 @@ DIRS += [ 'aom',
           'interfaces',
           'ipc',
           'jsat',
-          'xpcom',
-          'xul'
+          'xpcom'
 ]
+
+if CONFIG['MOZ_XUL']:
+    DIRS += ['xul']
 
 TEST_DIRS += ['tests/mochitest']
 

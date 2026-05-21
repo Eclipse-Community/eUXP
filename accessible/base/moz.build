@@ -24,7 +24,7 @@ if CONFIG['MOZ_DEBUG']:
         'Logging.h',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AccessibleOrProxy.cpp',
     'AccEvent.cpp',
     'AccGroupInfo.cpp',

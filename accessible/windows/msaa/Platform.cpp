@@ -5,9 +5,6 @@
 
 #include "Platform.h"
 
-#include "Accessible.h"
-#include "Accessible-inl.h"
-
 #include "AccEvent.h"
 #include "Compatibility.h"
 #include "HyperTextAccessibleWrap.h"
@@ -35,6 +32,19 @@ a11y::PlatformInit()
 
   nsWinUtils::MaybeStartWindowEmulation();
   ia2AccessibleText::InitTextChangeData();
+  if (BrowserTabsRemoteAutostart()) {
+    mscom::InterceptorLog::Init();
+    UniquePtr<RegisteredProxy> regProxy(
+        mscom::RegisterProxy(L"ia2marshal.dll"));
+    gRegProxy = regProxy.release();
+    UniquePtr<RegisteredProxy> regAccTlb(
+        mscom::RegisterTypelib(L"oleacc.dll",
+                               RegistrationFlags::eUseSystemDirectory));
+    gRegAccTlb = regAccTlb.release();
+    UniquePtr<RegisteredProxy> regMiscTlb(
+        mscom::RegisterTypelib(L"Accessible.tlb"));
+    gRegMiscTlb = regMiscTlb.release();
+  }
 }
 
 void

@@ -27,6 +27,8 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aInstancePtr)
     return E_FAIL;
   *aInstancePtr = nullptr;
@@ -50,6 +52,8 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
   }
 
   return E_NOINTERFACE;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -60,6 +64,8 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
                             unsigned int __RPC_FAR* aUniqueID,
                             unsigned short __RPC_FAR* aNodeType)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNodeName || !aNameSpaceID || !aNodeValue || !aNumChildren ||
       !aUniqueID || !aNodeType)
     return E_INVALIDARG;
@@ -107,6 +113,8 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   *aNumChildren = mNode->GetChildCount();
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -116,6 +124,8 @@ sdnAccessible::get_attributes(unsigned  short aMaxAttribs,
                               BSTR __RPC_FAR* aAttribValues,
                               unsigned short __RPC_FAR* aNumAttribs)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aAttribNames || !aNameSpaceIDs || !aAttribValues || !aNumAttribs)
     return E_INVALIDARG;
 
@@ -148,6 +158,8 @@ sdnAccessible::get_attributes(unsigned  short aMaxAttribs,
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -156,6 +168,8 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
                                       short __RPC_FAR* aNameSpaceID,
                                       BSTR __RPC_FAR* aAttribValues)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aAttribNames || !aNameSpaceID || !aAttribValues)
     return E_INVALIDARG;
 
@@ -192,6 +206,8 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -201,6 +217,8 @@ sdnAccessible::get_computedStyle(unsigned short aMaxStyleProperties,
                                  BSTR __RPC_FAR* aStyleValues,
                                  unsigned short __RPC_FAR* aNumStyleProperties)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStyleProperties || aStyleValues || !aNumStyleProperties)
     return E_INVALIDARG;
 
@@ -238,6 +256,8 @@ sdnAccessible::get_computedStyle(unsigned short aMaxStyleProperties,
   *aNumStyleProperties = static_cast<unsigned short>(realIndex);
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -246,6 +266,8 @@ sdnAccessible::get_computedStyleForProperties(unsigned short aNumStyleProperties
                                               BSTR __RPC_FAR* aStyleProperties,
                                               BSTR __RPC_FAR* aStyleValues)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStyleProperties || !aStyleValues)
     return E_INVALIDARG;
 
@@ -268,11 +290,15 @@ sdnAccessible::get_computedStyleForProperties(unsigned short aNumStyleProperties
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::scrollTo(boolean aScrollTopLeft)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   DocAccessible* document = GetDocument();
   if (!document) // that's IsDefunct check
     return CO_E_OBJNOTCONNECTED;
@@ -286,11 +312,15 @@ sdnAccessible::scrollTo(boolean aScrollTopLeft)
 
   nsCoreUtils::ScrollTo(document->PresShell(), mNode->AsContent(), scrollType);
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNode)
     return E_INVALIDARG;
   *aNode = nullptr;
@@ -305,11 +335,15 @@ sdnAccessible::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNode)
     return E_INVALIDARG;
   *aNode = nullptr;
@@ -324,11 +358,15 @@ sdnAccessible::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNode)
     return E_INVALIDARG;
   *aNode = nullptr;
@@ -343,11 +381,15 @@ sdnAccessible::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNode)
     return E_INVALIDARG;
   *aNode = nullptr;
@@ -362,11 +404,15 @@ sdnAccessible::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNode)
     return E_INVALIDARG;
   *aNode = nullptr;
@@ -381,12 +427,16 @@ sdnAccessible::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
   }
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_childAt(unsigned aChildIndex,
                            ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNode)
     return E_INVALIDARG;
   *aNode = nullptr;
@@ -402,11 +452,15 @@ sdnAccessible::get_childAt(unsigned aChildIndex,
 
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_innerHTML(BSTR __RPC_FAR* aInnerHTML)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aInnerHTML)
     return E_INVALIDARG;
   *aInnerHTML = nullptr;
@@ -427,11 +481,15 @@ sdnAccessible::get_innerHTML(BSTR __RPC_FAR* aInnerHTML)
     return E_OUTOFMEMORY;
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_localInterface(void __RPC_FAR *__RPC_FAR* aLocalInterface)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aLocalInterface)
     return E_INVALIDARG;
   *aLocalInterface = nullptr;
@@ -443,11 +501,15 @@ sdnAccessible::get_localInterface(void __RPC_FAR *__RPC_FAR* aLocalInterface)
   AddRef();
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnAccessible::get_language(BSTR __RPC_FAR* aLanguage)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aLanguage)
     return E_INVALIDARG;
   *aLanguage = nullptr;
@@ -471,4 +533,6 @@ sdnAccessible::get_language(BSTR __RPC_FAR* aLanguage)
    return E_OUTOFMEMORY;
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }

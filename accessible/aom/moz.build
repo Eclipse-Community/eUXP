@@ -7,7 +7,7 @@ EXPORTS.mozilla.dom += [
     'AccessibleNode.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AccessibleNode.cpp',
 ]
 

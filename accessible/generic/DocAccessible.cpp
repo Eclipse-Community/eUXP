@@ -48,7 +48,9 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -208,9 +210,11 @@ DocAccessible::NativeRole()
         return roles::CHROME_WINDOW;
 
       if (itemType == nsIDocShellTreeItem::typeContent) {
+#ifdef MOZ_XUL
         nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
         if (xulDoc)
           return roles::APPLICATION;
+#endif
         return roles::DOCUMENT;
       }
     }
@@ -383,11 +387,13 @@ DocAccessible::URL(nsAString& aURL) const
 void
 DocAccessible::DocType(nsAString& aType) const
 {
+#ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
   if (xulDoc) {
     aType.AssignLiteral("window"); // doctype not implemented for XUL at time of writing - causes assertion
     return;
   }
+#endif
   dom::DocumentType* docType = mDocumentNode->GetDoctype();
   if (docType)
     docType->GetPublicId(aType);

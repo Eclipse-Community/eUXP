@@ -295,7 +295,6 @@ enum CheckboxValue {
 
 @implementation mozPaneAccessible
 
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
 - (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
@@ -314,7 +313,6 @@ enum CheckboxValue {
 
   return [super accessibilityArrayAttributeCount:attribute];
 }
-#endif
 
 - (NSArray*)children
 {

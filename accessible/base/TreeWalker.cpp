@@ -6,7 +6,6 @@
 #include "TreeWalker.h"
 
 #include "Accessible.h"
-#include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"

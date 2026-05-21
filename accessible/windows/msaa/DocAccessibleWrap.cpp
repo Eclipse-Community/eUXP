@@ -62,6 +62,8 @@ DocAccessibleWrap::get_accParent(
 STDMETHODIMP
 DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aValue)
     return E_INVALIDARG;
   *aValue = nullptr;
@@ -85,6 +87,8 @@ DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue)
 
   *aValue = ::SysAllocStringLen(url.get(), url.Length());
   return *aValue ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 ////////////////////////////////////////////////////////////////////////////////
