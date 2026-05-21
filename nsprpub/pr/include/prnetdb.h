@@ -49,13 +49,8 @@ typedef struct PRHostEnt {
 /* A safe size to use that will mostly work... */
 #if (defined(AIX) && defined(_THREAD_SAFE))
 #define PR_NETDB_BUF_SIZE sizeof(struct protoent_data)
-#define PR_MIN_NETDB_BUF_SIZE PR_NETDB_BUF_SIZE
 #else
-/* PR_NETDB_BUF_SIZE is the recommended buffer size */
-#define PR_NETDB_BUF_SIZE 2048
-/* PR_MIN_NETDB_BUF_SIZE is the smallest buffer size that the API
- * accepts (for backward compatibility). */
-#define PR_MIN_NETDB_BUF_SIZE 1024
+#define PR_NETDB_BUF_SIZE 1024
 #endif
 
 /***********************************************************************
@@ -427,9 +422,6 @@ NSPR_API(void) PR_FreeAddrInfo(PRAddrInfo *addrInfo);
 ***********************************************************************/
 NSPR_API(void *) PR_EnumerateAddrInfo(
     void *enumPtr, const PRAddrInfo *addrInfo, PRUint16 port, PRNetAddr *result);
-
-NSPR_API(PRStatus) PR_GetPrefLoopbackAddrInfo(PRNetAddr *result,
-                                              PRUint16 port);
 
 /***********************************************************************
 ** FUNCTION:
