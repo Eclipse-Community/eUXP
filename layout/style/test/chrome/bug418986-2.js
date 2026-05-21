@@ -53,6 +53,8 @@ var suppressed_toggles = [
 
 // Possible values for '-moz-os-version'
 var windows_versions = [
+  "windows-xp",
+  "windows-vista",
   "windows-win7",
   "windows-win8",
   "windows-win10",
