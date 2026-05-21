@@ -301,7 +301,7 @@ class Traceback(list):
             by default this removes all the TracebackEntries which are hidden
             (see ishidden() above)
         """
-        return Traceback(list(filter(fn, self)))
+        return Traceback(filter(fn, self))
 
     def getcrashentry(self):
         """ return last non-hidden traceback entry that lead
@@ -425,7 +425,7 @@ class ExceptionInfo(object):
     def __unicode__(self):
         entry = self.traceback[-1]
         loc = ReprFileLocation(entry.path, entry.lineno + 1, self.exconly())
-        return str(loc)
+        return unicode(loc)
 
 
 class FormattedExcinfo(object):
