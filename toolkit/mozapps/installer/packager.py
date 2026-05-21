@@ -29,9 +29,24 @@ import mozpack.path as mozpath
 import buildconfig
 from argparse import ArgumentParser
 import os
-from io import StringIO
+from StringIO import StringIO
 import subprocess
 import platform
+import mozinfo
+
+# List of libraries to shlibsign.
+SIGN_LIBS = [
+    'softokn3',
+    'nssdbm3',
+    'freebl3',
+    'freeblpriv3',
+    'freebl_32fpu_3',
+    'freebl_32int_3',
+    'freebl_32int64_3',
+    'freebl_64fpu_3',
+    'freebl_64int_3',
+]
+
 
 class ToolLauncher(object):
     '''
@@ -80,11 +95,11 @@ class ToolLauncher(object):
 
         # Work around a bug in Python 2.7.2 and lower where unicode types in
         # environment variables aren't handled by subprocess.
-        for k, v in list(env.items()):
-            if isinstance(v, str):
+        for k, v in env.items():
+            if isinstance(v, unicode):
                 env[k] = v.encode('utf-8')
 
-        print('Executing', ' '.join(cmd), file=errors.out)
+        print >>errors.out, 'Executing', ' '.join(cmd)
         errors.out.flush()
         return subprocess.call(cmd, env=env)
 
@@ -92,6 +107,23 @@ class ToolLauncher(object):
         return self.tooldir is not None
 
 launcher = ToolLauncher()
+
+
+class LibSignFile(File):
+    '''
+    File class for shlibsign signatures.
+    '''
+    def copy(self, dest, skip_if_older=True):
+        assert isinstance(dest, basestring)
+        # os.path.getmtime returns a result in seconds with precision up to the
+        # microsecond. But microsecond is too precise because shutil.copystat
+        # only copies milliseconds, and seconds is not enough precision.
+        if os.path.exists(dest) and skip_if_older and \
+                int(os.path.getmtime(self.path) * 1000) <= \
+                int(os.path.getmtime(dest) * 1000):
+            return False
+        if launcher.launch(['shlibsign', '-v', '-o', dest, '-i', self.path]):
+            errors.fatal('Error while signing %s' % self.path)
 
 
 def precompile_cache(registry, source_path, gre_path, app_path):
@@ -138,10 +170,6 @@ def precompile_cache(registry, source_path, gre_path, app_path):
         jar = JarReader(cache)
         resource = '/resource/%s/' % resource
         for f in jar:
-            if isinstance(resource, bytes):
-                resource = resource.decode('utf-8')
-            if isinstance(f.filename, bytes):
-                f.filename = f.filename.decode('utf-8')
             if resource in f.filename:
                 path = f.filename[f.filename.index(resource) + len(resource):]
                 if registry.contains(path):
@@ -344,6 +372,18 @@ def main():
             removals = RemovedFiles(copier)
             preprocess(removals_in, removals, defines)
             copier.add(mozpath.join(respath, 'removed-files'), removals)
+
+    # shlibsign libraries
+    if launcher.can_launch():
+        if not mozinfo.isMac and buildconfig.substs.get('COMPILE_ENVIRONMENT'):
+            for lib in SIGN_LIBS:
+                libbase = mozpath.join(respath, '%s%s') \
+                    % (buildconfig.substs['DLL_PREFIX'], lib)
+                libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
+                if copier.contains(libname):
+                    copier.add(libbase + '.chk',
+                               LibSignFile(os.path.join(args.destination,
+                                                        libname)))
 
     # Setup preloading
     if args.jarlog and os.path.exists(args.jarlog):

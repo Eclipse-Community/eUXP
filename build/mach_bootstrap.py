@@ -12,7 +12,7 @@ import random
 import subprocess
 import sys
 import uuid
-import builtins
+import __builtin__
 
 from types import ModuleType
 
@@ -35,6 +35,7 @@ Press ENTER/RETURN to continue or CTRL+c to abort.
 # TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
 SEARCH_PATHS = [
     'python/mach',
+    'python/mozboot',
     'python/mozbuild',
     'python/mozlint',
     'python/mozversioncontrol',
@@ -64,6 +65,11 @@ SEARCH_PATHS = [
     'other-licenses/ply',
     'taskcluster',
     'testing',
+    'testing/firefox-ui/harness',
+    'testing/marionette/client',
+    'testing/marionette/harness',
+    'testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py',
+    'testing/marionette/puppeteer/firefox',
     'testing/mozbase/mozcrash',
     'testing/mozbase/mozdebug',
     'testing/mozbase/mozdevice',
@@ -99,12 +105,16 @@ MACH_MODULES = [
     'python/mach/mach/commands/commandinfo.py',
     'python/mach/mach/commands/settings.py',
     'python/compare-locales/mach_commands.py',
+    'python/mozboot/mozboot/mach_commands.py',
     'python/mozbuild/mozbuild/mach_commands.py',
+    'python/mozbuild/mozbuild/backend/mach_commands.py',
     'python/mozbuild/mozbuild/compilation/codecomplete.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
     'services/common/tests/mach_commands.py',
     'taskcluster/mach_commands.py',
+    'testing/firefox-ui/mach_commands.py',
     'testing/mach_commands.py',
+    'testing/marionette/mach_commands.py',
     'testing/mochitest/mach_commands.py',
     'testing/mozharness/mach_commands.py',
     'testing/talos/mach_commands.py',
@@ -170,16 +180,11 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     if mozilla_dir is None:
         mozilla_dir = topsrcdir
 
-    # Ensure we are not running Python 2.
-    # We put this check here so we generate a user-friendly error message
-    # rather than a cryptic stack trace on module import.
-    if sys.version_info[0] < 3 or sys.version_info[1] < 3:
-        print('Python 3.3 or above is required to run mach.')
-        print('You are running Python', platform.python_version())
-        sys.exit(1)
-    # This sanity check is overkill, but why not?
-    if sys.version_info[0] > 3:
-        print('Python 4.x or higher not supported. Use Python 3 instead.')
+    # Ensure we are running Python 2.7+. We put this check here so we generate a
+    # user-friendly error message rather than a cryptic stack trace on module
+    # import.
+    if sys.version_info[0] != 2 or sys.version_info[1] < 7:
+        print('Python 2.7 or above (but not Python 3) is required to run mach.')
         print('You are running Python', platform.python_version())
         sys.exit(1)
 
@@ -193,20 +198,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # like surprises.
     sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
     import mach.main
-
-    def get_state_dir():
-        """Obtain path to a directory to hold state.
-
-        Returns a tuple of the path and a bool indicating whether the
-        value came from an environment variable.
-        """
-        state_user_dir = os.path.expanduser('~/.mozbuild')
-        state_env_dir = os.environ.get('MOZBUILD_STATE_PATH')
-
-        if state_env_dir:
-            return state_env_dir, True
-        else:
-            return state_user_dir, False
+    from mozboot.util import get_state_dir
 
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
@@ -340,7 +332,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # always load local repository configuration
     mach.settings_paths.append(mozilla_dir)
 
-    for category, meta in list(CATEGORIES.items()):
+    for category, meta in CATEGORIES.items():
         mach.define_category(category, meta['short'], meta['long'],
             meta['priority'])
 
@@ -365,7 +357,7 @@ class ImportHook(object):
         self._modules = set()
 
     def __call__(self, name, globals=None, locals=None, fromlist=None,
-                 level=0):
+                 level=-1):
         # name might be a relative import. Instead of figuring out what that
         # resolves to, which is complex, just rely on the real import.
         # Since we don't know the full module name, we can't check sys.modules,
@@ -414,4 +406,4 @@ class ImportHook(object):
 
 
 # Install our hook
-builtins.__import__ = ImportHook(builtins.__import__)
+__builtin__.__import__ = ImportHook(__builtin__.__import__)

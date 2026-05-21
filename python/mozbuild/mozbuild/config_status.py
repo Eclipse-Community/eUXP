@@ -13,7 +13,6 @@ import os
 import subprocess
 import sys
 import time
-import random
 
 from argparse import ArgumentParser
 
@@ -30,7 +29,37 @@ from mozbuild.backend import (
     get_backend_class,
 )
 
+
 log_manager = LoggingManager()
+
+
+ANDROID_IDE_ADVERTISEMENT = '''
+=============
+ADVERTISEMENT
+
+You are building Firefox for Android. After your build completes, you can open
+the top source directory in IntelliJ or Android Studio directly and build using
+Gradle.  See the documentation at
+
+https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build
+
+PLEASE BE AWARE THAT GRADLE AND INTELLIJ/ANDROID STUDIO SUPPORT IS EXPERIMENTAL.
+You should verify any changes using |mach build|.
+=============
+'''.strip()
+
+VISUAL_STUDIO_ADVERTISEMENT = '''
+===============================
+Visual Studio Support Available
+
+You are building Firefox on Windows. You can generate Visual Studio
+files by running:
+
+   mach build-backend --backend=VisualStudio
+
+===============================
+'''.strip()
+
 
 def config_status(topobjdir='.', topsrcdir='.', defines=None,
                   non_global_defines=None, substs=None, source=None,
@@ -93,7 +122,7 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
     if 'WRITE_MOZINFO' in os.environ:
         write_mozinfo(os.path.join(topobjdir, 'mozinfo.json'), env, os.environ)
 
-    cpu_start = time.process_time()
+    cpu_start = time.clock()
     time_start = time.time()
 
     # Make appropriate backend instances, defaulting to RecursiveMakeBackend,
@@ -113,49 +142,13 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
     log_manager.add_terminal_logging(level=log_level)
     log_manager.enable_unstructured()
 
-    STATUS_MESSAGES = [
-        'Walking the dog',
-        'Feeding the hatchlings',
-        'Inserting floppy disk',
-        'Initializing Stacker volume',
-        'Spinning yarn',
-        'Adjusting flux capacitor',
-        'Granting wishes',
-        'Auditing the taxes',
-        'Twiddling thumbs',
-        'Consulting the manual',
-        'Brewing coffee',
-        'Inserting coin',
-        'Deriving optimal formula',
-        'Deleting junk mail',
-        'Warming caches',
-        'Popping bubble wrap',
-        'Pausing for fika',
-        'Oiling the hamster wheel',
-        'Ordering a pizza',
-        'Unclogging the Internet tubes',
-        'Testing your patience',
-        'Watching cat videos',
-        'Rescuing dragon from princess',
-        'Judging things by the spoon',
-        'Nailing down the files',
-        'Whistling in the dark',
-    ]
-
-    print('{0}...'.format(random.choice(STATUS_MESSAGES)), file=sys.stderr)
+    print('Feeding the hatchlings...', file=sys.stderr)
     sys.stderr.flush()
-
     if len(selected_backends) > 1:
         definitions = list(definitions)
 
     for the_backend in selected_backends:
         the_backend.consume(definitions)
-
-    for b in selected_backends:
-        marker_name = 'backend.%s' % b.__class__.__name__
-        marker_path = os.path.join(topobjdir, marker_name)
-        with open(marker_path, 'wb') as fh:
-            fh.write(b'')
 
     execution_time = 0.0
     for obj in chain((reader, emitter), selected_backends):
@@ -163,7 +156,7 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
         print(summary, file=sys.stderr)
         execution_time += summary.execution_time
 
-    cpu_time = time.process_time() - cpu_start
+    cpu_time = time.clock() - cpu_start
     wall_time = time.time() - time_start
     efficiency = cpu_time / wall_time if wall_time else 100
     untracked = wall_time - execution_time
@@ -180,3 +173,11 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
             for path, diff in sorted(the_backend.file_diffs.items()):
                 print('\n'.join(diff))
 
+    # Advertise Visual Studio if appropriate.
+    if os.name == 'nt' and 'VisualStudio' not in options.backend:
+        print(VISUAL_STUDIO_ADVERTISEMENT)
+
+    # Advertise Eclipse if it is appropriate.
+    if MachCommandConditions.is_android(env):
+        if 'AndroidEclipse' not in options.backend:
+            print(ANDROID_IDE_ADVERTISEMENT)

@@ -136,7 +136,7 @@ class BuildProgressFooter(object):
         # terminal is a blessings.Terminal.
         self._t = terminal
         self._fh = sys.stdout
-        self.tiers = monitor.tiers.tier_status.items()
+        self.tiers = monitor.tiers.tier_status.viewitems()
 
     def clear(self):
         """Removes the footer from the current terminal."""
@@ -412,7 +412,7 @@ class Build(MachCommandBase):
                     status = self._run_make(directory=make_dir, target=make_target,
                         line_handler=output.on_line, log=False, print_directory=False,
                         ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                        append_env={'NO_BUILDSTATUS_MESSAGES': '1'})
+                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'})
 
                     if status != 0:
                         break
@@ -509,7 +509,7 @@ class Build(MachCommandBase):
             # to avoid accidentally disclosing PII.
             telemetry_data['substs'] = {}
             try:
-                for key in ['MOZ_USING_CCACHE']:
+                for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE']:
                     value = self.substs.get(key, False)
                     telemetry_data['substs'][key] = value
             except BuildEnvironmentNotFoundException:
@@ -532,7 +532,10 @@ class Build(MachCommandBase):
         # need to be burdened with this.
         if not what:
             try:
-                print('To take your build for a test drive, run: |mach run|')
+                # Fennec doesn't have useful output from just building. We should
+                # arguably make the build action useful for Fennec. Another day...
+                if self.substs['MOZ_BUILD_APP'] != 'mobile/android':
+                    print('To take your build for a test drive, run: |mach run|')
             except Exception:
                 # Ignore Exceptions in case we can't find config.status (such
                 # as when doing OSX Universal builds)
@@ -548,14 +551,9 @@ class Build(MachCommandBase):
             ppcheck_script = mozpath.join(self.topsrcdir, "platform", "build", "ppCheck.py")
         else:
             ppcheck_script = None
-
-        try:
-            py_exe = which.which("python3")
-        except which.WhichError:
-            py_exe = which.which("python")
         
         if ppcheck_script:
-            ppcheck_cmd = [py_exe, ppcheck_script, ppcheck_path]
+            ppcheck_cmd = [which.which("python2.7"), ppcheck_script, ppcheck_path]
             ppcheck_result = subprocess.call(ppcheck_cmd, cwd=self.topsrcdir)
         
         if not ppcheck_script or ppcheck_result: 
@@ -575,12 +573,12 @@ class Build(MachCommandBase):
         line_handler = line_handler or on_line
 
         options = ' '.join(shell_quote(o) for o in options or ())
-        append_env = {'CONFIGURE_ARGS': options}
+        append_env = {b'CONFIGURE_ARGS': options.encode('utf-8')}
 
         # Only print build status messages when we have an active
         # monitor.
         if not buildstatus_messages:
-            append_env['NO_BUILDSTATUS_MESSAGES'] =  '1'
+            append_env[b'NO_BUILDSTATUS_MESSAGES'] =  b'1'
         status = self._run_make(srcdir=True, filename='client.mk',
             target='configure', line_handler=line_handler, log=False,
             print_directory=False, allow_parallel=False, ensure_exit_code=False,
@@ -840,7 +838,7 @@ class Warnings(MachCommandBase):
             dirpath = None
 
         type_counts = database.type_counts(dirpath)
-        sorted_counts = sorted(iter(type_counts.items()),
+        sorted_counts = sorted(type_counts.iteritems(),
             key=operator.itemgetter(1))
 
         total = 0
@@ -997,7 +995,7 @@ class GTestCommands(MachCommandBase):
             processes[i].run()
 
         exit_code = 0
-        for process in list(processes.values()):
+        for process in processes.values():
             status = process.wait()
             if status:
                 exit_code = status
@@ -1114,14 +1112,8 @@ class L10n_Package(MachCommandBase):
 
     @Command('langpack', category='post-build',
         description='Build and package l10n as a language pack.')
-    @CommandArgument('-v', '--verbose', action='store_true',
-        help='Verbose output for what commands the packaging process is running.')
-    def l10n_package(self, verbose=False):
-        ret = self._run_make(directory=".", target='l10n-package',
-                             silent=not verbose, ensure_exit_code=False)
-        if ret == 0:
-            self.notify('Packaging complete')
-        return ret
+    def l10n_package(self):
+        return self._run_make(directory=".", target='l10n-package', ensure_exit_code=False)
 
 @CommandProvider
 class Package(MachCommandBase):
@@ -1183,8 +1175,11 @@ class Install(MachCommandBase):
     @Command('install', category='post-build',
         description='Install the package on the machine, or on a device.')
     @CommandArgument('--verbose', '-v', action='store_true',
-        help='Print verbose output.')
+        help='Print verbose output when installing to an Android emulator.')
     def install(self, verbose=False):
+        if conditions.is_android(self):
+            from mozrunner.devices.android_device import verify_android_device
+            verify_android_device(self, verbose=verbose)
         ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
         if ret == 0:
             self.notify('Install complete')
@@ -1238,33 +1233,47 @@ class RunProgram(MachCommandBase):
     def run(self, params, remote, background, noprofile, disable_e10s, debug,
         debugger, debugparams, slowscript, dmd, mode, stacks, show_dump_stats):
 
-        try:
-            binpath = self.get_binary_path('app')
-        except Exception as e:
-            print("It looks like your program isn't built.",
-                "You can run |mach build| to build it.")
-            print(e)
-            return 1
+        if conditions.is_android(self):
+            # Running Firefox for Android is completely different
+            if dmd:
+                print("DMD is not supported for Firefox for Android")
+                return 1
+            from mozrunner.devices.android_device import verify_android_device, run_firefox_for_android
+            if not (debug or debugger or debugparams):
+                verify_android_device(self, install=True)
+                return run_firefox_for_android(self, params)
+            verify_android_device(self, install=True, debugger=True)
+            args = ['']
 
-        args = [binpath]
+        else:
 
-        if params:
-            args.extend(params)
+            try:
+                binpath = self.get_binary_path('app')
+            except Exception as e:
+                print("It looks like your program isn't built.",
+                    "You can run |mach build| to build it.")
+                print(e)
+                return 1
 
-        if not remote:
-            args.append('-no-remote')
+            args = [binpath]
 
-        if not background and sys.platform == 'darwin':
-            args.append('-foreground')
+            if params:
+                args.extend(params)
 
-        no_profile_option_given = \
-            all(p not in params for p in ['-profile', '--profile', '-P'])
-        if no_profile_option_given and not noprofile:
-            path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
-            if not os.path.isdir(path):
-                os.makedirs(path)
-            args.append('-profile')
-            args.append(path)
+            if not remote:
+                args.append('-no-remote')
+
+            if not background and sys.platform == 'darwin':
+                args.append('-foreground')
+
+            no_profile_option_given = \
+                all(p not in params for p in ['-profile', '--profile', '-P'])
+            if no_profile_option_given and not noprofile:
+                path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
+                if not os.path.isdir(path):
+                    os.makedirs(path)
+                args.append('-profile')
+                args.append(path)
 
         extra_env = {'MOZ_CRASHREPORTER_DISABLE': '1'}
         if disable_e10s:
@@ -1515,6 +1524,156 @@ class MachDebug(MachCommandBase):
                     return list(obj)
                 return json.JSONEncoder.default(self, obj)
         json.dump(self, cls=EnvironmentEncoder, sort_keys=True, fp=out)
+
+class ArtifactSubCommand(SubCommand):
+    def __call__(self, func):
+        after = SubCommand.__call__(self, func)
+        jobchoices = {
+            'android-api-15',
+            'android-x86',
+            'linux',
+            'linux64',
+            'macosx64',
+            'win32',
+            'win64'
+        }
+        args = [
+            CommandArgument('--tree', metavar='TREE', type=str,
+                help='Firefox tree.'),
+            CommandArgument('--job', metavar='JOB', choices=jobchoices,
+                help='Build job.'),
+            CommandArgument('--verbose', '-v', action='store_true',
+                help='Print verbose output.'),
+        ]
+        for arg in args:
+            after = arg(after)
+        return after
+
+
+@CommandProvider
+class PackageFrontend(MachCommandBase):
+    """Fetch and install binary artifacts from Mozilla automation."""
+
+    @Command('artifact', category='post-build',
+        description='Use pre-built artifacts to build Firefox.')
+    def artifact(self):
+        '''Download, cache, and install pre-built binary artifacts to build Firefox.
+
+        Use |mach build| as normal to freshen your installed binary libraries:
+        artifact builds automatically download, cache, and install binary
+        artifacts from Mozilla automation, replacing whatever may be in your
+        object directory.  Use |mach artifact last| to see what binary artifacts
+        were last used.
+
+        Never build libxul again!
+
+        '''
+        pass
+
+    def _set_log_level(self, verbose):
+        self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
+
+    def _install_pip_package(self, package):
+        if os.environ.get('MOZ_AUTOMATION'):
+            self.virtualenv_manager._run_pip([
+                'install',
+                package,
+                '--no-index',
+                '--find-links',
+                'http://pypi.pub.build.mozilla.org/pub',
+                '--trusted-host',
+                'pypi.pub.build.mozilla.org',
+            ])
+            return
+        self.virtualenv_manager.install_pip_package(package)
+
+    def _make_artifacts(self, tree=None, job=None, skip_cache=False):
+        # Undo PATH munging that will be done by activating the virtualenv,
+        # so that invoked subprocesses expecting to find system python
+        # (git cinnabar, in particular), will not find virtualenv python.
+        original_path = os.environ.get('PATH', '')
+        self._activate_virtualenv()
+        os.environ['PATH'] = original_path
+
+        for package in ('taskcluster==0.0.32',
+                        'mozregression==1.0.2'):
+            self._install_pip_package(package)
+
+        state_dir = self._mach_context.state_dir
+        cache_dir = os.path.join(state_dir, 'package-frontend')
+
+        try:
+            os.makedirs(cache_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        import which
+
+        here = os.path.abspath(os.path.dirname(__file__))
+        build_obj = MozbuildObject.from_environment(cwd=here)
+
+        hg = None
+        if conditions.is_hg(build_obj):
+            if self._is_windows():
+                hg = which.which('hg.exe')
+            else:
+                hg = which.which('hg')
+
+        git = None
+        if conditions.is_git(build_obj):
+            if self._is_windows():
+                git = which.which('git.exe')
+            else:
+                git = which.which('git')
+
+        # Absolutely must come after the virtualenv is populated!
+        from mozbuild.artifacts import Artifacts
+        artifacts = Artifacts(tree, self.substs, self.defines, job,
+                              log=self.log, cache_dir=cache_dir,
+                              skip_cache=skip_cache, hg=hg, git=git,
+                              topsrcdir=self.topsrcdir)
+        return artifacts
+
+    @ArtifactSubCommand('artifact', 'install',
+        'Install a good pre-built artifact.')
+    @CommandArgument('source', metavar='SRC', nargs='?', type=str,
+        help='Where to fetch and install artifacts from.  Can be omitted, in '
+            'which case the current hg repository is inspected; an hg revision; '
+            'a remote URL; or a local file.',
+        default=None)
+    @CommandArgument('--skip-cache', action='store_true',
+        help='Skip all local caches to force re-fetching remote artifacts.',
+        default=False)
+    def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
+        artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache)
+
+        return artifacts.install_from(source, self.distdir)
+
+    @ArtifactSubCommand('artifact', 'last',
+        'Print the last pre-built artifact installed.')
+    def artifact_print_last(self, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
+        artifacts = self._make_artifacts(tree=tree, job=job)
+        artifacts.print_last()
+        return 0
+
+    @ArtifactSubCommand('artifact', 'print-cache',
+        'Print local artifact cache for debugging.')
+    def artifact_print_cache(self, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
+        artifacts = self._make_artifacts(tree=tree, job=job)
+        artifacts.print_cache()
+        return 0
+
+    @ArtifactSubCommand('artifact', 'clear-cache',
+        'Delete local artifacts and reset local artifact cache.')
+    def artifact_clear_cache(self, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
+        artifacts = self._make_artifacts(tree=tree, job=job)
+        artifacts.clear_cache()
+        return 0
 
 @CommandProvider
 class Vendor(MachCommandBase):

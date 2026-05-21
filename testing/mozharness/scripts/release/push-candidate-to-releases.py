@@ -48,6 +48,7 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
                 r"^.*json$",
                 r"^.*/host.*$",
                 r"^.*/mar-tools/.*$",
+                r"^.*robocop.apk$",
                 r"^.*bouncer.apk$",
                 r"^.*contrib.*",
                 r"^.*/beetmover-checksums/.*$",
