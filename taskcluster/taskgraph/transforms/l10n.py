@@ -21,7 +21,10 @@ def mh_config_replace_project(config, jobs):
             # Nothing to do, not mozharness
             yield job
             continue
-        job['run']['config'] = [x.format(project=config.params['project']) for x in job['run']['config']]
+        job['run']['config'] = map(
+            lambda x: x.format(project=config.params['project']),
+            job['run']['config']
+            )
         yield job
 
 
@@ -34,5 +37,8 @@ def mh_options_replace_project(config, jobs):
             # Nothing to do, not mozharness
             yield job
             continue
-        job['run']['options'] = [x.format(project=config.params['project']) for x in job['run']['options']]
+        job['run']['options'] = map(
+            lambda x: x.format(project=config.params['project']),
+            job['run']['options']
+            )
         yield job

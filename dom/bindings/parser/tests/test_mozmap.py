@@ -33,7 +33,7 @@ def WebIDLTest(parser, harness):
         """)
 
         results = parser.finish()
-    except Exception as x:
+    except Exception,x:
         threw = True
 
     harness.ok(threw, "Should have thrown.")

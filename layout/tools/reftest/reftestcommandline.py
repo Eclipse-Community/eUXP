@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from collections import OrderedDict
-from urllib.parse import urlparse
+from urlparse import urlparse
 
 import mozlog
 
@@ -254,7 +254,7 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                 return
 
         for test_path in options.tests:
-            for manifest_file, suite in manifests.items():
+            for manifest_file, suite in manifests.iteritems():
                 if os.path.exists(os.path.join(test_path, manifest_file)):
                     options.suite = suite
                     return

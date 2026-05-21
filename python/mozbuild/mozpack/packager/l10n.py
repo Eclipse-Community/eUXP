@@ -163,7 +163,7 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
             if not path:
                 continue
         else:
-            base = mozpath.basedir(p, list(paths.keys()))
+            base = mozpath.basedir(p, paths.keys())
             if base:
                 subpath = mozpath.relpath(p, base)
                 path = mozpath.normpath(mozpath.join(paths[base],
@@ -207,7 +207,7 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
                     formatter.add(p, f)
 
     # Transplant jar preloading information.
-    for path, log in app_finder.jarlogs.items():
+    for path, log in app_finder.jarlogs.iteritems():
         assert isinstance(copier[path], Jarrer)
         copier[path].preload([l.replace(locale, l10n_locale) for l in log])
 
@@ -238,7 +238,7 @@ def repack(source, l10n, extra_l10n={}, non_resources=[], non_chrome=set()):
         finders = {
             '': l10n_finder,
         }
-        for base, path in extra_l10n.items():
+        for base, path in extra_l10n.iteritems():
             finders[base] = UnpackFinder(path)
         l10n_finder = ComposedFinder(finders)
     copier = FileCopier()

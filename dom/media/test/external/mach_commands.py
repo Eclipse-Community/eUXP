@@ -45,7 +45,7 @@ def run_external_media_test(tests, testtype=None, topsrcdir=None, **kwargs):
 
     args = Namespace(tests=tests)
 
-    for k, v in kwargs.items():
+    for k, v in kwargs.iteritems():
         setattr(args, k, v)
 
     parser.verify_usage(args)

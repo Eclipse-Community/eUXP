@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 
 import os
-from io import StringIO
+from cStringIO import StringIO
 
 from mach.base import CommandContext
 from mach.registrar import Registrar
@@ -44,11 +44,11 @@ cmd_bar = cmd_bar --baz
         parser = self.get_parser(config=config)
 
         args = parser.parse_args(['foo'])
-        self.assertEqual(args.command, 'cmd_foo')
+        self.assertEquals(args.command, 'cmd_foo')
 
         def assert_bar_baz(argv):
             args = parser.parse_args(argv)
-            self.assertEqual(args.command, 'cmd_bar')
+            self.assertEquals(args.command, 'cmd_bar')
             self.assertTrue(args.command_args.baz)
 
         # The following should all result in |cmd_bar --baz|
