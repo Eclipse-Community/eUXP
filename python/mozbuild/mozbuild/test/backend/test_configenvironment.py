@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os, posixpath
-from io import StringIO
+from StringIO import StringIO
 import unittest
 from mozunit import main, MockedOpen
 
@@ -29,7 +29,7 @@ class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
             self.substs = ReadOnlyDict(d)
 
             d = dict(self.substs_unicode)
-            d['top_srcdir'] = top_srcdir.decode('utf-8')
+            d[u'top_srcdir'] = top_srcdir.decode('utf-8')
             self.substs_unicode = ReadOnlyDict(d)
 
 

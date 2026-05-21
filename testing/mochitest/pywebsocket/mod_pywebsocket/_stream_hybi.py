@@ -501,7 +501,7 @@ class Stream(StreamBase):
             raise BadOperationException(
                 'Requested send_message after sending out a closing handshake')
 
-        if binary and isinstance(message, str):
+        if binary and isinstance(message, unicode):
             raise BadOperationException(
                 'Message for binary frame must be instance of str')
 
@@ -538,7 +538,7 @@ class Stream(StreamBase):
                 # at least one frame is sent.
                 if len(message) <= bytes_written:
                     break
-        except ValueError as e:
+        except ValueError, e:
             raise BadOperationException(e)
 
     def _get_message_from_frame(self, frame):
@@ -677,7 +677,7 @@ class Stream(StreamBase):
             if handler:
                 handler(self._request, message)
                 return
-        except AttributeError as e:
+        except AttributeError, e:
             pass
         self._send_pong(message)
 
@@ -704,7 +704,7 @@ class Stream(StreamBase):
                     break
                 else:
                     inflight_pings.append(expected_body)
-            except IndexError as e:
+            except IndexError, e:
                 # The received pong was unsolicited pong. Keep the
                 # ping queue as is.
                 self._ping_queue = inflight_pings
@@ -715,7 +715,7 @@ class Stream(StreamBase):
             handler = self._request.on_pong_handler
             if handler:
                 handler(self._request, message)
-        except AttributeError as e:
+        except AttributeError, e:
             pass
 
     def receive_message(self):
@@ -780,7 +780,7 @@ class Stream(StreamBase):
                 # CHARACTER.
                 try:
                     return message.decode('utf-8')
-                except UnicodeDecodeError as e:
+                except UnicodeDecodeError, e:
                     raise InvalidUTF8Exception(e)
             elif self._original_opcode == common.OPCODE_BINARY:
                 return message
@@ -837,7 +837,7 @@ class Stream(StreamBase):
                     'close reason must not be specified if code is None')
             reason = ''
         else:
-            if not isinstance(reason, str) and not isinstance(reason, str):
+            if not isinstance(reason, str) and not isinstance(reason, unicode):
                 raise BadOperationException(
                     'close reason must be an instance of str or unicode')
 

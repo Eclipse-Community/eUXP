@@ -4,7 +4,7 @@ import logging
 try:  # Python 3
     from urllib.parse import urljoin
 except ImportError:
-    from urllib.parse import urljoin
+    from urlparse import urljoin
 
 from ._collections import RecentlyUsedContainer
 from .connectionpool import HTTPConnectionPool, HTTPSConnectionPool

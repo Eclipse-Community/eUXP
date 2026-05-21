@@ -9,7 +9,7 @@ import os
 import posixpath
 import re
 import struct
-import io
+import StringIO
 import zlib
 
 from functools import wraps
@@ -27,8 +27,8 @@ class DMError(Exception):
 
 
 def abstractmethod(method):
-    line = method.__code__.co_firstlineno
-    filename = method.__code__.co_filename
+    line = method.func_code.co_firstlineno
+    filename = method.func_code.co_filename
 
     @wraps(method)
     def not_implemented(*args, **kwargs):
@@ -404,7 +404,7 @@ class DeviceManager(object):
         :param root: Specifies whether command requires root privileges
         :raises: DMError
         """
-        buf = io.StringIO()
+        buf = StringIO.StringIO()
         retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
         output = str(buf.getvalue()[0:-1]).rstrip()
         buf.close()
@@ -434,7 +434,7 @@ class DeviceManager(object):
         processInfo = None
 
         # filter out extra spaces
-        parts = [x for x in processName.split(' ') if x != '']
+        parts = filter(lambda x: x != '', processName.split(' '))
         processName = ' '.join(parts)
 
         # filter out the quoted env string if it exists

@@ -11,7 +11,7 @@ import textwrap
 import unittest
 import sys
 
-from io import StringIO
+from StringIO import StringIO
 
 from mozunit import main
 from mozpack import path as mozpath
@@ -20,9 +20,8 @@ from mozbuild.configure.util import (
     ConfigureOutputHandler,
     getpreferredencoding,
     LineIO,
+    Version,
 )
-
-from mozbuild.version import Version
 
 from mozbuild.configure import (
     ConfigureSandbox,
@@ -435,11 +434,11 @@ class TestLogSubprocessOutput(unittest.TestCase):
         except SystemExit as e:
             status = e.code
 
-        self.assertEqual(status, 0)
+        self.assertEquals(status, 0)
         quote_char = "'"
         if getpreferredencoding().lower() == 'utf-8':
             quote_char = '\u00B4'.encode('utf-8')
-        self.assertEqual(out.getvalue().strip(), quote_char)
+        self.assertEquals(out.getvalue().strip(), quote_char)
 
 
 class TestVersion(unittest.TestCase):

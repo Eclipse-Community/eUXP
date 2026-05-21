@@ -3,7 +3,7 @@
 """
 import os
 from datetime import datetime, timedelta
-from urllib.parse import urljoin
+from urlparse import urljoin
 
 from mozharness.base.log import LogMixin
 

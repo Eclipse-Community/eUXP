@@ -325,7 +325,7 @@ class TestMozbuildSandbox(unittest.TestCase):
             sandbox.exec_source('error("This is an error.")')
 
         e = sce.exception
-        self.assertEqual(e.args[0], 'This is an error.')
+        self.assertEqual(e.message, 'This is an error.')
 
     def test_substitute_config_files(self):
         sandbox = self.sandbox()
@@ -345,7 +345,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         sandbox = MozbuildSandbox(Context(VARIABLES, config))
 
         self.assertEqual(sandbox['CONFIG']['BAD_UTF8'],
-            '\ufffd\ufffd\ufffd\ufffd:')
+            u'\ufffd\ufffd\ufffd\ufffd:')
 
     def test_invalid_exports_set_base(self):
         sandbox = self.sandbox()
@@ -471,7 +471,7 @@ def foo():
         self.assertIsInstance(e.exc_value, NameError)
 
         e = se.exception.exc_value
-        self.assertEqual(e.args[0],
+        self.assertEqual(e.message,
             'Template function names must be CamelCase.')
 
         # Template names must not already be registered.
@@ -488,7 +488,7 @@ def Template():
         self.assertIsInstance(e.exc_value, KeyError)
 
         e = se.exception.exc_value
-        self.assertEqual(e.args[0],
+        self.assertEqual(e.message,
             'A template named "Template" was already declared in %s.' %
             sandbox.normalize_path('templates.mozbuild'))
 
@@ -525,7 +525,7 @@ def Template():
             source = 'a = foo(1, 2)'
             sandbox.exec_source(source, 'foo.mozbuild')
 
-            self.assertEqual(sandbox['a'], (Foo, int))
+            self.assertEquals(sandbox['a'], (Foo, int))
         finally:
             del FUNCTIONS['foo']
 

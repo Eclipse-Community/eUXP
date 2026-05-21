@@ -233,7 +233,7 @@ def _parse_extension(state):
 
         try:
             _parse_extension_param(state, extension)
-        except ExtensionParsingException as e:
+        except ExtensionParsingException, e:
             raise ExtensionParsingException(
                 'Failed to parse parameter for %r (%r)' %
                 (extension_token, e))

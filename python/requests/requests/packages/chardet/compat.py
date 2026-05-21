@@ -22,7 +22,7 @@ import sys
 
 
 if sys.version_info < (3, 0):
-    base_str = (str, str)
+    base_str = (str, unicode)
 else:
     base_str = (bytes, str)
 

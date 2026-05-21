@@ -136,9 +136,9 @@ class GTestListTestsUnitTest(gtest_test_utils.TestCase):
            (LIST_TESTS_FLAG, flag_expression, ' '.join(args), output))
 
     if expected_output is not None:
-      self.assertTrue(output == expected_output, msg)
+      self.assert_(output == expected_output, msg)
     else:
-      self.assertTrue(output != EXPECTED_OUTPUT_NO_FILTER, msg)
+      self.assert_(output != EXPECTED_OUTPUT_NO_FILTER, msg)
 
   def testDefaultBehavior(self):
     """Tests the behavior of the default mode."""
