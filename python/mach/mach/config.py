@@ -26,16 +26,19 @@ command can be used to populate these files.
 
 from __future__ import absolute_import, unicode_literals
 
-try:
-    from collections.abc import Mapping, MutableMapping
-except ImportError:
-    from collections import Mapping, MutableMapping
-from collections import defaultdict
+import collections
 import gettext
 import os
 import sys
 from functools import wraps
-from configparser import RawConfigParser, NoSectionError
+
+if sys.version_info[0] == 3:
+    from configparser import RawConfigParser, NoSectionError
+    str_type = str
+else:
+    from ConfigParser import RawConfigParser, NoSectionError
+    str_type = basestring
+
 
 TRANSLATION_NOT_FOUND = """
 No translation files detected for {section}, there must at least be a
@@ -82,7 +85,7 @@ class ConfigType(object):
 class StringType(ConfigType):
     @staticmethod
     def validate(value):
-        if not isinstance(value, str):
+        if not isinstance(value, str_type):
             raise TypeError()
 
     @staticmethod
@@ -129,7 +132,7 @@ class PositiveIntegerType(IntegerType):
 class PathType(StringType):
     @staticmethod
     def validate(value):
-        if not isinstance(value, str):
+        if not isinstance(value, str_type):
             raise TypeError()
 
     @staticmethod
@@ -160,11 +163,11 @@ def reraise_attribute_error(func):
             return func(*args, **kwargs)
         except KeyError:
             exc_class, exc, tb = sys.exc_info()
-            raise AttributeError().__class__(exc).with_traceback(tb)
+            raise AttributeError().__class__, exc, tb
     return _
 
 
-class ConfigSettings(Mapping):
+class ConfigSettings(collections.Mapping):
     """Interface for configuration settings.
 
     This is the main interface to the configuration.
@@ -210,7 +213,7 @@ class ConfigSettings(Mapping):
     will result in exceptions being raised.
     """
 
-    class ConfigSection(MutableMapping, object):
+    class ConfigSection(collections.MutableMapping, object):
         """Represents an individual config section."""
         def __init__(self, config, name, settings):
             object.__setattr__(self, '_config', config)
@@ -354,7 +357,7 @@ class ConfigSettings(Mapping):
             extra -- A dict of additional key/value pairs to add to the
                 setting metadata.
         """
-        if isinstance(type_cls, str):
+        if isinstance(type_cls, basestring):
             type_cls = TYPE_CLASSES[type_cls]
 
         meta = {
@@ -383,7 +386,7 @@ class ConfigSettings(Mapping):
         if callable(settings):
             settings = settings()
 
-        config_settings = defaultdict(dict)
+        config_settings = collections.defaultdict(dict)
         for setting in settings:
             section, option = setting[0].split('.')
 
@@ -394,10 +397,10 @@ class ConfigSettings(Mapping):
             meta = self._format_metadata(provider, section, option, *setting[1:])
             config_settings[section][option] = meta
 
-        for section_name, settings in list(config_settings.items()):
+        for section_name, settings in config_settings.items():
             section = self._settings.get(section_name, {})
 
-            for k, v in list(settings.items()):
+            for k, v in settings.items():
                 if k in section:
                     raise ConfigException('Setting already registered: %s.%s' %
                                           section_name, k)
@@ -429,7 +432,7 @@ class ConfigSettings(Mapping):
         if self._finalized:
             return
 
-        for section, settings in list(self._settings.items()):
+        for section, settings in self._settings.items():
             s = ConfigSettings.ConfigSection(self._config, section, settings)
             self._sections[section] = s
 
@@ -442,7 +445,7 @@ class ConfigSettings(Mapping):
     def __iter__(self):
         self._finalize()
 
-        return iter(list(self._sections.keys()))
+        return iter(self._sections.keys())
 
     def __contains__(self, k):
         return k in self._settings

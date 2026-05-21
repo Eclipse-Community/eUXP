@@ -248,13 +248,13 @@ def main():
     mozlog.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not args:
-        print("""Usage: %s <test binary> [<test binary>...]""" % sys.argv[0], file=sys.stderr)
+        print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
         sys.exit(1)
     if not options.xre_path:
-        print("""Error: --xre-path is required""", file=sys.stderr)
+        print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
     if options.manifest_path and len(args) > 1:
-        print("Error: multiple arguments not supported with --test-manifest", file=sys.stderr)
+        print >>sys.stderr, "Error: multiple arguments not supported with --test-manifest"
         sys.exit(1)
     log = mozlog.commandline.setup_logging("cppunittests", options,
                                            {"tbpl": sys.stdout})

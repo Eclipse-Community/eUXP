@@ -9,6 +9,7 @@
 # Runs PRESUBMIT.py in py3 mode by git cl presubmit.
 USE_PYTHON3 = True
 
+
 def _CommonChecks(input_api, output_api):
   """Checks common to both upload and commit."""
   results = []
@@ -31,7 +32,6 @@ def _CommonChecks(input_api, output_api):
       pylintrc='pylintrc',
       version='2.7'))
   return results
-
 
 def CheckChangeOnUpload(input_api, output_api):
   results = []

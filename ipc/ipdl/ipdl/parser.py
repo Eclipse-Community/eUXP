@@ -78,8 +78,8 @@ class Parser:
         try:
             ast = self.parser.parse(input=input, lexer=self.lexer,
                                     debug=self.debug)
-        except ParseError as p:
-            print(p, file=errout)
+        except ParseError, p:
+            print >>errout, p
             return None
 
         Parser.current = Parser.parseStack.pop()

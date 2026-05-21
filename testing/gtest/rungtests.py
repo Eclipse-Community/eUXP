@@ -172,13 +172,13 @@ def main():
     parser = gtestOptions()
     options, args = parser.parse_args()
     if not args:
-        print("""Usage: %s <binary>""" % sys.argv[0], file=sys.stderr)
+        print >>sys.stderr, """Usage: %s <binary>""" % sys.argv[0]
         sys.exit(1)
     if not options.xre_path:
-        print("""Error: --xre-path is required""", file=sys.stderr)
+        print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
     if not options.utility_path:
-        print("""Warning: --utility-path is required to process assertion stacks""", file=sys.stderr)
+        print >>sys.stderr, """Warning: --utility-path is required to process assertion stacks"""
 
     update_mozinfo()
     prog = os.path.abspath(args[0])
@@ -189,7 +189,7 @@ def main():
                                   options.cwd,
                                   symbols_path=options.symbols_path,
                                   utility_path=options.utility_path)
-    except Exception as e:
+    except Exception, e:
         log.error(str(e))
         result = False
     sys.exit(0 if result else 1)

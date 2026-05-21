@@ -6,13 +6,13 @@ import tempfile
 try:
     from io import StringIO
 except ImportError:
-    from io import StringIO
+    from StringIO import StringIO
 
 if sys.version_info < (3,0):
     class TextIO(StringIO):
         def write(self, data):
-            if not isinstance(data, str):
-                data = str(data, getattr(self, '_encoding', 'UTF-8'), 'replace')
+            if not isinstance(data, unicode):
+                data = unicode(data, getattr(self, '_encoding', 'UTF-8'), 'replace')
             StringIO.write(self, data)
 else:
     TextIO = StringIO
@@ -22,7 +22,7 @@ try:
 except ImportError:
     class BytesIO(StringIO):
         def write(self, data):
-            if isinstance(data, str):
+            if isinstance(data, unicode):
                 raise TypeError("not a byte value: %r" %(data,))
             StringIO.write(self, data)
 
@@ -122,7 +122,7 @@ class EncodedFile(object):
         self.encoding = encoding
 
     def write(self, obj):
-        if isinstance(obj, str):
+        if isinstance(obj, unicode):
             obj = obj.encode(self.encoding)
         elif isinstance(obj, str):
             pass

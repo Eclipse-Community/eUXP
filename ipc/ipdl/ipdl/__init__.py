@@ -5,7 +5,7 @@
 __all__ = [ 'gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified' ]
 
 import os, sys
-from io import StringIO
+from cStringIO import StringIO
 
 from ipdl.cgen import IPDLCodeGen
 from ipdl.lower import LowerToCxx, msgenums
@@ -72,6 +72,6 @@ def writeifmodified(contents, file):
         oldcontents = fd.read()
         fd.close()
     if oldcontents != contents:
-        fd = open(file, 'w', encoding='utf-8')
+        fd = open(file, 'wb')
         fd.write(contents)
         fd.close()

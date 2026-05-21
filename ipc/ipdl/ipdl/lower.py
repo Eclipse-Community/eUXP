@@ -956,11 +956,11 @@ class MessageDecl(ipdl.ast.MessageDecl):
 |params| and |returns| is the C++ semantics of those: 'in', 'out', or None."""
 
         def makeDecl(d, sems):
-            if sems == 'in':
+            if sems is 'in':
                 return Decl(d.inType(side), d.name)
-            elif sems == 'move':
+            elif sems is 'move':
                 return Decl(d.moveType(side), d.name)
-            elif sems == 'out':
+            elif sems is 'out':
                 return Decl(d.outType(side), d.name)
             else: assert 0
 
@@ -981,24 +981,24 @@ class MessageDecl(ipdl.ast.MessageDecl):
         assert not retcallsems or retsems # retcallsems => returnsems
         cxxargs = [ ]
 
-        if paramsems == 'move':
+        if paramsems is 'move':
             cxxargs.extend([ ExprMove(p.var()) for p in self.params ])
-        elif paramsems == 'in':
+        elif paramsems is 'in':
             cxxargs.extend([ p.var() for p in self.params ])
         else:
             assert False
 
         for ret in self.returns:
-            if retsems == 'in':
-                if retcallsems == 'in':
+            if retsems is 'in':
+                if retcallsems is 'in':
                     cxxargs.append(ret.var())
-                elif retcallsems == 'out':
+                elif retcallsems is 'out':
                     cxxargs.append(ExprAddrOf(ret.var()))
                 else: assert 0
-            elif retsems == 'out':
-                if retcallsems == 'in':
+            elif retsems is 'out':
+                if retcallsems is 'in':
                     cxxargs.append(ExprDeref(ret.var()))
-                elif retcallsems == 'out':
+                elif retcallsems is 'out':
                     cxxargs.append(ret.var())
                 else: assert 0
 
@@ -1271,8 +1271,7 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
             ipdl.ast.Visitor.visitTranslationUnit(self, tu)
             if not isinstance(tu, TranslationUnit):
                 TranslationUnit.upgrade(tu)
-            self.typedefs[:] = sorted(self.typedefSet,
-                                      key=lambda t: t.totypename)
+            self.typedefs[:] = sorted(list(self.typedefSet))
 
     def visitInclude(self, inc):
         if inc.tu.filetype == 'header':
@@ -1731,7 +1730,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 transitions.append(ifsametrigger)
                 msgToTransitions[msgid] = transitions
 
-            for msgid, transitions in msgToTransitions.items():
+            for msgid, transitions in msgToTransitions.iteritems():
                 block = Block()
                 block.addstmts(transitions +[ StmtBreak() ])
                 msgswitch.addcase(CaseLabel(msgid), block)
@@ -2700,7 +2699,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             inherits.append(Inherit(p.managerInterfaceType(), viz='public'))
 
-        if ptype.isToplevel() and self.side == 'parent':
+        if ptype.isToplevel() and self.side is 'parent':
             self.hdrfile.addthings([
                     _makeForwardDeclForQClass('nsIFile', []),
                     Whitespace.NL
@@ -4640,11 +4639,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if actor is not None:  stateexpr = _actorState(actor)
         else:                  stateexpr = self.protocol.stateVar()
 
-        if (self.side == 'parent' and direction == 'out'
-            or self.side == 'child' and direction == 'in'):
+        if (self.side is 'parent' and direction is 'out'
+            or self.side is 'child' and direction is 'in'):
             action = ExprVar('Trigger::Send')
-        elif (self.side == 'parent' and direction == 'in'
-            or self.side == 'child' and direction == 'out'):
+        elif (self.side is 'parent' and direction is 'in'
+            or self.side is 'child' and direction is 'out'):
             action = ExprVar('Trigger::Recv')
         else: assert 0 and 'unknown combo %s/%s'% (self.side, direction)
 

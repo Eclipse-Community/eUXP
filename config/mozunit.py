@@ -5,7 +5,7 @@
 from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
 import unittest
 import inspect
-from io import StringIO
+from StringIO import StringIO
 import os
 import sys
 
@@ -140,7 +140,7 @@ class MockedOpen(object):
     '''
     def __init__(self, files = {}):
         self.files = {}
-        for name, content in files.items():
+        for name, content in files.iteritems():
             self.files[normcase(os.path.abspath(name))] = content
 
     def __call__(self, name, mode = 'r'):
@@ -158,19 +158,19 @@ class MockedOpen(object):
         return file
 
     def __enter__(self):
-        import builtins
-        self.open = builtins.open
+        import __builtin__
+        self.open = __builtin__.open
         self._orig_path_exists = os.path.exists
         self._orig_path_isdir = os.path.isdir
         self._orig_path_isfile = os.path.isfile
-        builtins.open = self
+        __builtin__.open = self
         os.path.exists = self._wrapped_exists
         os.path.isdir = self._wrapped_isdir
         os.path.isfile = self._wrapped_isfile
 
     def __exit__(self, type, value, traceback):
-        import builtins
-        builtins.open = self.open
+        import __builtin__
+        __builtin__.open = self.open
         os.path.exists = self._orig_path_exists
         os.path.isdir = self._orig_path_isdir
         os.path.isfile = self._orig_path_isfile

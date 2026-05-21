@@ -23,7 +23,7 @@ except NameError:
         def __iter__(self):
             return self
 
-        def __next__(self):
+        def next(self):
             i = self.remaining
             if i > 0:
                 i -= 1
@@ -164,17 +164,17 @@ if sys.version_info >= (3, 0):
         exec_(co, globs, locs)
 
 else:
-    import builtins as builtins
-    _totext = str
+    import __builtin__ as builtins
+    _totext = unicode
     _basestring = basestring
-    text = str
+    text = unicode
     bytes = str
     execfile = execfile
     callable = callable
     def _isbytes(x):
         return isinstance(x, str)
     def _istext(x):
-        return isinstance(x, str)
+        return isinstance(x, unicode)
 
     def _getimself(function):
         return getattr(function, 'im_self', None)
