@@ -8,10 +8,10 @@ import re
 import sys
 import time
 
-from . import android_commands
-from . import cmd_helper
-from . import constants
-from . import ports
+import android_commands
+import cmd_helper
+import constants
+import ports
 
 from pylib import pexpect
 

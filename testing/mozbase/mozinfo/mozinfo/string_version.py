@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozbuild.version import RichVersion
+from distutils.version import LooseVersion
+
 
 class StringVersion(str):
     """
@@ -10,15 +11,15 @@ class StringVersion(str):
     """
 
     def __init__(self, vstring):
-        super().__init__()
-        self.version = RichVersion(vstring)
+        str.__init__(self, vstring)
+        self.version = LooseVersion(vstring)
 
     def __repr__(self):
         return "StringVersion ('%s')" % self
 
     def __to_version(self, other):
         if not isinstance(other, StringVersion):
-            other = RichVersion(other)
+            other = StringVersion(other)
         return other.version
 
     # rich comparison methods

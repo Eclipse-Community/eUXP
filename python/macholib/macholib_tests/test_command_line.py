@@ -13,7 +13,7 @@ else:
     import unittest
 
 try:
-    from io import StringIO
+    from StringIO import StringIO
 except ImportError:
     from io import StringIO
 

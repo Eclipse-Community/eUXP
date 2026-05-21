@@ -48,7 +48,7 @@ class TestRunner(object):
         self.logger = get_default_logger(component='TestRunner')
 
     def gather_tests(self):
-        for item in globals().values():
+        for item in globals().itervalues():
             if isinstance(item, types.FunctionType) and item.__name__.startswith("test_"):
                 yield item.__name__, item
 

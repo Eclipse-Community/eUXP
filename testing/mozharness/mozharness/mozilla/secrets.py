@@ -9,7 +9,7 @@
 
 import os
 import mozharness
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 import json
 from mozharness.base.log import ERROR
 
@@ -22,7 +22,7 @@ class SecretsMixin(object):
         # within a taskcluster task.  Outside of that environment, do not
         # use this action.
         url = "http://taskcluster/secrets/v1/secret/" + secret_name
-        res = urllib.request.urlopen(url)
+        res = urllib2.urlopen(url)
         if res.getcode() != 200:
             self.fatal("Error fetching from secrets API:" + res.read())
 

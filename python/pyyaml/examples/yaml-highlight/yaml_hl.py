@@ -29,10 +29,10 @@ class Style:
     def __setstate__(self, state):
         self.__init__(**state)
 
-yaml.add_path_resolver('tag:yaml.org,2002:python/object:__main__.Style',
+yaml.add_path_resolver(u'tag:yaml.org,2002:python/object:__main__.Style',
         [None], dict)
-yaml.add_path_resolver('tag:yaml.org,2002:pairs',
-        [None, 'replaces'], list)
+yaml.add_path_resolver(u'tag:yaml.org,2002:pairs',
+        [None, u'replaces'], list)
 
 class YAMLHighlight:
 
@@ -51,11 +51,11 @@ class YAMLHighlight:
     def highlight(self):
         input = self.input.read()
         if input.startswith(codecs.BOM_UTF16_LE):
-            input = str(input, 'utf-16-le')
+            input = unicode(input, 'utf-16-le')
         elif input.startswith(codecs.BOM_UTF16_BE):
-            input = str(input, 'utf-16-be')
+            input = unicode(input, 'utf-16-be')
         else:
-            input = str(input, 'utf-8')
+            input = unicode(input, 'utf-8')
         substitutions = self.style.substitutions
         tokens = yaml.scan(input)
         events = yaml.parse(input)
@@ -90,7 +90,7 @@ class YAMLHighlight:
                 position = index
             chunks.append(substitution)
         chunks.reverse()
-        result = ''.join(chunks)
+        result = u''.join(chunks)
         if self.style.header:
             self.output.write(self.style.header)
         self.output.write(result.encode('utf-8'))

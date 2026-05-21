@@ -27,7 +27,7 @@ def main(ip, port, heartbeat_port, scripts, directory, isTestDevice, verbose):
     if scripts:
         # Ensure the user didn't include the .py on the name of the test file
         # (and get rid of it if they did)
-        scripts = [x.split('.')[0] for x in scripts]
+        scripts = map(lambda x: x.split('.')[0], scripts)
     else:
         # Go through the directory and pick up everything
         # named test_*.py and run it
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         try:
             env_port = int(env_port)
         except ValueError:
-            print("Port in TEST_DEVICE should be an integer.", file=sys.stderr)
+            print >> sys.stderr, "Port in TEST_DEVICE should be an integer."
             sys.exit(1)
 
     # Deal with the options

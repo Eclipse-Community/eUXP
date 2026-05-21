@@ -1,13 +1,13 @@
 import types
 from xml.etree import ElementTree
 
-from . import base
+import base
 
 
 def format_test_id(test_id):
     """Take a test id and return something that looks a bit like
     a class path"""
-    if type(test_id) not in (str,):
+    if type(test_id) not in types.StringTypes:
         # Not sure how to deal with reftests yet
         raise NotImplementedError
 

@@ -4,7 +4,7 @@
 
 import unittest
 
-from io import StringIO
+from StringIO import StringIO
 import os
 import shutil
 

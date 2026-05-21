@@ -45,7 +45,7 @@ Process #1..n:
 
 import atexit
 from concurrent.futures import _base
-import queue as queue
+import Queue as queue
 import multiprocessing
 import threading
 import weakref

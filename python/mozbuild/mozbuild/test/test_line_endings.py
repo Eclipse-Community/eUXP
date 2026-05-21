@@ -1,6 +1,6 @@
 import unittest
 
-from io import StringIO
+from StringIO import StringIO
 import os
 import sys
 import os.path
@@ -30,17 +30,17 @@ class TestLineEndings(unittest.TestCase):
   def testMac(self):
     self.createFile(['\x0D']*3)
     self.pp.do_include(self.tempnam)
-    self.assertEqual(self.pp.out.getvalue(), 'a\nb\nc\n')
+    self.assertEquals(self.pp.out.getvalue(), 'a\nb\nc\n')
 
   def testUnix(self):
     self.createFile(['\x0A']*3)
     self.pp.do_include(self.tempnam)
-    self.assertEqual(self.pp.out.getvalue(), 'a\nb\nc\n')
+    self.assertEquals(self.pp.out.getvalue(), 'a\nb\nc\n')
 
   def testWindows(self):
     self.createFile(['\x0D\x0A']*3)
     self.pp.do_include(self.tempnam)
-    self.assertEqual(self.pp.out.getvalue(), 'a\nb\nc\n')
+    self.assertEquals(self.pp.out.getvalue(), 'a\nb\nc\n')
 
 if __name__ == '__main__':
   mozunit.main()
