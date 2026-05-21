@@ -9,6 +9,9 @@
 #include "MP4Demuxer.h"
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
+#ifdef MOZ_EME
+#include "mozilla/CDMProxy.h"
+#endif
 #include "mozilla/Logging.h"
 #include "mozilla/SharedThreadPool.h"
 #include "nsMimeTypes.h"
@@ -46,6 +49,14 @@ IsWhitelistedH264Codec(const nsAString& aCodec)
   if (!ExtractH264CodecDetails(aCodec, profile, level)) {
     return false;
   }
+
+#ifdef XP_WIN
+  // Disable 4k video on windows vista since it performs poorly.
+  if (!IsWin7OrLater() &&
+      level >= H264_LEVEL_5) {
+    return false;
+  }
+#endif
 
   // Just assume what we can play on all platforms the codecs/formats that
   // WMF can play, since we don't have documentation about what other

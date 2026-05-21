@@ -5,6 +5,7 @@
 
 #include "GMPContentParent.h"
 #include "GMPAudioDecoderParent.h"
+#include "GMPDecryptorParent.h"
 #include "GMPParent.h"
 #include "GMPServiceChild.h"
 #include "GMPVideoDecoderParent.h"
@@ -66,6 +67,7 @@ void
 GMPContentParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_ASSERT(mAudioDecoders.IsEmpty() &&
+             mDecryptors.IsEmpty() &&
              mVideoDecoders.IsEmpty() &&
              mVideoEncoders.IsEmpty());
   NS_DispatchToCurrentThread(new ReleaseGMPContentParent(this));
@@ -107,9 +109,19 @@ GMPContentParent::VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder)
 }
 
 void
+GMPContentParent::DecryptorDestroyed(GMPDecryptorParent* aSession)
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+
+  MOZ_ALWAYS_TRUE(mDecryptors.RemoveElement(aSession));
+  CloseIfUnused();
+}
+
+void
 GMPContentParent::CloseIfUnused()
 {
   if (mAudioDecoders.IsEmpty() &&
+      mDecryptors.IsEmpty() &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty()) {
     RefPtr<GMPContentParent> toClose;
@@ -124,6 +136,23 @@ GMPContentParent::CloseIfUnused()
     NS_DispatchToCurrentThread(NewRunnableMethod(toClose,
                                                  &GMPContentParent::Close));
   }
+}
+
+nsresult
+GMPContentParent::GetGMPDecryptor(GMPDecryptorParent** aGMPDP)
+{
+  PGMPDecryptorParent* pdp = SendPGMPDecryptorConstructor();
+  if (!pdp) {
+    return NS_ERROR_FAILURE;
+  }
+  GMPDecryptorParent* dp = static_cast<GMPDecryptorParent*>(pdp);
+  // This addref corresponds to the Proxy pointer the consumer is returned.
+  // It's dropped by calling Close() on the interface.
+  NS_ADDREF(dp);
+  mDecryptors.AppendElement(dp);
+  *aGMPDP = dp;
+
+  return NS_OK;
 }
 
 nsIThread*
@@ -165,10 +194,11 @@ GMPContentParent::GetGMPAudioDecoder(GMPAudioDecoderParent** aGMPAD)
 }
 
 nsresult
-GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD)
+GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
+                                     uint32_t aDecryptorId)
 {
   // returned with one anonymous AddRef that locks it until Destroy
-  PGMPVideoDecoderParent* pvdp = SendPGMPVideoDecoderConstructor();
+  PGMPVideoDecoderParent* pvdp = SendPGMPVideoDecoderConstructor(aDecryptorId);
   if (!pvdp) {
     return NS_ERROR_FAILURE;
   }
@@ -201,7 +231,7 @@ GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE)
 }
 
 PGMPVideoDecoderParent*
-GMPContentParent::AllocPGMPVideoDecoderParent()
+GMPContentParent::AllocPGMPVideoDecoderParent(const uint32_t& aDecryptorId)
 {
   GMPVideoDecoderParent* vdp = new GMPVideoDecoderParent(this);
   NS_ADDREF(vdp);
@@ -229,6 +259,22 @@ GMPContentParent::DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor)
 {
   GMPVideoEncoderParent* vep = static_cast<GMPVideoEncoderParent*>(aActor);
   NS_RELEASE(vep);
+  return true;
+}
+
+PGMPDecryptorParent*
+GMPContentParent::AllocPGMPDecryptorParent()
+{
+  GMPDecryptorParent* ksp = new GMPDecryptorParent(this);
+  NS_ADDREF(ksp);
+  return ksp;
+}
+
+bool
+GMPContentParent::DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor)
+{
+  GMPDecryptorParent* ksp = static_cast<GMPDecryptorParent*>(aActor);
+  NS_RELEASE(ksp);
   return true;
 }
 

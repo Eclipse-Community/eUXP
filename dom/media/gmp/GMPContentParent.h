@@ -14,6 +14,7 @@ namespace mozilla {
 namespace gmp {
 
 class GMPAudioDecoderParent;
+class GMPDecryptorParent;
 class GMPParent;
 class GMPVideoDecoderParent;
 class GMPVideoEncoderParent;
@@ -26,11 +27,15 @@ public:
 
   explicit GMPContentParent(GMPParent* aParent = nullptr);
 
-  nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD);
+  nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
+                              uint32_t aDecryptorId);
   void VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder);
 
   nsresult GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE);
   void VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder);
+
+  nsresult GetGMPDecryptor(GMPDecryptorParent** aGMPKS);
+  void DecryptorDestroyed(GMPDecryptorParent* aSession);
 
   nsresult GetGMPAudioDecoder(GMPAudioDecoderParent** aGMPAD);
   void AudioDecoderDestroyed(GMPAudioDecoderParent* aDecoder);
@@ -62,11 +67,14 @@ private:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent() override;
+  PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent(const uint32_t& aDecryptorId) override;
   bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) override;
 
   PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() override;
   bool DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor) override;
+
+  PGMPDecryptorParent* AllocPGMPDecryptorParent() override;
+  bool DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor) override;
 
   PGMPAudioDecoderParent* AllocPGMPAudioDecoderParent() override;
   bool DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor) override;
@@ -81,6 +89,7 @@ private:
 
   nsTArray<RefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<RefPtr<GMPVideoEncoderParent>> mVideoEncoders;
+  nsTArray<RefPtr<GMPDecryptorParent>> mDecryptors;
   nsTArray<RefPtr<GMPAudioDecoderParent>> mAudioDecoders;
   nsCOMPtr<nsIThread> mGMPThread;
   RefPtr<GMPParent> mParent;

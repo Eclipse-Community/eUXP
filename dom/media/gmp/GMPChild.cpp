@@ -10,6 +10,7 @@
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
 #include "GMPAudioDecoderChild.h"
+#include "GMPDecryptorChild.h"
 #include "GMPVideoHost.h"
 #include "nsDebugImpl.h"
 #include "nsIFile.h"
@@ -21,6 +22,9 @@
 #include "GMPUtils.h"
 #include "prio.h"
 #include "base/task.h"
+#ifdef MOZ_EME
+#include "widevine-adapter/WidevineAdapter.h"
+#endif
 
 using namespace mozilla::ipc;
 
@@ -163,18 +167,46 @@ GMPChild::RecvSetNodeId(const nsCString& aNodeId)
 GMPErr
 GMPChild::GetAPI(const char* aAPIName,
                  void* aHostAPI,
-                 void** aPluginAPI)
+                 void** aPluginAPI,
+                 uint32_t aDecryptorId)
 {
   if (!mGMPLoader) {
     return GMPGenericErr;
   }
-  return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI);
+  return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
 }
 
 bool
 GMPChild::RecvPreloadLibs(const nsCString& aLibs)
 {
-  /* STUB */
+#ifdef XP_WIN
+  // Pre-load DLLs that need to be used by the EME plugin but that can't be
+  // loaded after the sandbox has started
+  // Items in this must be lowercase!
+  static const char* whitelist[] = {
+    "d3d9.dll", // Create an `IDirect3D9` to get adapter information
+    "dxva2.dll", // Get monitor information
+    "evr.dll", // MFGetStrideForBitmapInfoHeader
+    "mfh264dec.dll", // H.264 decoder (on Windows Vista)
+    "mfheaacdec.dll", // AAC decoder (on Windows Vista)
+    "mfplat.dll", // MFCreateSample, MFCreateAlignedMemoryBuffer, MFCreateMediaType
+    "msauddecmft.dll", // AAC decoder (on Windows 8)
+    "msmpeg2adec.dll", // AAC decoder (on Windows 7)
+    "msmpeg2vdec.dll", // H.264 decoder
+  };
+
+  nsTArray<nsCString> libs;
+  SplitAt(", ", aLibs, libs);
+  for (nsCString lib : libs) {
+    ToLowerCase(lib);
+    for (const char* whiteListedLib : whitelist) {
+      if (lib.EqualsASCII(whiteListedLib)) {
+        LoadLibraryA(lib.get());
+        break;
+      }
+    }
+  }
+#endif
   return true;
 }
 
@@ -224,7 +256,13 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
     return false;
   }
 
+#ifdef MOZ_EME
+  bool isWidevine = aAdapter.EqualsLiteral("widevine");
+
+  GMPAdapter* adapter = (isWidevine) ? new WidevineAdapter() : nullptr;
+#else
   GMPAdapter* adapter = nullptr;
+#endif
   if (!mGMPLoader->Load(libPath.get(),
                         libPath.Length(),
                         mNodeId.BeginWriting(),

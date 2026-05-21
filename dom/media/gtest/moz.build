@@ -64,6 +64,7 @@ LOCAL_INCLUDES += [
     '/dom/media/encoder',
     '/dom/media/fmp4',
     '/security/certverifier',
+    '/security/pkix/include',
 ]
 
 if CONFIG['MOZ_GMP']:

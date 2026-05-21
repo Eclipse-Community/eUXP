@@ -38,6 +38,9 @@ EXPORTS += [
     'GMPContentChild.h',
     'GMPContentParent.h',
     'GMPCrashHelperHolder.h',
+    'GMPDecryptorChild.h',
+    'GMPDecryptorParent.h',
+    'GMPDecryptorProxy.h',
     'GMPEncryptedBufferDataImpl.h',
     'GMPLoader.h',
     'GMPMessageUtils.h',
@@ -67,6 +70,22 @@ EXPORTS += [
     'GMPVideoPlaneImpl.h',
 ]
 
+if CONFIG['MOZ_EME']:
+    EXPORTS += [
+        'GMPCDMCallbackProxy.h',
+        'GMPCDMProxy.h',
+    ]
+
+# We link GMPLoader into xul on B2G/Fennec as its code does not need to be
+# covered by a DRM vendor's voucher.
+if CONFIG['OS_TARGET'] == 'Android':
+    UNIFIED_SOURCES += [
+      'GMPLoader.cpp',
+    ]
+    USE_LIBS += [
+        'rlz',
+    ]
+
 UNIFIED_SOURCES += [
     'GMPAudioDecoderChild.cpp',
     'GMPAudioDecoderParent.cpp',
@@ -74,6 +93,8 @@ UNIFIED_SOURCES += [
     'GMPChild.cpp',
     'GMPContentChild.cpp',
     'GMPContentParent.cpp',
+    'GMPDecryptorChild.cpp',
+    'GMPDecryptorParent.cpp',
     'GMPDiskStorage.cpp',
     'GMPEncryptedBufferDataImpl.cpp',
     'GMPMemoryStorage.cpp',
@@ -100,13 +121,23 @@ UNIFIED_SOURCES += [
     'GMPVideoPlaneImpl.cpp',
 ]
 
+if CONFIG['MOZ_EME']:
+    UNIFIED_SOURCES += [
+        'GMPCDMCallbackProxy.cpp',
+        'GMPCDMProxy.cpp',
+    ]
+
 DIRS += ['rlz']
+
+if CONFIG['MOZ_EME']:
+    DIRS += ['widevine-adapter']
 
 IPDL_SOURCES += [
   'GMPTypes.ipdlh',
   'PGMP.ipdl',
   'PGMPAudioDecoder.ipdl',
   'PGMPContent.ipdl',
+  'PGMPDecryptor.ipdl',
   'PGMPService.ipdl',
   'PGMPStorage.ipdl',
   'PGMPTimer.ipdl',
