@@ -1,4 +1,4 @@
-﻿# Updating HTML5 parser code
+# Updating HTML5 parser code
 
 Our html5 parser is based on the java html5 parser from [Validator.nu](http://about.validator.nu/htmlparser/) by Henri Sivonen. It has been adopted by Mozilla and further updated, and has been imported as a whole into the UXP tree to have an independent and maintainable source of it that doesn't rely on external sources.
 
