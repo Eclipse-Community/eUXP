@@ -4546,7 +4546,9 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     newTransform.PreTranslate(aX, 0);
     newTransform.PreScale(aMaxWidth.Value() / totalWidth, 1);
     newTransform.PreTranslate(-aX, 0);
-    mTarget->SetTransform(newTransform);
+    /* we do this to avoid an ICE in the android compiler */
+    Matrix androidCompilerBug = newTransform;
+    mTarget->SetTransform(androidCompilerBug);
   }
 
   // save the previous bounding box
