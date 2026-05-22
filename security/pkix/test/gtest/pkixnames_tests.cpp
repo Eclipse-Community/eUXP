@@ -1,4 +1,4 @@
-﻿/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This code is made available to you under your choice of the following sets
  * of licensing terms:
  */
