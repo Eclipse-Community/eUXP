@@ -102,7 +102,6 @@ static const VideoSizeAbbr video_size_abbrs[] = {
     { "wsxga",    1600,1024 },
     { "wuxga",    1920,1200 },
     { "woxga",    2560,1600 },
-    { "wqhd",     2560,1440 },
     { "wqsxga",   3200,2048 },
     { "wquxga",   3840,2400 },
     { "whsxga",   6400,4096 },
@@ -112,7 +111,6 @@ static const VideoSizeAbbr video_size_abbrs[] = {
     { "hd480",     852, 480 },
     { "hd720",    1280, 720 },
     { "hd1080",   1920,1080 },
-    { "quadhd",   2560,1440 },
     { "2k",       2048,1080 }, /* Digital Cinema System Specification */
     { "2kdci",    2048,1080 },
     { "2kflat",   1998,1080 },
@@ -506,7 +504,7 @@ char *av_small_strptime(const char *p, const char *fmt, struct tm *dt)
         switch(c) {
         case 'H':
         case 'J':
-            val = date_get_num(&p, 0, c == 'H' ? 23 : INT_MAX, c == 'H' ? 2 : 4);
+            val = date_get_num(&p, 0, c == 'H' ? 23 : INT_MAX, 2);
 
             if (val == -1)
                 return NULL;
@@ -592,7 +590,7 @@ int av_parse_time(int64_t *timeval, const char *timestr, int duration)
     int64_t t, now64;
     time_t now;
     struct tm dt = { 0 }, tmbuf;
-    int today = 0, negative = 0, microseconds = 0, suffix = 1000000;
+    int today = 0, negative = 0, microseconds = 0;
     int i;
     static const char * const date_fmt[] = {
         "%Y - %m - %d",
@@ -663,15 +661,12 @@ int av_parse_time(int64_t *timeval, const char *timestr, int duration)
         if (!q) {
             char *o;
             /* parse timestr as S+ */
-            errno = 0;
-            t = strtoll(p, &o, 10);
+            dt.tm_sec = strtol(p, &o, 10);
             if (o == p) /* the parsing didn't succeed */
                 return AVERROR(EINVAL);
-            if (errno == ERANGE)
-                return AVERROR(ERANGE);
+            dt.tm_min = 0;
+            dt.tm_hour = 0;
             q = o;
-        } else {
-            t = dt.tm_hour * 3600 + dt.tm_min * 60 + dt.tm_sec;
         }
     }
 
@@ -693,16 +688,7 @@ int av_parse_time(int64_t *timeval, const char *timestr, int duration)
     }
 
     if (duration) {
-        if (q[0] == 'm' && q[1] == 's') {
-            suffix = 1000;
-            microseconds /= 1000;
-            q += 2;
-        } else if (q[0] == 'u' && q[1] == 's') {
-            suffix = 1;
-            microseconds = 0;
-            q += 2;
-        } else if (*q == 's')
-            q++;
+        t = dt.tm_hour * 3600 + dt.tm_min * 60 + dt.tm_sec;
     } else {
         int is_utc = *q == 'Z' || *q == 'z';
         int tzoffset = 0;
@@ -738,14 +724,8 @@ int av_parse_time(int64_t *timeval, const char *timestr, int duration)
     if (*q)
         return AVERROR(EINVAL);
 
-    if (INT64_MAX / suffix < t || t < INT64_MIN / suffix)
-        return AVERROR(ERANGE);
-    t *= suffix;
-    if (INT64_MAX - microseconds < t)
-        return AVERROR(ERANGE);
+    t *= 1000000;
     t += microseconds;
-    if (t == INT64_MIN && negative)
-        return AVERROR(ERANGE);
     *timeval = negative ? -t : t;
     return 0;
 }

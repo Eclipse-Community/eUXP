@@ -6,35 +6,26 @@
 # Due to duplicate file names, we compile libavcodec/x86 in its own
 # moz.build file.
 if CONFIG['FFVPX_ASFLAGS']:
-    if CONFIG['CPU_ARCH'].startswith('x86'):
-        DIRS += ['x86']
-    elif CONFIG['CPU_ARCH'].startswith('arm'):
-        DIRS += ['arm']
-
-if CONFIG['CPU_ARCH'] == 'aarch64':
-    DIRS += ['aarch64']
-elif CONFIG['CPU_ARCH'].startswith('ppc'):
-    DIRS += ['ppc']
+    DIRS += ['x86']
 
 SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
-    'avcodec.c',
-    'avfft.c',
+    'audioconvert.c',
     'avpacket.c',
+    'avpicture.c',
     'bitstream.c',
+    'bitstream_filter.c',
     'bitstream_filters.c',
     'bsf.c',
     'codec_desc.c',
-    'codec_par.c',
     'decode.c',
-    'encode.c',
+    'dummy_funcs.c',
     'flac.c',
     'flac_parser.c',
     'flacdata.c',
     'flacdec.c',
     'flacdsp.c',
-    'get_buffer.c',
     'golomb.c',
     'h264pred.c',
     'imgconvert.c',
@@ -43,27 +34,24 @@ SOURCES += [
     'null_bsf.c',
     'options.c',
     'parser.c',
-    'parsers.c',
     'profiles.c',
     'pthread.c',
     'pthread_frame.c',
     'pthread_slice.c',
     'qsv_api.c',
     'raw.c',
-    'refstruct.c',
+    'resample.c',
+    'resample2.c',
     'reverse.c',
     'utils.c',
-    'version.c',
     'videodsp.c',
-    'vlc.c',
     'vorbis_parser.c',
+    'vp56rac.c',
     'vp8.c',
     'vp8_parser.c',
-    'vp8data.c',
     'vp8dsp.c',
     'vp9.c',
     'vp9_parser.c',
-    'vp9_superframe_split_bsf.c',
     'vp9block.c',
     'vp9data.c',
     'vp9dsp.c',
@@ -74,16 +62,14 @@ SOURCES += [
     'vp9mvs.c',
     'vp9prob.c',
     'vp9recon.c',
-    'vpx_rac.c',
     'xiph.c'
 ]
 
-# When building debug, there's a linker symbol inclusion issue, requiring us to
-# include dummy function definitions to have symbols exposed.
-# See discussion in UXP issue #2725
-if CONFIG['MOZ_DEBUG']:
+if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
-        'dummy_funcs.c',
+        'avfft.c',
+        'fft_float.c',
+        'rdft.c',
     ]
 
 SYMBOLS_FILE = 'avcodec.symbols'

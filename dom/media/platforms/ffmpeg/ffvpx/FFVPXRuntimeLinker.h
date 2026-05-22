@@ -7,12 +7,8 @@
 #define __FFVPXRuntimeLinker_h__
 
 #include "PlatformDecoderModule.h"
-#include "ffvpx/tx.h"
 
-struct FFmpegFFTFuncs {
-  decltype(av_tx_init)* init;
-  decltype(av_tx_uninit)* uninit;
-};
+struct FFmpegRDFTFuncs;
 
 namespace mozilla
 {
@@ -26,7 +22,7 @@ public:
   static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
 
   // Call (on any thread) after Init().
-  static void GetFFTFuncs(FFmpegFFTFuncs* aOutFuncs);
+  static void GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs);
 
 private:
   // Set once on the main thread and then read from other threads.
