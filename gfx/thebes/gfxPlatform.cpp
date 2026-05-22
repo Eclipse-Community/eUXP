@@ -518,7 +518,12 @@ static uint32_t GetSkiaGlyphCacheSize()
     // Chromium uses 20mb and skia default uses 2mb.
     // We don't need to change the font cache count since we usually
     // cache thrash due to asian character sets in talos.
+    // Only increase memory on the content proces
     uint32_t cacheSize = 10 * 1024 * 1024;
+    if (mozilla::BrowserTabsRemoteAutostart()) {
+      return XRE_IsContentProcess() ? cacheSize : kDefaultGlyphCacheSize;
+    }
+
     return cacheSize;
 }
 #endif
@@ -2011,6 +2016,7 @@ gfxPlatform::InitAcceleration()
   gfxPrefs::GetSingleton();
 
   if (XRE_IsParentProcess()) {
+    gfxVars::SetBrowserTabsRemoteAutostart(BrowserTabsRemoteAutostart());
     gfxVars::SetOffscreenFormat(GetOffscreenFormat());
     gfxVars::SetRequiresAcceleratedGLContextForCompositorOGL(
               RequiresAcceleratedGLContextForCompositorOGL());
@@ -2062,11 +2068,30 @@ gfxPlatform::InitGPUProcessPrefs()
     gpuProc.UserForceEnable("User force-enabled via pref");
   }
 
-  gpuProc.ForceDisable(
-    FeatureStatus::Unavailable,
-    "GPU processes are not supported",
-    NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
-  return;
+  // We require E10S - otherwise, there is very little benefit to the GPU
+  // process, since the UI process must still use acceleration for
+  // performance.
+  if (!BrowserTabsRemoteAutostart()) {
+    gpuProc.ForceDisable(
+      FeatureStatus::Unavailable,
+      "Multi-process mode is not enabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
+    return;
+  }
+  if (InSafeMode()) {
+    gpuProc.ForceDisable(
+      FeatureStatus::Blocked,
+      "Safe-mode is enabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
+    return;
+  }
+  if (gfxPrefs::LayerScopeEnabled()) {
+    gpuProc.ForceDisable(
+      FeatureStatus::Blocked,
+      "LayerScope does not work in the GPU process",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_LAYERSCOPE"));
+    return;
+  }
 }
 
 void
@@ -2158,7 +2183,9 @@ gfxPlatform::UsesOffMainThreadCompositing()
 
   if (firstTime) {
     MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
-    result = !gfxPrefs::LayersOffMainThreadCompositionForceDisabled();
+    result =
+      gfxVars::BrowserTabsRemoteAutostart() ||
+      !gfxPrefs::LayersOffMainThreadCompositionForceDisabled();
 #if defined(MOZ_WIDGET_GTK)
     // Linux users who chose OpenGL are being grandfathered in to OMTC
     result |= gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly();
@@ -2255,7 +2282,7 @@ gfxPlatform::AsyncPanZoomEnabled()
 #if !defined(MOZ_WIDGET_UIKIT)
   // For XUL applications (everything but Firefox on Android) we only want
   // to use APZ when E10S is enabled or when the user explicitly enable it.
-  if (gfxPrefs::APZDesktopEnabled()) {
+  if (BrowserTabsRemoteAutostart() || gfxPrefs::APZDesktopEnabled()) {
     return gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly();
   } else {
     return false;
