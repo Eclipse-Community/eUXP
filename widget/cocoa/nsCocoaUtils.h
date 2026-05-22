@@ -25,20 +25,7 @@
 - (CGFloat)backingScaleFactor;
 @end
 
-// When building with a pre-10.7 SDK, NSEventPhase is not defined.
-#if !defined(MAC_OS_X_VERSION_10_7) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7)
-enum {
-  NSEventPhaseNone        = 0,
-  NSEventPhaseBegan       = 0x1 << 0,
-  NSEventPhaseStationary  = 0x1 << 1,
-  NSEventPhaseChanged     = 0x1 << 2,
-  NSEventPhaseEnded       = 0x1 << 3,
-  NSEventPhaseCancelled   = 0x1 << 4,
-};
-typedef uint32_t NSEventPhase;
-#endif // #if !defined(MAC_OS_X_VERSION_10_7) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7)
-
-#if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
+#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
 enum {
   NSEventPhaseMayBegin    = 0x1 << 5
 };
@@ -190,22 +177,14 @@ public:
   static NSPoint
   ConvertPointFromScreen(NSWindow* aWindow, const NSPoint& aPt)
   {
-#if !defined(MAC_OS_X_VERSION_10_7) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7)
-    return [aWindow convertScreenToBase:aPt];
-#else
     return [aWindow convertRectFromScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
-#endif // #if !defined(MAC_OS_X_VERSION_10_7) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7)
   }
 
   // Implements an NSPoint equivalent of -[NSWindow convertRectToScreen:].
   static NSPoint
   ConvertPointToScreen(NSWindow* aWindow, const NSPoint& aPt)
   {
-#if !defined(MAC_OS_X_VERSION_10_7) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7)
-    return [aWindow convertBaseToScreen:aPt];
-#else
     return [aWindow convertRectToScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
-#endif // #if !defined(MAC_OS_X_VERSION_10_7) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7)
   }
 
   static NSRect
@@ -276,7 +255,7 @@ public:
   static BOOL EventHasPhaseInformation(NSEvent* aEvent);
 
   // Hides the Menu bar and the Dock. Multiple hide/show requests can be nested.
-  static void HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen);
+  static void HideOSChromeOnScreen(bool aShouldHide);
 
   static nsIWidget* GetHiddenWindowWidget();
 

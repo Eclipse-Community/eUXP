@@ -5869,9 +5869,7 @@ MOZ_MEMORY_API
 void *
 MEMALIGN(size_t alignment, size_t size)
 {
-#if defined(MOZ_MEMORY_DARWIN) && !defined(__ppc__)
 	DARWIN_ONLY(return (szone->memalign)(szone, alignment, size));
-#endif
 
 	FREEBSD_ONLY(BA_DIVERT(return ba_memalign(alignment, size)));
 

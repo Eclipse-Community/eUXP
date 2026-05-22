@@ -266,15 +266,9 @@ add_old_configure_assignment('FT2_CFLAGS',
 
 # Apple platform decoder support
 # ==============================================================
-option('--disable-apple-media',
-       help='Disable support for Apple Media')
-
-@depends('--disable-apple-media', toolkit)
-def applemedia(value, toolkit):
-    enabled = bool(value)
-    if value.origin == 'default':
-        enabled = toolkit in ('cocoa', 'uikit')
-    if enabled:
+@depends(toolkit)
+def applemedia(toolkit):
+    if toolkit in ('cocoa', 'uikit'):
         return True
 
 set_config('MOZ_APPLEMEDIA', applemedia)
