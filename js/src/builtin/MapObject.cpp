@@ -476,7 +476,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef
 };
 
 template <typename ObjectT>
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
 {
     if (MOZ_LIKELY(!keyValue.isObject()))
@@ -501,13 +501,13 @@ WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
     return true;
 }
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 WriteBarrierPost(JSRuntime* rt, MapObject* map, const Value& key)
 {
     return WriteBarrierPostImpl(rt, map, key);
 }
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 WriteBarrierPost(JSRuntime* rt, SetObject* set, const Value& key)
 {
     return WriteBarrierPostImpl(rt, set, key);

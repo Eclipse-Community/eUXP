@@ -65,7 +65,7 @@ protected:
 					void *aClosure);
 
   void appendArg(const char* arg);
-  [[nodiscard]] nsresult resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
+  MOZ_MUST_USE nsresult resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
   nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
   nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
 

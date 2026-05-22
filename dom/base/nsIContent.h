@@ -593,7 +593,8 @@ public:
    * Append the text content to aResult.
    * NOTE: This asserts and returns for elements
    */
-  [[nodiscard]] virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) = 0;
+  MOZ_MUST_USE
+  virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) = 0;
 
   /**
    * Check if this content is focusable and in the current tab order.

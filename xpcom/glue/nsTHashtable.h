@@ -154,7 +154,8 @@ public:
     return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey)));
   }
 
-  [[nodiscard]] EntryType* PutEntry(KeyType aKey, const fallible_t&)
+  MOZ_MUST_USE
+  EntryType* PutEntry(KeyType aKey, const fallible_t&)
   {
     return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey),
                                               mozilla::fallible));
@@ -519,7 +520,8 @@ public:
     return reinterpret_cast<EntryType*>(Base::PutEntry(aKey));
   }
 
-  [[nodiscard]] EntryType* PutEntry(T* aKey, const mozilla::fallible_t&)
+  MOZ_MUST_USE
+  EntryType* PutEntry(T* aKey, const mozilla::fallible_t&)
   {
     return reinterpret_cast<EntryType*>(
       Base::PutEntry(aKey, mozilla::fallible));

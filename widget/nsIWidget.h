@@ -419,7 +419,7 @@ class nsIWidget : public nsISupports
      * @param     aInitData     data that is used for widget initialization
      *
      */
-    [[nodiscard]] virtual nsresult
+    virtual MOZ_MUST_USE nsresult
     Create(nsIWidget* aParent,
            nsNativeWidget aNativeParent,
            const LayoutDeviceIntRect& aRect,
@@ -433,7 +433,7 @@ class nsIWidget : public nsISupports
      * mapping is not straightforward or the native platform needs to use the
      * desktop pixel values directly.
      */
-    [[nodiscard]] virtual nsresult
+    virtual MOZ_MUST_USE nsresult
     Create(nsIWidget* aParent,
            nsNativeWidget aNativeParent,
            const DesktopIntRect& aRect,
@@ -892,7 +892,7 @@ class nsIWidget : public nsISupports
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    [[nodiscard]] virtual nsresult
+    virtual MOZ_MUST_USE nsresult
     GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
 
     /**

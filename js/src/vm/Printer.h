@@ -83,14 +83,14 @@ class Sprinter final : public GenericPrinter
     size_t                size;             // size of buffer allocated at base
     ptrdiff_t             offset;           // offset of next free char in buffer
 
-    [[nodiscard]] bool realloc_(size_t newSize);
+    MOZ_MUST_USE bool realloc_(size_t newSize);
 
   public:
     explicit Sprinter(ExclusiveContext* cx, bool shouldReportOOM = true);
     ~Sprinter();
 
     // Initialize this sprinter, returns false on error.
-    [[nodiscard]] bool init();
+    MOZ_MUST_USE bool init();
 
     void checkInvariants() const;
 
@@ -114,7 +114,7 @@ class Sprinter final : public GenericPrinter
     // Format the given format/arguments as if by JS_vsmprintf, then put it.
     // Return true on success, else return false and report an error (typically
     // OOM).
-    [[nodiscard]] bool jsprintf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+    MOZ_MUST_USE bool jsprintf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 
     // Prints a formatted string into the buffer.
     virtual int vprintf(const char* fmt, va_list ap) override;
@@ -142,7 +142,7 @@ class Fprinter final : public GenericPrinter
     ~Fprinter();
 
     // Initialize this printer, returns false on error.
-    [[nodiscard]] bool init(const char* path);
+    MOZ_MUST_USE bool init(const char* path);
     void init(FILE* fp);
     bool isInitialized() const {
         return file_ != nullptr;

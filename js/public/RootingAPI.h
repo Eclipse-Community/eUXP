@@ -1274,7 +1274,7 @@ class MutableWrappedPtrOperations<UniquePtr<T, D>, Container>
     UniquePtr<T, D>& uniquePtr() { return static_cast<Container*>(this)->get(); }
 
   public:
-    [[nodiscard]] typename UniquePtr<T, D>::Pointer release() { return uniquePtr().release(); }
+    MOZ_MUST_USE typename UniquePtr<T, D>::Pointer release() { return uniquePtr().release(); }
     void reset(T* ptr = T()) { uniquePtr().reset(ptr); }
 };
 

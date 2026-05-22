@@ -1852,7 +1852,7 @@ class StringSegmentRange
       : stack(cx, StringVector(cx)), cur(cx)
     {}
 
-    [[nodiscard]] bool init(JSString* str) {
+    MOZ_MUST_USE bool init(JSString* str) {
         MOZ_ASSERT(stack.empty());
         return settle(str);
     }
@@ -1866,7 +1866,7 @@ class StringSegmentRange
         return cur;
     }
 
-    [[nodiscard]] bool popFront() {
+    MOZ_MUST_USE bool popFront() {
         MOZ_ASSERT(!empty());
         if (stack.empty()) {
             cur = nullptr;

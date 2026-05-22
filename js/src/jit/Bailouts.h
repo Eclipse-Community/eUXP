@@ -150,7 +150,7 @@ class BailoutFrameInfo
     }
 };
 
-[[nodiscard]] bool EnsureHasEnvironmentObjects(JSContext* cx, AbstractFramePtr fp);
+MOZ_MUST_USE bool EnsureHasEnvironmentObjects(JSContext* cx, AbstractFramePtr fp);
 
 struct BaselineBailoutInfo;
 

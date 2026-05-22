@@ -22,7 +22,7 @@ class AlignmentMaskAnalysis
       : graph_(graph)
     {}
 
-    [[nodiscard]] bool analyze();
+    MOZ_MUST_USE bool analyze();
 };
 
 } /* namespace jit */

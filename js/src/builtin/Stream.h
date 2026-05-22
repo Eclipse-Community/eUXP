@@ -37,31 +37,31 @@ class ReadableStream : public NativeObject
 
     JS::ReadableStreamMode mode() const;
 
-    [[nodiscard]] static bool close(JSContext* cx, Handle<ReadableStream*> stream);
-    [[nodiscard]] static JSObject* cancel(JSContext* cx, Handle<ReadableStream*> stream,
-                                          HandleValue reason);
-    [[nodiscard]] static bool error(JSContext* cx, Handle<ReadableStream*> stream,
-                                    HandleValue error);
+    static MOZ_MUST_USE bool close(JSContext* cx, Handle<ReadableStream*> stream);
+    static MOZ_MUST_USE JSObject* cancel(JSContext* cx, Handle<ReadableStream*> stream,
+                                         HandleValue reason);
+    static MOZ_MUST_USE bool error(JSContext* cx, Handle<ReadableStream*> stream,
+                                   HandleValue error);
 
-    [[nodiscard]] static NativeObject* getReader(JSContext* cx, Handle<ReadableStream*> stream,
-                                                 JS::ReadableStreamReaderMode mode);
+    static MOZ_MUST_USE NativeObject* getReader(JSContext* cx, Handle<ReadableStream*> stream,
+                                                JS::ReadableStreamReaderMode mode);
 
-    [[nodiscard]] static bool tee(JSContext* cx,
-                                  Handle<ReadableStream*> stream, bool cloneForBranch2,
-                                  MutableHandle<ReadableStream*> branch1Stream,
-                                  MutableHandle<ReadableStream*> branch2Stream);
+    static MOZ_MUST_USE bool tee(JSContext* cx,
+                                 Handle<ReadableStream*> stream, bool cloneForBranch2,
+                                 MutableHandle<ReadableStream*> branch1Stream,
+                                 MutableHandle<ReadableStream*> branch2Stream);
 
-    [[nodiscard]] static bool enqueue(JSContext* cx, Handle<ReadableStream*> stream,
-                                      HandleValue chunk);
-    [[nodiscard]] static bool enqueueBuffer(JSContext* cx, Handle<ReadableStream*> stream,
-                                            Handle<ArrayBufferObject*> chunk);
-    [[nodiscard]] static bool getExternalSource(JSContext* cx, Handle<ReadableStream*> stream,
-                                                void** source);
+    static MOZ_MUST_USE bool enqueue(JSContext* cx, Handle<ReadableStream*> stream,
+                                     HandleValue chunk);
+    static MOZ_MUST_USE bool enqueueBuffer(JSContext* cx, Handle<ReadableStream*> stream,
+                                           Handle<ArrayBufferObject*> chunk);
+    static MOZ_MUST_USE bool getExternalSource(JSContext* cx, Handle<ReadableStream*> stream,
+                                               void** source);
     void releaseExternalSource();
     uint8_t embeddingFlags() const;
-    [[nodiscard]] static bool updateDataAvailableFromSource(JSContext* cx,
-                                                            Handle<ReadableStream*> stream,
-                                                            uint32_t availableData);
+    static MOZ_MUST_USE bool updateDataAvailableFromSource(JSContext* cx,
+                                                           Handle<ReadableStream*> stream,
+                                                           uint32_t availableData);
 
     enum State {
          Readable  = 1 << 0,
@@ -71,7 +71,7 @@ class ReadableStream : public NativeObject
     };
 
   private:
-    [[nodiscard]] static ReadableStream* createStream(JSContext* cx, HandleObject proto = nullptr);
+    static MOZ_MUST_USE ReadableStream* createStream(JSContext* cx, HandleObject proto = nullptr);
 
   public:
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
@@ -84,7 +84,7 @@ class ReadableStream : public NativeObject
 class ReadableStreamDefaultReader : public NativeObject
 {
   public:
-    [[nodiscard]] static JSObject* read(JSContext* cx, Handle<ReadableStreamDefaultReader*> reader);
+    static MOZ_MUST_USE JSObject* read(JSContext* cx, Handle<ReadableStreamDefaultReader*> reader);
 
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
@@ -96,8 +96,8 @@ class ReadableStreamDefaultReader : public NativeObject
 class ReadableStreamBYOBReader : public NativeObject
 {
   public:
-    [[nodiscard]] static JSObject* read(JSContext* cx, Handle<ReadableStreamBYOBReader*> reader,
-                                        Handle<ArrayBufferViewObject*> view);
+    static MOZ_MUST_USE JSObject* read(JSContext* cx, Handle<ReadableStreamBYOBReader*> reader,
+                                       Handle<ArrayBufferViewObject*> view);
 
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
@@ -108,10 +108,10 @@ class ReadableStreamBYOBReader : public NativeObject
 
 bool ReadableStreamReaderIsClosed(const JSObject* reader);
 
-[[nodiscard]] bool ReadableStreamReaderCancel(JSContext* cx, HandleObject reader,
+MOZ_MUST_USE bool ReadableStreamReaderCancel(JSContext* cx, HandleObject reader,
                                              HandleValue reason);
 
-[[nodiscard]] bool ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject reader);
+MOZ_MUST_USE bool ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject reader);
 
 class ReadableStreamDefaultController : public NativeObject
 {

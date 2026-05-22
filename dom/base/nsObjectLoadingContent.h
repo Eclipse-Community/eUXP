@@ -394,7 +394,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     void GetNestedParams(nsTArray<mozilla::dom::MozPluginParameter>& aParameters,
                          bool aIgnoreCodebase);
 
-    [[nodiscard]] nsresult BuildParametersArray();
+    MOZ_MUST_USE nsresult BuildParametersArray();
 
     /**
      * Loads fallback content with the specified FallbackType

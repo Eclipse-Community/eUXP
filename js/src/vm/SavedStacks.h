@@ -161,11 +161,11 @@ class SavedStacks {
         creatingSavedFrame(false)
     { }
 
-    [[nodiscard]] bool init();
+    MOZ_MUST_USE bool init();
     bool initialized() const { return frames.initialized(); }
-    [[nodiscard]] bool saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
+    MOZ_MUST_USE bool saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
                                        JS::StackCapture&& capture = JS::StackCapture(JS::AllFrames()));
-    [[nodiscard]] bool copyAsyncStack(JSContext* cx, HandleObject asyncStack,
+    MOZ_MUST_USE bool copyAsyncStack(JSContext* cx, HandleObject asyncStack,
                                      HandleString asyncCause,
                                      MutableHandleSavedFrame adoptedStack,
                                      uint32_t maxFrameCount = 0);
@@ -218,10 +218,10 @@ class SavedStacks {
         }
     };
 
-    [[nodiscard]] bool insertFrames(JSContext* cx, FrameIter& iter,
+    MOZ_MUST_USE bool insertFrames(JSContext* cx, FrameIter& iter,
                                    MutableHandleSavedFrame frame,
                                    JS::StackCapture&& capture);
-    [[nodiscard]] bool adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
+    MOZ_MUST_USE bool adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
                                       HandleString asyncCause,
                                       MutableHandleSavedFrame adoptedStack,
                                       uint32_t maxFrameCount);
@@ -291,7 +291,7 @@ class SavedStacks {
     using PCLocationMap = GCHashMap<PCKey, LocationValue, PCLocationHasher, SystemAllocPolicy>;
     PCLocationMap pcLocationMap;
 
-    [[nodiscard]] bool getLocation(JSContext* cx, const FrameIter& iter,
+    MOZ_MUST_USE bool getLocation(JSContext* cx, const FrameIter& iter,
                                   MutableHandle<LocationValue> locationp);
 };
 

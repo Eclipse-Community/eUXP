@@ -136,54 +136,54 @@ class MOZ_STACK_CLASS NameOpEmitter
     NameOpEmitter(BytecodeEmitter* bce, JSAtom* name, const NameLocation& loc, Kind kind);
 
   private:
-    [[nodiscard]] bool isCall() const {
+    MOZ_MUST_USE bool isCall() const {
         return kind_ == Kind::Call;
     }
 
-    [[nodiscard]] bool isSimpleAssignment() const {
+    MOZ_MUST_USE bool isSimpleAssignment() const {
         return kind_ == Kind::SimpleAssignment;
     }
 
-    [[nodiscard]] bool isCompoundAssignment() const {
+    MOZ_MUST_USE bool isCompoundAssignment() const {
         return kind_ == Kind::CompoundAssignment;
     }
 
-    [[nodiscard]] bool isIncDec() const {
+    MOZ_MUST_USE bool isIncDec() const {
         return isPostIncDec() || isPreIncDec();
     }
 
-    [[nodiscard]] bool isPostIncDec() const {
+    MOZ_MUST_USE bool isPostIncDec() const {
         return kind_ == Kind::PostIncrement ||
                kind_ == Kind::PostDecrement;
     }
 
-    [[nodiscard]] bool isPreIncDec() const {
+    MOZ_MUST_USE bool isPreIncDec() const {
         return kind_ == Kind::PreIncrement ||
                kind_ == Kind::PreDecrement;
     }
 
-    [[nodiscard]] bool isInc() const {
+    MOZ_MUST_USE bool isInc() const {
         return kind_ == Kind::PostIncrement ||
                kind_ == Kind::PreIncrement;
     }
 
-    [[nodiscard]] bool isInitialize() const {
+    MOZ_MUST_USE bool isInitialize() const {
         return kind_ == Kind::Initialize;
     }
 
   public:
-    [[nodiscard]] bool emittedBindOp() const {
+    MOZ_MUST_USE bool emittedBindOp() const {
         return emittedBindOp_;
     }
 
-    [[nodiscard]] const NameLocation& loc() const {
+    MOZ_MUST_USE const NameLocation& loc() const {
         return loc_;
     }
 
-    [[nodiscard]] bool emitGet();
-    [[nodiscard]] bool prepareForRhs();
-    [[nodiscard]] bool emitAssignment();
-    [[nodiscard]] bool emitIncDec();
+    MOZ_MUST_USE bool emitGet();
+    MOZ_MUST_USE bool prepareForRhs();
+    MOZ_MUST_USE bool emitAssignment();
+    MOZ_MUST_USE bool emitIncDec();
 };
 
 } /* namespace frontend */

@@ -34,9 +34,7 @@ public:
 
     for (auto iter = mAudioNotificationSet->ConstIter(); !iter.Done(); iter.Next()) {
       PluginModuleParent* pluginModule = iter.Get()->GetKey();
-      if (!pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(mChangeDetails)) {
-        // Sending of notification failed. Ignore for now.
-      }
+      pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(mChangeDetails);
     }
     return NS_OK;
   }

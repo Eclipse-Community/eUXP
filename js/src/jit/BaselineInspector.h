@@ -89,12 +89,12 @@ class BaselineInspector
     }
 
     ICStub* monomorphicStub(jsbytecode* pc);
-    [[nodiscard]] bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
+    MOZ_MUST_USE bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
 
   public:
     typedef Vector<ReceiverGuard, 4, JitAllocPolicy> ReceiverVector;
     typedef Vector<ObjectGroup*, 4, JitAllocPolicy> ObjectGroupVector;
-    [[nodiscard]] bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
+    MOZ_MUST_USE bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                              ObjectGroupVector& convertUnboxedGroups);
 
     SetElemICInspector setElemICInspector(jsbytecode* pc) {
@@ -112,7 +112,7 @@ class BaselineInspector
     bool hasSeenDoubleResult(jsbytecode* pc);
     bool hasSeenNonStringIterMore(jsbytecode* pc);
 
-    [[nodiscard]] bool isOptimizableCallStringSplit(jsbytecode* pc, JSString** strOut,
+    MOZ_MUST_USE bool isOptimizableCallStringSplit(jsbytecode* pc, JSString** strOut,
                                                    JSString** sepOut, JSObject** objOut);
     JSObject* getTemplateObject(jsbytecode* pc);
     JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
@@ -127,16 +127,16 @@ class BaselineInspector
     LexicalEnvironmentObject* templateNamedLambdaObject();
     CallObject* templateCallObject();
 
-    [[nodiscard]] bool commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
+    MOZ_MUST_USE bool commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
                                             JSFunction** commonGetter, Shape** globalShape,
                                             bool* isOwnProperty, ReceiverVector& receivers,
                                             ObjectGroupVector& convertUnboxedGroups);
-    [[nodiscard]] bool commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
+    MOZ_MUST_USE bool commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
                                             JSFunction** commonSetter, bool* isOwnProperty,
                                             ReceiverVector& receivers,
                                             ObjectGroupVector& convertUnboxedGroups);
 
-    [[nodiscard]] bool instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
+    MOZ_MUST_USE bool instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
                                      JSObject** prototypeObject);
 };
 

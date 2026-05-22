@@ -4324,7 +4324,7 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 BuildFunctionString(const char* name, size_t nameLen,
                     unsigned nargs, const char* const* argnames,
                     const SourceBufferHolder& srcBuf, StringBuffer* out,

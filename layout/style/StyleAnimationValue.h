@@ -54,7 +54,7 @@ public:
    * @param aCount      The number of times to add aValueToAdd.
    * @return true on success, false on failure.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   Add(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
       const StyleAnimationValue& aValueToAdd, uint32_t aCount) {
     return AddWeighted(aProperty, 1.0, aDest, aCount, aValueToAdd, aDest);
@@ -92,7 +92,7 @@ public:
    * @param aDistance   The result of the calculation.
    * @return true on success, false on failure.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   ComputeDistance(nsCSSPropertyID aProperty,
                   const StyleAnimationValue& aStartValue,
                   const StyleAnimationValue& aEndValue,
@@ -115,7 +115,7 @@ public:
    * @param [out] aResultValue The resulting interpolated value.
    * @return true on success, false on failure.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   Interpolate(nsCSSPropertyID aProperty,
               const StyleAnimationValue& aStartValue,
               const StyleAnimationValue& aEndValue,
@@ -139,7 +139,7 @@ public:
    * difficulty, we might change this to restrict them to being
    * positive.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   AddWeighted(nsCSSPropertyID aProperty,
               double aCoeff1, const StyleAnimationValue& aValue1,
               double aCoeff2, const StyleAnimationValue& aValue2,
@@ -161,7 +161,7 @@ public:
    * has a value which is outside the range [0, 1] so that we can calculate
    * plausible values as interpolation with the return value.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   Accumulate(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
              const StyleAnimationValue& aValueToAccumulate,
              uint64_t aCount);
@@ -198,7 +198,7 @@ public:
    *                        nullptr.
    * @return true on success, false on failure.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   ComputeValue(nsCSSPropertyID aProperty,
                mozilla::dom::Element* aTargetElement,
                nsStyleContext* aStyleContext,
@@ -217,7 +217,7 @@ public:
    * to aResult.  On failure, aResult might still have partial results
    * in it.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   ComputeValues(nsCSSPropertyID aProperty,
                 mozilla::CSSEnabledState aEnabledState,
                 mozilla::dom::Element* aTargetElement,
@@ -230,7 +230,7 @@ public:
    * A variant on ComputeValues that takes an nsCSSValue as the specified
    * value. Only longhand properties are supported.
    */
-  [[nodiscard]] static bool
+  static MOZ_MUST_USE bool
   ComputeValues(nsCSSPropertyID aProperty,
                 mozilla::CSSEnabledState aEnabledState,
                 mozilla::dom::Element* aTargetElement,
@@ -256,18 +256,18 @@ public:
    * @param [out] aSpecifiedValue The resulting specified value.
    * @return true on success, false on failure.
    *
-   * These functions are not [[nodiscard]] because failing to check the return
+   * These functions are not MOZ_MUST_USE because failing to check the return
    * value is common and reasonable.
    */
-  static bool
+  static MOZ_MUST_USE bool
   UncomputeValue(nsCSSPropertyID aProperty,
                  const StyleAnimationValue& aComputedValue,
                  nsCSSValue& aSpecifiedValue);
-  static bool
+  static MOZ_MUST_USE bool
   UncomputeValue(nsCSSPropertyID aProperty,
                  StyleAnimationValue&& aComputedValue,
                  nsCSSValue& aSpecifiedValue);
-  static bool
+  static MOZ_MUST_USE bool
   UncomputeValue(nsCSSPropertyID aProperty,
                  const StyleAnimationValue& aComputedValue,
                  nsAString& aSpecifiedValue);
@@ -286,7 +286,7 @@ public:
    * @param [out] aComputedValue The resulting computed value.
    * @return true on success, false on failure.
    */
-  [[nodiscard]] static bool ExtractComputedValue(
+  static MOZ_MUST_USE bool ExtractComputedValue(
     nsCSSPropertyID aProperty,
     nsStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);

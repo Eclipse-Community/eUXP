@@ -113,7 +113,7 @@ public:
   {}
 #endif
 
-  [[nodiscard]] inline bool init();
+  MOZ_MUST_USE inline bool init();
 
   inline T get() const;
 

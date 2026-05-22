@@ -130,7 +130,7 @@ public:
    * Return false iff the last Check*() call has returned false or when we've read past
    * the end of the input string.
    */
-  [[nodiscard]] bool HasFailed() const;
+  MOZ_MUST_USE bool HasFailed() const;
 
 protected:
   explicit TokenizerBase(const char* aWhitespaces = nullptr,
@@ -238,20 +238,23 @@ public:
    * to Next() reads another token from the input and shifts the cursor.
    * Returns false if we have passed the end of the input.
    */
-  [[nodiscard]] bool Next(Token& aToken);
+  MOZ_MUST_USE
+  bool Next(Token& aToken);
 
   /**
    * Parse the token on the input read cursor position, check its type is equal to aTokenType
    * and if so, put it into aResult, shift the cursor and return true.  Otherwise, leave
    * the input read cursor position intact and return false.
    */
-  [[nodiscard]] bool Check(const TokenType aTokenType, Token& aResult);
+  MOZ_MUST_USE
+  bool Check(const TokenType aTokenType, Token& aResult);
   /**
    * Same as above method, just compares both token type and token value passed in aToken.
    * When both the type and the value equals, shift the cursor and return true.  Otherwise
    * return false.
    */
-  [[nodiscard]] bool Check(const Token& aToken);
+  MOZ_MUST_USE
+  bool Check(const Token& aToken);
 
   /**
    * SkipWhites method (below) may also skip new line characters automatically.
@@ -285,12 +288,14 @@ public:
   /**
    * Check whitespace character is present.
    */
-  [[nodiscard]] bool CheckWhite() { return Check(Token::Whitespace()); }
+  MOZ_MUST_USE
+  bool CheckWhite() { return Check(Token::Whitespace()); }
   /**
    * Check there is a single character on the read cursor position.  If so, shift the read
    * cursor position and return true.  Otherwise false.
    */
-  [[nodiscard]] bool CheckChar(const char aChar) { return Check(Token::Char(aChar)); }
+  MOZ_MUST_USE
+  bool CheckChar(const char aChar) { return Check(Token::Char(aChar)); }
   /**
    * This is a customizable version of CheckChar.  aClassifier is a function called with
    * value of the character on the current input read position.  If this user function
@@ -298,34 +303,39 @@ public:
    * The user classifiction function is not called when we are at or past the end and
    * false is immediately returned.
    */
-  [[nodiscard]] bool CheckChar(bool (*aClassifier)(const char aChar));
+  MOZ_MUST_USE
+  bool CheckChar(bool (*aClassifier)(const char aChar));
   /**
    * Check for a whole expected word.
    */
-  [[nodiscard]] bool CheckWord(const nsACString& aWord) { return Check(Token::Word(aWord)); }
+  MOZ_MUST_USE
+  bool CheckWord(const nsACString& aWord) { return Check(Token::Word(aWord)); }
   /**
    * Shortcut for literal const word check with compile time length calculation.
    */
   template <uint32_t N>
-  [[nodiscard]] bool CheckWord(const char (&aWord)[N]) { return Check(Token::Word(nsDependentCString(aWord, N - 1))); }
+  MOZ_MUST_USE
+  bool CheckWord(const char (&aWord)[N]) { return Check(Token::Word(nsDependentCString(aWord, N - 1))); }
   /**
    * Checks \r, \n or \r\n.
    */
-  [[nodiscard]] bool CheckEOL() { return Check(Token::NewLine()); }
+  MOZ_MUST_USE
+  bool CheckEOL() { return Check(Token::NewLine()); }
   /**
    * Checks we are at the end of the input string reading.  If so, shift past the end
    * and returns true.  Otherwise does nothing and returns false.
    */
-  [[nodiscard]] bool CheckEOF() { return Check(Token::EndOfFile()); }
+  MOZ_MUST_USE
+  bool CheckEOF() { return Check(Token::EndOfFile()); }
 
   /**
    * These are shortcuts to obtain the value immediately when the token type matches.
    */
-  [[nodiscard]] bool ReadChar(char* aValue);
-  [[nodiscard]] bool ReadChar(bool (*aClassifier)(const char aChar),
+  MOZ_MUST_USE bool ReadChar(char* aValue);
+  MOZ_MUST_USE bool ReadChar(bool (*aClassifier)(const char aChar),
                              char* aValue);
-  [[nodiscard]] bool ReadWord(nsACString& aValue);
-  [[nodiscard]] bool ReadWord(nsDependentCSubstring& aValue);
+  MOZ_MUST_USE bool ReadWord(nsACString& aValue);
+  MOZ_MUST_USE bool ReadWord(nsDependentCSubstring& aValue);
 
   /**
    * This is an integer read helper.  It returns false and doesn't move the read
@@ -336,7 +346,7 @@ public:
    * and the cursor is moved forward.
    */
   template <typename T>
-  [[nodiscard]] bool ReadInteger(T* aValue)
+  MOZ_MUST_USE bool ReadInteger(T* aValue)
   {
     MOZ_RELEASE_ASSERT(aValue);
 
@@ -412,10 +422,10 @@ public:
    * Calling Rollback() after ReadUntil() will return the read cursor to the
    * position it had before ReadUntil was called.
    */
-  [[nodiscard]] bool ReadUntil(Token const& aToken, nsDependentCSubstring& aResult,
-                               ClaimInclusion aInclude = EXCLUDE_LAST);
-  [[nodiscard]] bool ReadUntil(Token const& aToken, nsACString& aResult,
-                               ClaimInclusion aInclude = EXCLUDE_LAST);
+  MOZ_MUST_USE bool ReadUntil(Token const& aToken, nsDependentCSubstring& aResult,
+                              ClaimInclusion aInclude = EXCLUDE_LAST);
+  MOZ_MUST_USE bool ReadUntil(Token const& aToken, nsACString& aResult,
+                              ClaimInclusion aInclude = EXCLUDE_LAST);
 
 protected:
   // All these point to the original buffer passed to the Tokenizer's constructor

@@ -270,7 +270,8 @@ class CodeGeneratorShared : public LElementVisitor
     };
 
   protected:
-    [[nodiscard]] bool allocateData(size_t size, size_t* offset) {
+    MOZ_MUST_USE
+    bool allocateData(size_t size, size_t* offset) {
         MOZ_ASSERT(size % sizeof(void*) == 0);
         *offset = runtimeData_.length();
         masm.propagateOOM(runtimeData_.appendN(0, size));

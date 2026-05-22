@@ -434,7 +434,7 @@ struct IonScript
     bool hasProfilingInstrumentation() const {
         return hasProfilingInstrumentation_;
     }
-    [[nodiscard]] bool addTraceLoggerEvent(TraceLoggerEvent& event) {
+    MOZ_MUST_USE bool addTraceLoggerEvent(TraceLoggerEvent& event) {
         MOZ_ASSERT(event.hasPayload());
         return traceLoggerEvents_.append(Move(event));
     }
@@ -617,7 +617,7 @@ struct IonBlockCounts
 
   public:
 
-    [[nodiscard]] bool init(uint32_t id, uint32_t offset, char* description,
+    MOZ_MUST_USE bool init(uint32_t id, uint32_t offset, char* description,
                            uint32_t numSuccessors) {
         id_ = id;
         offset_ = offset;
@@ -715,7 +715,7 @@ struct IonScriptCounts
         }
     }
 
-    [[nodiscard]] bool init(size_t numBlocks) {
+    MOZ_MUST_USE bool init(size_t numBlocks) {
         blocks_ = js_pod_calloc<IonBlockCounts>(numBlocks);
         if (!blocks_)
             return false;

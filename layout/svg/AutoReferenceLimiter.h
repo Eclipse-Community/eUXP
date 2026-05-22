@@ -96,7 +96,7 @@ public:
    * within the specified limits), else returns false on failure (there is a
    * reference loop/the reference chain has exceeded the specified limits).
    */
-  [[nodiscard]] bool Reference() {
+  MOZ_MUST_USE bool Reference() {
     // If we fail this assertion then either a consumer failed to break a
     // reference loop/chain, or else they called Reference() more than once
     MOZ_ASSERT(*mRefCounter >= 0);

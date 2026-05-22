@@ -144,8 +144,8 @@ public:
     }
   }
 
-  [[nodiscard]] bool Put(KeyType aKey, const UserDataType& aData,
-                         const fallible_t&)
+  MOZ_MUST_USE bool Put(KeyType aKey, const UserDataType& aData,
+                        const fallible_t&)
   {
     EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
     if (!ent) {

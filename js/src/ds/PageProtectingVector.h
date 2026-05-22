@@ -223,7 +223,7 @@ class PageProtectingVector final
         unprotectedBytes = 0;
     }
 
-    [[nodiscard]] bool reserve(size_t size) {
+    MOZ_MUST_USE bool reserve(size_t size) {
         AutoUnprotect guard;
         if (size > vector.capacity())
             guard.emplace(this);
@@ -237,7 +237,7 @@ class PageProtectingVector final
     }
 
     template<typename U>
-    [[nodiscard]] bool append(const U* values, size_t size) {
+    MOZ_MUST_USE bool append(const U* values, size_t size) {
         bool ret;
         {
             AutoUnprotect guard;

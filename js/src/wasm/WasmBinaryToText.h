@@ -1,7 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * Copyright 2015 Mozilla Foundation
- * Copyright 2023 Moonchild Productions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +33,7 @@ namespace wasm {
 // Translate the given binary representation of a wasm module into the module's textual
 // representation.
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
              GeneratedSourceMap* sourceMap = nullptr);
 

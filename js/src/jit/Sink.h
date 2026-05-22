@@ -15,7 +15,8 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
-[[nodiscard]] bool Sink(MIRGenerator* mir, MIRGraph& graph);
+MOZ_MUST_USE bool
+Sink(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit
 } // namespace js

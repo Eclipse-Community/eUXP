@@ -84,7 +84,8 @@ private:
                                             nsIContent **outImageOrLinkNode,
                                             bool* outDragSelectedText);
   static already_AddRefed<nsIContent> FindParentLinkNode(nsIContent* inNode);
-  [[nodiscard]] static nsresult GetAnchorURL(nsIContent* inNode, nsAString& outURL);
+  static MOZ_MUST_USE nsresult
+  GetAnchorURL(nsIContent* inNode, nsAString& outURL);
   static void GetNodeString(nsIContent* inNode, nsAString & outNodeString);
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);

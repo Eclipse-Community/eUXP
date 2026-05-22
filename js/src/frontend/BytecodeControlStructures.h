@@ -64,7 +64,7 @@ class BreakableControl : public NestableControl
 
     BreakableControl(BytecodeEmitter* bce, StatementKind kind);
 
-    [[nodiscard]] bool patchBreaks(BytecodeEmitter* bce);
+    MOZ_MUST_USE bool patchBreaks(BytecodeEmitter* bce);
 };
 template <>
 inline bool
@@ -131,7 +131,7 @@ class LoopControl : public BreakableControl
         return canIonOsr_;
     }
 
-    [[nodiscard]] bool patchBreaksAndContinues(BytecodeEmitter* bce);
+    MOZ_MUST_USE bool patchBreaksAndContinues(BytecodeEmitter* bce);
 };
 template <>
 inline bool
