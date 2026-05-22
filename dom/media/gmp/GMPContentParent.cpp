@@ -5,6 +5,7 @@
 
 #include "GMPContentParent.h"
 #include "GMPAudioDecoderParent.h"
+#include "GMPDecryptorParent.h"
 #include "GMPParent.h"
 #include "GMPServiceChild.h"
 #include "GMPVideoDecoderParent.h"
@@ -66,6 +67,7 @@ void
 GMPContentParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_ASSERT(mAudioDecoders.IsEmpty() &&
+             mDecryptors.IsEmpty() &&
              mVideoDecoders.IsEmpty() &&
              mVideoEncoders.IsEmpty());
   NS_DispatchToCurrentThread(new ReleaseGMPContentParent(this));
@@ -107,9 +109,19 @@ GMPContentParent::VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder)
 }
 
 void
+GMPContentParent::DecryptorDestroyed(GMPDecryptorParent* aSession)
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+
+  MOZ_ALWAYS_TRUE(mDecryptors.RemoveElement(aSession));
+  CloseIfUnused();
+}
+
+void
 GMPContentParent::CloseIfUnused()
 {
   if (mAudioDecoders.IsEmpty() &&
+      mDecryptors.IsEmpty() &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty()) {
     RefPtr<GMPContentParent> toClose;
@@ -124,6 +136,23 @@ GMPContentParent::CloseIfUnused()
     NS_DispatchToCurrentThread(NewRunnableMethod(toClose,
                                                  &GMPContentParent::Close));
   }
+}
+
+nsresult
+GMPContentParent::GetGMPDecryptor(GMPDecryptorParent** aGMPDP)
+{
+  PGMPDecryptorParent* pdp = SendPGMPDecryptorConstructor();
+  if (!pdp) {
+    return NS_ERROR_FAILURE;
+  }
+  GMPDecryptorParent* dp = static_cast<GMPDecryptorParent*>(pdp);
+  // This addref corresponds to the Proxy pointer the consumer is returned.
+  // It's dropped by calling Close() on the interface.
+  NS_ADDREF(dp);
+  mDecryptors.AppendElement(dp);
+  *aGMPDP = dp;
+
+  return NS_OK;
 }
 
 nsIThread*
@@ -230,6 +259,22 @@ GMPContentParent::DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor)
 {
   GMPVideoEncoderParent* vep = static_cast<GMPVideoEncoderParent*>(aActor);
   NS_RELEASE(vep);
+  return true;
+}
+
+PGMPDecryptorParent*
+GMPContentParent::AllocPGMPDecryptorParent()
+{
+  GMPDecryptorParent* ksp = new GMPDecryptorParent(this);
+  NS_ADDREF(ksp);
+  return ksp;
+}
+
+bool
+GMPContentParent::DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor)
+{
+  GMPDecryptorParent* ksp = static_cast<GMPDecryptorParent*>(aActor);
+  NS_RELEASE(ksp);
   return true;
 }
 
