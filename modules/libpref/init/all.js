@@ -3219,12 +3219,12 @@ pref("font.name-list.emoji", "Twemoji Mozilla");
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Segoe UI");
 pref("font.name-list.sans-serif.ar", "Segoe UI, Tahoma, Arial");
-pref("font.name.monospace.ar", "Consolas");
+pref("font.name.monospace.ar", "Courier New");
 pref("font.name.cursive.ar", "Segoe Script");
 
 pref("font.name.serif.el", "Times New Roman");
 pref("font.name.sans-serif.el", "Arial");
-pref("font.name.monospace.el", "Consolas");
+pref("font.name.monospace.el", "Courier New");
 pref("font.name.cursive.el", "Segoe Script");
 
 pref("font.name.serif.he", "Narkisim");
@@ -3259,17 +3259,17 @@ pref("font.name.cursive.th", "Tahoma");
 
 pref("font.name.serif.x-cyrillic", "Times New Roman");
 pref("font.name.sans-serif.x-cyrillic", "Arial");
-pref("font.name.monospace.x-cyrillic", "Consolas");
+pref("font.name.monospace.x-cyrillic", "Courier New");
 pref("font.name.cursive.x-cyrillic", "Segoe Script");
 
 pref("font.name.serif.x-unicode", "Times New Roman");
 pref("font.name.sans-serif.x-unicode", "Arial");
-pref("font.name.monospace.x-unicode", "Consolas");
+pref("font.name.monospace.x-unicode", "Courier New");
 pref("font.name.cursive.x-unicode", "Segoe Script");
 
 pref("font.name.serif.x-western", "Times New Roman");
 pref("font.name.sans-serif.x-western", "Arial");
-pref("font.name.monospace.x-western", "Consolas");
+pref("font.name.monospace.x-western", "Courier New");
 pref("font.name.cursive.x-western", "Segoe Script");
 
 pref("font.name.serif.zh-CN", "SimSun");
@@ -3415,7 +3415,7 @@ pref("font.name.serif.x-math", "Latin Modern Math");
 // We have special support for Monotype Symbol on Windows.
 pref("font.name-list.serif.x-math", "Latin Modern Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Symbol, Times New Roman");
 pref("font.name.sans-serif.x-math", "Arial");
-pref("font.name.monospace.x-math", "Consolas");
+pref("font.name.monospace.x-math", "Courier New");
 pref("font.name.cursive.x-math", "Segoe Script");
 
 // cleartype settings - false implies default system settings
