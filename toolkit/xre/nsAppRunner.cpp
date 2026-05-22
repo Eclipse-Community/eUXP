@@ -4140,7 +4140,7 @@ enum {
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
-  kE10sDisabledForOperatingSystem = 10,
+  // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
 };
 
 const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
@@ -4210,19 +4210,6 @@ MultiprocessBlockPolicy() {
     return gMultiprocessBlockPolicy;
   }
 #endif
-
-  /**
-   * Avoids enabling e10s for Windows XP users on the release channel.
-   */
-#if defined(XP_WIN)
-  if (!IsVistaOrLater()) {
-    nsAdoptingCString channelName = Preferences::GetDefaultCString("app.update.channel");
-    if (channelName.EqualsLiteral("release") || channelName.EqualsLiteral("esr")) {
-      gMultiprocessBlockPolicy = kE10sDisabledForOperatingSystem;
-      return gMultiprocessBlockPolicy;
-    }
-  }
-#endif // XP_WIN
 
   /*
    * None of the blocking policies matched, so e10s is allowed to run.
