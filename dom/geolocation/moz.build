@@ -25,9 +25,9 @@ LOCAL_INCLUDES += [
     '/dom/ipc',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        '/dom/system/mac',
+        '/dom/system/android',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
@@ -39,3 +39,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
             '/dom/system/linux',
         ]
         DEFINES['MOZ_GPSD'] = True
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '/dom/system/mac',
+    ]

@@ -3643,7 +3643,7 @@ HTMLInputElement::Focus(const FocusOptions& aOptions, ErrorResult& aError)
   return;
 }
 
-#if !defined(XP_MACOSX)
+#if !defined(ANDROID) && !defined(XP_MACOSX)
 bool
 HTMLInputElement::IsNodeApzAwareInternal() const
 {
@@ -4793,7 +4793,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           }
           break;
         }
-#if !defined(XP_MACOSX)
+#if !defined(ANDROID) && !defined(XP_MACOSX)
         case eWheel: {
           // Handle wheel events as increasing / decreasing the input element's
           // value when it's focused and it's type is number or range.
@@ -6091,7 +6091,17 @@ HTMLInputElement::ChooseDirectory(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  InitFilePicker(FILE_PICKER_DIRECTORY);
+  // Script can call this method directly, so even though we don't show the
+  // "Pick Folder..." button on platforms that don't have a directory picker
+  // we have to redirect to the file picker here.
+  InitFilePicker(
+#if defined(ANDROID)
+                 // No native directory picker - redirect to plain file picker
+                 FILE_PICKER_FILE
+#else
+                 FILE_PICKER_DIRECTORY
+#endif
+                 );
 }
 
 already_AddRefed<Promise>
@@ -6724,7 +6734,7 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 void
 HTMLInputElement::UpdateApzAwareFlag()
 {
-#if !defined(XP_MACOSX)
+#if !defined(ANDROID) && !defined(XP_MACOSX)
   if ((mType == NS_FORM_INPUT_NUMBER) || (mType == NS_FORM_INPUT_RANGE)) {
     SetMayBeApzAware();
   }

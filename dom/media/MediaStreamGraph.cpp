@@ -50,8 +50,15 @@ LazyLogModule gMediaStreamGraphLog("MediaStreamGraph");
 
 // #define ENABLE_LIFECYCLE_LOG
 
+// We don't use NSPR log here because we want this interleaved with adb logcat
+// on Android/B2G
 #ifdef ENABLE_LIFECYCLE_LOG
-#  define LIFECYCLE_LOG(...) printf(__VA_ARGS__);printf("\n");
+#  ifdef ANDROID
+#    include "android/log.h"
+#    define LIFECYCLE_LOG(...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - MSG", ## __VA_ARGS__); printf(__VA_ARGS__);printf("\n");
+#  else
+#    define LIFECYCLE_LOG(...) printf(__VA_ARGS__);printf("\n");
+#  endif
 #else
 #  define LIFECYCLE_LOG(...)
 #endif

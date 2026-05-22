@@ -11,6 +11,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 else:
     DIRS += ['unix']
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DIRS += ['annotationProcessors']
+
 for var in ('GRE_MILESTONE',
             'MOZ_APP_VERSION',
             'MOZ_APP_BASENAME',
