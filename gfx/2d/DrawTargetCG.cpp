@@ -172,7 +172,7 @@ DrawTargetCG::~DrawTargetCG()
 DrawTargetType
 DrawTargetCG::GetType() const
 {
-#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7)
+#if !defined(__ppc__)
   return GetBackendType() == BackendType::COREGRAPHICS_ACCELERATED ?
            DrawTargetType::HARDWARE_RASTER : DrawTargetType::SOFTWARE_RASTER;
 #else
@@ -183,7 +183,7 @@ DrawTargetCG::GetType() const
 BackendType
 DrawTargetCG::GetBackendType() const
 {
-#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7)
+#if defined(MOZ_WIDGET_COCOA) && !defined(__ppc__)
   // It may be worth spliting Bitmap and IOSurface DrawTarget
   // into seperate classes.
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
@@ -200,7 +200,7 @@ already_AddRefed<SourceSurface>
 DrawTargetCG::Snapshot()
 {
   if (!mSnapshot) {
-#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7)
+#if defined(MOZ_WIDGET_COCOA) && !defined(__ppc__)
     if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
       return MakeAndAddRef<SourceSurfaceCGIOSurfaceContext>(this);
     }
