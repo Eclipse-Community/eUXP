@@ -94,6 +94,10 @@ bool KillProcess(ProcessHandle process_id, int exit_code, bool wait) {
   return result;
 }
 
+#ifdef ANDROID
+typedef unsigned long int rlim_t;
+#endif
+
 // A class to handle auto-closing of DIR*'s.
 class ScopedDIRClose {
  public:
@@ -109,7 +113,10 @@ typedef mozilla::UniquePtr<DIR, ScopedDIRClose> ScopedDIR;
 void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
   // DANGER: no calls to malloc are allowed from now on:
   // http://crbug.com/36678
-#if defined(OS_LINUX) || defined(OS_SOLARIS)
+#if defined(ANDROID)
+  static const rlim_t kSystemDefaultMaxFds = 1024;
+  static const char kFDDir[] = "/proc/self/fd";
+#elif defined(OS_LINUX) || defined(OS_SOLARIS)
   static const rlim_t kSystemDefaultMaxFds = 8192;
   static const char kFDDir[] = "/proc/self/fd";
 #elif defined(OS_MACOSX)

@@ -1013,7 +1013,7 @@ AC_LANG_CPLUSPLUS
 MOZ_CXX11
 
 case "${OS_TARGET}" in
-WINNT|Darwin)
+WINNT|Darwin|Android)
   ;;
 *)
   STL_FLAGS="-I${DIST}/stl_wrappers"
@@ -1630,11 +1630,11 @@ dnl = Enable jemalloc
 dnl ========================================================
 
 case "${OS_TARGET}" in
-WINNT|Darwin)
+Android|WINNT|Darwin)
   MOZ_GLUE_IN_PROGRAM=
   ;;
 *)
-  dnl On !Windows, we only want to link executables against mozglue
+  dnl On !Android !Windows !OSX, we only want to link executables against mozglue
   MOZ_GLUE_IN_PROGRAM=1
   AC_DEFINE(MOZ_GLUE_IN_PROGRAM)
   ;;

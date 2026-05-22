@@ -30,6 +30,7 @@ from mozbuild.backend import (
     get_backend_class,
 )
 
+
 log_manager = LoggingManager()
 
 

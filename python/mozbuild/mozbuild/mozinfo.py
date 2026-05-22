@@ -36,7 +36,8 @@ def build_dict(config, env=os.environ):
     o = substs["OS_TARGET"]
     known_os = {"Linux": "linux",
                 "WINNT": "win",
-                "Darwin": "mac"}
+                "Darwin": "mac",
+                "Android": "android"}
     if o in known_os:
         d["os"] = known_os[o]
     else:
@@ -103,6 +104,11 @@ def build_dict(config, env=os.environ):
                 p = '{}-asan'.format(p)
 
             return p
+
+        if d['buildapp'] == 'mobile/android':
+            if d['processor'] == 'x86':
+                return 'android-x86'
+            return 'android-arm'
 
     def guess_buildtype():
         if d['debug']:
