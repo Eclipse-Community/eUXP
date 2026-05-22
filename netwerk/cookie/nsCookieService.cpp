@@ -56,6 +56,13 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
+// Create key from baseDomain that will access the default cookie namespace.
+// TODO: When we figure out what the API will look like for nsICookieManager{2}
+// on content processes (see bug 777620), change to use the appropriate app
+// namespace.  For now those IDLs aren't supported on child processes.
+#define DEFAULT_APP_KEY(baseDomain) \
+        nsCookieKey(baseDomain, NeckoOriginAttributes())
+
 /******************************************************************************
  * nsCookieService impl:
  * useful types & constants
@@ -68,7 +75,7 @@ static nsCookieService *gCookieService;
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
 
 #define COOKIES_FILE "cookies.sqlite"
-#define COOKIES_SCHEMA_VERSION 8
+#define COOKIES_SCHEMA_VERSION 7
 
 // parameter indexes; see |Read|
 #define IDX_NAME 0
@@ -80,7 +87,8 @@ static nsCookieService *gCookieService;
 #define IDX_CREATION_TIME 6
 #define IDX_SECURE 7
 #define IDX_HTTPONLY 8
-#define IDX_ORIGIN_ATTRIBUTES 9
+#define IDX_BASE_DOMAIN 9
+#define IDX_ORIGIN_ATTRIBUTES 10
 
 static const int64_t kCookiePurgeAge =
   int64_t(30 * 24 * 60 * 60) * PR_USEC_PER_SEC; // 30 days in microseconds
@@ -1199,82 +1207,6 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         COOKIE_LOGSTRING(LogLevel::Debug,
           ("Upgraded database to schema version 7"));
       }
-      [[fallthrough]];
-      
-    case 7: {
-        // Version update drops appId and inBrowserElement (obsolete) as well
-        // as the BASEDOMAIN index. NO downgrade possible after this migration.
-        // See UXP issue #2671
-      
-        // Rename existing table
-        rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "ALTER TABLE moz_cookies RENAME TO moz_cookies_old"));
-        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-
-        // Create a new moz_cookies table without the appId, inBrowserElement
-        // and baseDomain fields.
-        rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("CREATE TABLE moz_cookies("
-                               "id INTEGER PRIMARY KEY, "
-                               "originAttributes TEXT NOT NULL DEFAULT '', "
-                               "name TEXT, "
-                               "value TEXT, "
-                               "host TEXT, "
-                               "path TEXT, "
-                               "expiry INTEGER, "
-                               "lastAccessed INTEGER, "
-                               "creationTime INTEGER, "
-                               "isSecure INTEGER, "
-                               "isHttpOnly INTEGER, "
-                               "CONSTRAINT moz_uniqueid UNIQUE (name, host, "
-                               "path, originAttributes)"
-                               ")"));
-        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-
-        // Move the relevant data over.
-        rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("INSERT INTO moz_cookies ("
-                               "id, "
-                               "originAttributes, "
-                               "name, "
-                               "value, "
-                               "host, "
-                               "path, "
-                               "expiry, "
-                               "lastAccessed, "
-                               "creationTime, "
-                               "isSecure, "
-                               "isHttpOnly "
-                               ") SELECT "
-                               "id, "
-                               "originAttributes, "
-                               "name, "
-                               "value, "
-                               "host, "
-                               "path, "
-                               "expiry, "
-                               "lastAccessed, "
-                               "creationTime, "
-                               "isSecure, "
-                               "isHttpOnly "
-                               "FROM moz_cookies_old "
-                               "WHERE baseDomain NOTNULL;"));
-        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-
-        // Drop the old table
-        rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("DROP TABLE moz_cookies_old;"));
-        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-
-        // Drop the moz_basedomain index from the database (if it hasn't been
-        // removed already by removing the table).
-        rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_basedomain;"));
-        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-
-        COOKIE_LOGSTRING(LogLevel::Debug,
-                         ("Upgraded database to schema version 8"));
-      }
 
       // No more upgrades. Update the schema version.
       rv = mDefaultDBState->syncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
@@ -1312,6 +1244,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         rv = mDefaultDBState->syncConn->CreateStatement(NS_LITERAL_CSTRING(
           "SELECT "
             "id, "
+            "baseDomain, "
             "originAttributes, "
             "name, "
             "value, "
@@ -1459,6 +1392,7 @@ nsCookieService::InitDBConnInternal()
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDefaultDBState->dbConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_cookies ("
+      "baseDomain, "
       "originAttributes, "
       "name, "
       "value, "
@@ -1470,6 +1404,7 @@ nsCookieService::InitDBConnInternal()
       "isSecure, "
       "isHttpOnly"
     ") VALUES ("
+      ":baseDomain, "
       ":originAttributes, "
       ":name, "
       ":value, "
@@ -1514,6 +1449,7 @@ nsCookieService::CreateTable()
   rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_cookies ("
       "id INTEGER PRIMARY KEY, "
+      "baseDomain TEXT, "
       "originAttributes TEXT NOT NULL DEFAULT '', "
       "name TEXT, "
       "value TEXT, "
@@ -1524,11 +1460,16 @@ nsCookieService::CreateTable()
       "creationTime INTEGER, "
       "isSecure INTEGER, "
       "isHttpOnly INTEGER, "
+      "appId INTEGER DEFAULT 0, "
+      "inBrowserElement INTEGER DEFAULT 0, "
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)"
     ")"));
   if (NS_FAILED(rv)) return rv;
 
-  return NS_OK;
+  // Create an index on baseDomain.
+  return mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain, "
+                                                "originAttributes)"));
 }
 
 // Sets the schema version and creates the moz_cookies table.
@@ -2566,6 +2507,7 @@ mozilla::UniquePtr<ConstCookie>
 nsCookieService::GetCookieFromRow(mozIStorageStatement *aRow,
                                   const OriginAttributes &aOriginAttributes)
 {
+  // Skip reading 'baseDomain' -- up to the caller.
   nsCString name, value, host, path;
   DebugOnly<nsresult> rv = aRow->GetUTF8String(IDX_NAME, name);
   NS_ASSERT_SUCCESS(rv);
@@ -2619,10 +2561,18 @@ nsCookieService::Read()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mThread);
 
+  // Set up a statement to delete any rows with a nullptr 'baseDomain'
+  // column. This takes care of any cookies set by browsers that don't
+  // understand the 'baseDomain' column, where the database schema version
+  // is from one that does. (This would occur when downgrading.)
+  nsresult rv = mDefaultDBState->syncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+                  "DELETE FROM moz_cookies WHERE baseDomain ISNULL"));
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
   // Read in the data synchronously.
   // see IDX_NAME, etc. for parameter indexes
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDefaultDBState->syncConn->CreateStatement(NS_LITERAL_CSTRING(
+  rv = mDefaultDBState->syncConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT "
       "name, "
       "value, "
@@ -2633,8 +2583,10 @@ nsCookieService::Read()
       "creationTime, "
       "isSecure, "
       "isHttpOnly, "
-      "originAttributes "
-    "FROM moz_cookies"), getter_AddRefs(stmt));
+      "baseDomain, "
+      "originAttributes  "
+    "FROM moz_cookies "
+    "WHERE baseDomain NOTNULL"), getter_AddRefs(stmt));
 
   NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
@@ -2655,6 +2607,8 @@ nsCookieService::Read()
     if (!hasResult)
       break;
 
+    // IDX_BASE_DOMAIN cannot be used, because updates to the public suffix list
+    // may invalidate the value of the stored baseDomain.
     stmt->GetUTF8String(IDX_HOST, host);
 
     rv = GetBaseDomainFromHost(host, baseDomain);
@@ -2803,7 +2757,9 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     if (NS_FAILED(rv))
       continue;
 
-    nsCookieKey key(baseDomain, NeckoOriginAttributes());
+    // pre-existing cookies have appId=0, inIsolatedMozBrowser=false set by default
+    // constructor of NeckoOriginAttributes().
+    nsCookieKey key = DEFAULT_APP_KEY(baseDomain);
 
     // Create a new nsCookie and assign the data. We don't know the cookie
     // creation time, so just use the current time to generate a unique one.
@@ -4489,7 +4445,7 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCookieKey key(baseDomain, NeckoOriginAttributes());
+  nsCookieKey key = DEFAULT_APP_KEY(baseDomain);
 
   // Return a count of all cookies, including expired.
   nsCookieEntry *entry = mDBState->hostTable.GetEntry(key);
@@ -4808,6 +4764,11 @@ bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
   nsCOMPtr<mozIStorageBindingParams> params;
   DebugOnly<nsresult> rv =
     aParamsArray->NewBindingParams(getter_AddRefs(params));
+  NS_ASSERT_SUCCESS(rv);
+
+  // Bind our values to params
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("baseDomain"),
+                                    aKey.mBaseDomain);
   NS_ASSERT_SUCCESS(rv);
 
   nsAutoCString suffix;
