@@ -15,9 +15,9 @@ DIRS += [
     '/security/certverifier',
 ]
 
-# MAR support at all times.
-DIRS += ['/modules/libmar',
-         '/other-licenses/bsdiff']
+# the signing related bits of libmar depend on nss
+if CONFIG['MOZ_UPDATER']:
+    DIRS += ['/modules/libmar']
 
 DIRS += [
     '/config/external/freetype2',
@@ -29,6 +29,9 @@ DIRS += [
 
 if CONFIG['MOZ_AUTH_EXTENSION']:
     DIRS += ['/extensions/auth']
+
+if CONFIG['MOZ_UPDATER']:
+    DIRS += ['/other-licenses/bsdiff']
 
 # Gecko/Core components.
 
