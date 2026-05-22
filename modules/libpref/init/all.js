@@ -3409,6 +3409,14 @@ pref("font.name.sans-serif.x-math", "Arial");
 pref("font.name.monospace.x-math", "Consolas");
 pref("font.name.cursive.x-math", "Segoe Script");
 
+// cleartype settings - false implies default system settings
+
+// use cleartype rendering for downloadable fonts (win xp only)
+pref("gfx.font_rendering.cleartype.use_for_downloadable_fonts", true);
+
+// use cleartype rendering for all fonts always (win xp only)
+pref("gfx.font_rendering.cleartype.always_use_for_content", false);
+
 // ClearType tuning parameters for directwrite/d2d.
 //
 // Allows overriding of underlying registry values in:

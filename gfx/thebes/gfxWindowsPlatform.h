@@ -180,6 +180,11 @@ public:
 
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 
+    // ClearType is not always enabled even when available (e.g. Windows XP)
+    // if either of these prefs are enabled and apply, use ClearType rendering
+    bool UseClearTypeForDownloadableFonts();
+    bool UseClearTypeAlways();
+
     static void GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion);
 
     // returns ClearType tuning information for each display
@@ -232,6 +237,9 @@ protected:
 
 protected:
     RenderMode mRenderMode;
+
+    int8_t mUseClearTypeForDownloadableFonts;
+    int8_t mUseClearTypeAlways;
 
 private:
     void Init();
