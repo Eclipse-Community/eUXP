@@ -5,9 +5,6 @@
 
 #include "Platform.h"
 
-#include "Accessible.h"
-#include "Accessible-inl.h"
-
 #include "AccEvent.h"
 #include "Compatibility.h"
 #include "HyperTextAccessibleWrap.h"

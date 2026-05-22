@@ -14,7 +14,7 @@ EXPORTS += [
     'ia2AccessibleValue.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ia2Accessible.cpp',
     'ia2AccessibleAction.cpp',
     'ia2AccessibleComponent.cpp',

@@ -7,9 +7,6 @@
 
 #include "nsIAccessibilityService.h"
 
-#include "nsCOMPtr.h"
-#include "nsITimer.h"
-
 class xpcAccessibilityService : public nsIAccessibleRetrieval
 {
 

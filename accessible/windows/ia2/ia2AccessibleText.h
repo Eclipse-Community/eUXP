@@ -9,8 +9,6 @@
 #include "nsIAccessibleText.h"
 
 #include "AccessibleText.h"
-#include "nsString.h"
-#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace a11y {

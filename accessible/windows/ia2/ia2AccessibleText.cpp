@@ -13,7 +13,6 @@
 #include "ProxyWrappers.h"
 #include "mozilla/ClearOnShutdown.h"
 
-using namespace mozilla;
 using namespace mozilla::a11y;
 
 StaticRefPtr<HyperTextAccessibleWrap> ia2AccessibleText::sLastTextChangeAcc;

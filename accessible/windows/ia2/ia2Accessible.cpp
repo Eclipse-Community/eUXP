@@ -5,9 +5,6 @@
 
 #include "AccessibleWrap.h"
 
-#include "Accessible.h"
-#include "Accessible-inl.h"
-
 #include "Accessible2_i.c"
 #include "Accessible2_2_i.c"
 #include "Accessible2_3_i.c"
