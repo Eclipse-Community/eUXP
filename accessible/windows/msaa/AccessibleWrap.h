@@ -173,7 +173,7 @@ public: // construction, destruction
   /**
    * Find an accessible by the given child ID in cached documents.
    */
-  [[nodiscard]] already_AddRefed<IAccessible>
+  MOZ_MUST_USE already_AddRefed<IAccessible>
   GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct);
 
   virtual void GetNativeInterface(void **aOutAccessible) override;
@@ -198,7 +198,7 @@ protected:
   /**
    * Find a remote accessible by the given child ID.
    */
-  [[nodiscard]] already_AddRefed<IAccessible>
+  MOZ_MUST_USE already_AddRefed<IAccessible>
   GetRemoteIAccessibleFor(const VARIANT& aVarChild);
 
   /**
