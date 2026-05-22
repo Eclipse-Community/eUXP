@@ -1219,7 +1219,9 @@ protected:
   };
   PriorityParsingStatus ParsePriority();
 
+#ifdef MOZ_XUL
   bool ParseTreePseudoElement(nsAtomList **aPseudoElementArgs);
+#endif
 
   // Property specific parsing routines
   bool ParseImageLayers(const nsCSSPropertyID aTable[]);
@@ -7007,6 +7009,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
     }
   }
 
+#ifdef MOZ_XUL
   isTreePseudo = (pseudoElementType == CSSPseudoElementType::XULTree);
   // If a tree pseudo-element is using the function syntax, it will
   // get isTree set here and will pass the check below that only
@@ -7016,7 +7019,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
   // pseudo-elements are allowed to be either functions or not, as
   // desired.
   bool isTree = (eCSSToken_Function == mToken.mType) && isTreePseudo;
-
+#endif
   bool isPseudoElement = (pseudoElementType < CSSPseudoElementType::Count);
   // anonymous boxes are only allowed if they're the tree boxes or we have
   // enabled agent rules
@@ -7042,7 +7045,10 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
   // If it's a function token, it better be on our "ok" list, and if the name
   // is that of a function pseudo it better be a function token
   if ((eCSSToken_Function == mToken.mType) !=
-      (isTree ||
+      (
+#ifdef MOZ_XUL
+       isTree ||
+#endif
        nsCSSPseudoClasses::HasStringArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasNthPairArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType)) &&
@@ -7220,8 +7226,11 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
     // various -moz-* pseudo-elements) must have |parsingPseudoElement|
     // set.
     if (!parsingPseudoElement &&
-        !nsCSSPseudoElements::IsCSS2PseudoElement(pseudo) &&
-        !isTreePseudo) {
+        !nsCSSPseudoElements::IsCSS2PseudoElement(pseudo)
+#ifdef MOZ_XUL
+        && !isTreePseudo
+#endif
+        ) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelNewStyleOnly);
       UngetToken();
       return eSelectorParsingStatus_Error;
@@ -7232,6 +7241,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
       NS_ADDREF(*aPseudoElement = pseudo);
       *aPseudoElementType = pseudoElementType;
 
+#ifdef MOZ_XUL
       if (isTree) {
         // We have encountered a pseudoelement of the form
         // -moz-tree-xxxx(a,b,c).  We parse (a,b,c) and add each
@@ -7241,6 +7251,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
           return eSelectorParsingStatus_Error;
         }
       }
+#endif
 
       // Pseudo-elements can only be followed by user action pseudo-classes
       // or be the end of the selector.  So the next non-whitespace token must
@@ -8453,6 +8464,7 @@ CSSParserImpl::ParseRGBColor(ComponentType& aR,
   return false;
 }
 
+#ifdef MOZ_XUL
 bool
 CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
 {
@@ -8478,6 +8490,7 @@ CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
   fakeSelector.mClassList = nullptr;
   return true;
 }
+#endif
 
 nsCSSKeyword
 CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,

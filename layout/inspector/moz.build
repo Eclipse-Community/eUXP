@@ -29,12 +29,16 @@ UNIFIED_SOURCES += [
     'inCSSValueSearch.cpp',
     'inDeepTreeWalker.cpp',
     'inDOMUtils.cpp',
-    'inDOMView.cpp',
     'inLayoutUtils.cpp',
     'inSearchLoop.cpp',
     'nsFontFace.cpp',
     'nsFontFaceList.cpp',
 ]
+
+if CONFIG['MOZ_XUL']:
+    SOURCES += [
+        'inDOMView.cpp',
+    ]
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [

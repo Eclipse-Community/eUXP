@@ -395,11 +395,12 @@ ReparentFrameViewTo(nsIFrame*       aFrame,
                     nsView*        aOldParentView)
 {
   if (aFrame->HasView()) {
+#ifdef MOZ_XUL
     if (aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
       // This view must be parented by the root view, don't reparent it.
       return;
     }
-
+#endif
     nsView* view = aFrame->GetView();
     // Verify that the current parent view is what we think it is
     //nsView*  parentView;
@@ -652,6 +653,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
                                        nsRenderingContext*  aRC,
                                        uint32_t             aFlags)
 {
+#ifdef MOZ_XUL
   if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
     return;
 
@@ -715,6 +717,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   nsSize maxSize = rootFrame->GetXULMaxSize(aState);
 
   SetSizeConstraints(aPresContext, windowWidget, minSize, maxSize);
+#endif
 }
 
 void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,

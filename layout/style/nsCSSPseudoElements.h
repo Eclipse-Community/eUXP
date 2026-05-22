@@ -59,7 +59,9 @@ enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
 #undef CSS_PSEUDO_ELEMENT
   Count,
   AnonBox = Count,
+#ifdef MOZ_XUL
   XULTree,
+#endif
   NotPseudo,
   MAX
 };

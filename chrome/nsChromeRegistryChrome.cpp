@@ -640,6 +640,7 @@ nsChromeRegistryChrome::OverlayListHash::GetArray(nsIURI* aBase)
   return &entry->mArray;
 }
 
+#ifdef MOZ_XUL
 NS_IMETHODIMP
 nsChromeRegistryChrome::GetStyleOverlays(nsIURI *aChromeURL,
                                          nsISimpleEnumerator **aResult)
@@ -669,6 +670,7 @@ nsChromeRegistryChrome::GetXULOverlays(nsIURI *aChromeURL,
 
   return NS_NewArrayEnumerator(aResult, *parray);
 }
+#endif // MOZ_XUL
 
 nsIURI*
 nsChromeRegistry::ManifestProcessingContext::GetManifestURI()

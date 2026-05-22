@@ -109,9 +109,11 @@ nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom, EnabledState aEnabledState)
   }
 
   if (nsCSSAnonBoxes::IsAnonBox(aAtom)) {
+#ifdef MOZ_XUL
     if (nsCSSAnonBoxes::IsTreePseudoElement(aAtom)) {
       return Type::XULTree;
     }
+#endif
 
     return Type::AnonBox;
   }

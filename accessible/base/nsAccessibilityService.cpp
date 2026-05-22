@@ -68,6 +68,7 @@
 #include "mozilla/Services.h"
 #include "nsDeckFrame.h"
 
+#ifdef MOZ_XUL
 #include "XULAlertAccessible.h"
 #include "XULColorPickerAccessible.h"
 #include "XULComboboxAccessible.h"
@@ -78,6 +79,7 @@
 #include "XULSliderAccessible.h"
 #include "XULTabAccessible.h"
 #include "XULTreeGridAccessibleWrap.h"
+#endif
 
 #if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
 #include "nsNPAPIPluginInstance.h"
@@ -1354,6 +1356,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   }
 
   RefPtr<Accessible> accessible;
+#ifdef MOZ_XUL
   // XUL controls
   if (role.EqualsLiteral("xul:alert")) {
     accessible = new XULAlertAccessible(aContent, aDoc);
@@ -1512,6 +1515,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new XULToolbarButtonAccessible(aContent, aDoc);
 
   }
+#endif // MOZ_XUL
 
   return accessible.forget();
 }
@@ -1735,6 +1739,7 @@ nsAccessibilityService::HasAccessible(nsIDOMNode* aDOMNode)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private (DON'T put methods here)
 
+#ifdef MOZ_XUL
 already_AddRefed<Accessible>
 nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
                                                    DocAccessible* aDoc)
@@ -1764,6 +1769,7 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
     new XULTreeGridAccessibleWrap(aContent, aDoc, treeFrame);
   return accessible.forget();
 }
+#endif
 
 nsAccessibilityService*
 GetOrCreateAccService(uint32_t aNewConsumer)

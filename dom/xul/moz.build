@@ -7,25 +7,26 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
-DIRS += ['templates']
+if CONFIG['MOZ_XUL']:
+    DIRS += ['templates']
 
-XPIDL_SOURCES += [
-    'nsIXULOverlayProvider.idl',
-]
+    XPIDL_SOURCES += [
+        'nsIXULOverlayProvider.idl',
+    ]
 
-EXPORTS += [
-    'nsIXULDocument.h',
-]
+    EXPORTS += [
+        'nsIXULDocument.h',
+    ]
 
-UNIFIED_SOURCES += [
-    'nsXULCommandDispatcher.cpp',
-    'nsXULContentSink.cpp',
-    'nsXULElement.cpp',
-    'nsXULPopupListener.cpp',
-    'nsXULPrototypeCache.cpp',
-    'nsXULPrototypeDocument.cpp',
-    'XULDocument.cpp',
-]
+    UNIFIED_SOURCES += [
+        'nsXULCommandDispatcher.cpp',
+        'nsXULContentSink.cpp',
+        'nsXULElement.cpp',
+        'nsXULPopupListener.cpp',
+        'nsXULPrototypeCache.cpp',
+        'nsXULPrototypeDocument.cpp',
+        'XULDocument.cpp',
+    ]
 
 XPIDL_SOURCES += [
     'nsIController.idl',

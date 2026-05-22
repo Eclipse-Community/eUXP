@@ -73,10 +73,12 @@
 // includes needed for the prototype chain interfaces
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIControllers.h"
+#ifdef MOZ_XUL
 #include "nsITreeSelection.h"
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
 #include "nsIXULTemplateBuilder.h"
+#endif
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
@@ -176,20 +178,26 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // Misc Core related classes
 
   // XUL classes
+#ifdef MOZ_XUL
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULControllers, nsNonDOMObjectSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
+#ifdef MOZ_XUL
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(TreeSelection, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
+#endif
 
+#ifdef MOZ_XUL
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTemplateBuilder, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
+#endif
 
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager,
                                        nsMessageManagerSH<nsEventTargetSH>,
@@ -458,14 +466,17 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
+#ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(XULCommandDispatcher, nsIDOMXULCommandDispatcher)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandDispatcher)
   DOM_CLASSINFO_MAP_END
+#endif
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULControllers, nsIControllers)
     DOM_CLASSINFO_MAP_ENTRY(nsIControllers)
   DOM_CLASSINFO_MAP_END
 
+#ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(TreeSelection, nsITreeSelection)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeSelection)
   DOM_CLASSINFO_MAP_END
@@ -474,7 +485,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsITreeContentView)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
+#endif
 
+#ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(XULTemplateBuilder, nsIXULTemplateBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsIXULTemplateBuilder)
   DOM_CLASSINFO_MAP_END
@@ -484,6 +497,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIXULTemplateBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
+#endif
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsISupports)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)

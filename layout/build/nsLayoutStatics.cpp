@@ -75,6 +75,7 @@
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/WebCryptoThreadPool.h"
 
+#ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #include "nsXULContentUtils.h"
 #include "nsXULPrototypeCache.h"
@@ -83,6 +84,7 @@
 #include "inDOMView.h"
 
 #include "nsMenuBarListener.h"
+#endif
 
 #include "nsTextServicesDocument.h"
 
@@ -205,11 +207,14 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+#ifdef MOZ_XUL
   rv = nsXULContentUtils::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsXULContentUtils");
     return rv;
   }
+
+#endif
 
   nsMathMLOperators::AddRefTable();
 
@@ -239,11 +244,13 @@ nsLayoutStatics::Initialize()
   nsCSSParser::Startup();
   nsCSSRuleUtils::Startup();
 
+#ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsXULPopupManager");
     return rv;
   }
+#endif
 
   rv = nsFocusManager::Init();
   if (NS_FAILED(rv)) {
@@ -278,7 +285,9 @@ nsLayoutStatics::Initialize()
 
   HTMLVideoElement::Init();
 
+#ifdef MOZ_XUL
   nsMenuBarListener::InitializeStatics();
+#endif
 
   CacheObserver::Init();
 
@@ -312,7 +321,9 @@ nsLayoutStatics::Shutdown()
 
   nsMessageManagerScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
+#ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
+#endif
   DOMStorageObserver::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   Attr::Shutdown();
@@ -337,9 +348,11 @@ nsLayoutStatics::Shutdown()
   nsStackLayout::Shutdown();
   nsBox::Shutdown();
 
+#ifdef MOZ_XUL
   nsXULContentUtils::Finish();
   nsXULPrototypeCache::ReleaseGlobals();
   nsSprocketLayout::Shutdown();
+#endif
 
   SVGElementFactory::Shutdown();
   nsMathMLOperators::ReleaseTable();

@@ -2088,8 +2088,11 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
 #ifdef DEBUG
-    bool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
-                     !nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag);
+    bool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag)
+#ifdef MOZ_XUL
+                 && !nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag)
+#endif
+      ;
     NS_PRECONDITION(isAnonBox, "Unexpected pseudo");
 #endif
 
@@ -2123,6 +2126,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
                     nullptr, aFlags);
 }
 
+#ifdef MOZ_XUL
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
                                       nsIAtom* aPseudoTag,
@@ -2161,6 +2165,7 @@ nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
                     aPseudoTag, CSSPseudoElementType::XULTree,
                     nullptr, eNoFlags);
 }
+#endif
 
 bool
 nsStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)

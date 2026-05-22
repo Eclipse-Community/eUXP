@@ -61,8 +61,10 @@
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
+#endif
 
 #include "nsIClipboardHelper.h"
 
@@ -1389,9 +1391,11 @@ nsDocumentViewer::PageHide(bool aIsUnload)
     EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
   }
 
+#ifdef MOZ_XUL
   // look for open menupopups and close them after the unload event, in case
   // the unload event listeners open any new popups
   nsContentUtils::HidePopupsInDocument(mDocument);
+#endif
 
   return NS_OK;
 }
@@ -3552,6 +3556,7 @@ nsDocumentViewer::GetPopupNode(nsIDOMNode** aNode)
 
     // get the popup node
     nsCOMPtr<nsIDOMNode> node = root->GetPopupNode();
+#ifdef MOZ_XUL
     if (!node) {
       nsPIDOMWindowOuter* rootWindow = root->GetWindow();
       if (rootWindow) {
@@ -3564,6 +3569,7 @@ nsDocumentViewer::GetPopupNode(nsIDOMNode** aNode)
         }
       }
     }
+#endif
     node.swap(*aNode);
   }
 

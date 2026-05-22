@@ -59,7 +59,9 @@
 #include "nsNodeUtils.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
+#ifdef MOZ_XUL
 #include "nsXULElement.h"
+#endif /* MOZ_XUL */
 #include "nsFrameSelection.h"
 #ifdef DEBUG
 #include "nsRange.h"
@@ -100,7 +102,9 @@
 #include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
 
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"
+#endif /* MOZ_XUL */
 
 #include "nsCCUncollectableMarker.h"
 
