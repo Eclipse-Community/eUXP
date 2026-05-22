@@ -18,6 +18,9 @@
 #include <shlobj.h>
 #include <knownfolders.h>
 #include <guiddef.h>
+#include "mozilla/WindowsVersion.h"
+
+using mozilla::IsWin7OrLater;
 
 #elif defined(XP_UNIX)
 
@@ -111,13 +114,19 @@ SHLoadLibraryFromKnownFolder(REFKNOWNFOLDERID aFolderId, DWORD aMode,
 }
 
 /*
- * Return the default save-to location for the Windows Library passed in
- * through aFolderId.
+ * Check to see if we're on Win7 and up, and if so, returns the default
+ * save-to location for the Windows Library passed in through aFolderId.
+ * Otherwise falls back on pre-win7 GetWindowsFolder.
  */
 static nsresult
 GetLibrarySaveToPath(int aFallbackFolderId, REFKNOWNFOLDERID aFolderId,
                      nsIFile** aFile)
 {
+  // Skip off checking for library support if the os is Vista or lower.
+  if (!IsWin7OrLater()) {
+    return GetWindowsFolder(aFallbackFolderId, aFile);
+  }
+
   RefPtr<IShellLibrary> shellLib;
   RefPtr<IShellItem> savePath;
   HRESULT hr =
