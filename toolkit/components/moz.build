@@ -60,6 +60,9 @@ DIRS += [
     'xulstore'
 ]
 
+if CONFIG['MOZ_WEBEXTENSIONS']:
+    DIRS += ['webextensions']
+
 DIRS += ['mozintl']
 
 DIRS += ['narrate', 'viewsource'];

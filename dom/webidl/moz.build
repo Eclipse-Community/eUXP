@@ -606,6 +606,9 @@ if CONFIG['MOZ_EME']:
         'WidevineCDMManifest.webidl',
     ]
 
+if CONFIG['MOZ_WEBEXTENSIONS']:
+  WEBIDL_FILES += ['AddonManager.webidl']
+
 if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
     WEBIDL_FILES += [
         'AudioChannelManager.webidl',
@@ -726,6 +729,9 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'UserProximityEvent.webidl',
     'WebGLContextEvent.webidl',
 ]
+
+if CONFIG['MOZ_WEBEXTENSIONS']:
+  GENERATED_EVENTS_WEBIDL_FILES += ['AddonEvent.webidl']
 
 if CONFIG['MOZ_WEBRTC']:
     GENERATED_EVENTS_WEBIDL_FILES += [
