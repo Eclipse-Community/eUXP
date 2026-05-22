@@ -54,6 +54,7 @@ public:
 private:
   ~MacWakeLockListener() {}
 
+#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
@@ -90,12 +91,24 @@ private:
     }
     return NS_OK;
   }
+#else
+  // Dummy class to make this happy, since 10.4 doesn't support
+  // IOPMAssertions.
+  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
+	return NS_OK;
+  }
+#endif
 }; // MacWakeLockListener
 
 // defined in nsCocoaWindow.mm
 extern int32_t             gXULModalLevel;
 
 static bool gAppShellMethodsSwizzled = false;
+
+#ifdef __ppc__
+#pragma GCC push_optimize
+#pragma GCC optimize ("-O1")
+#endif
 
 @implementation GeckoNSApplication
 
@@ -134,6 +147,10 @@ static bool gAppShellMethodsSwizzled = false;
 }
 
 @end
+
+#ifdef __ppc__
+#pragma GCC pop_optimize
+#endif
 
 // AppShellDelegate
 //

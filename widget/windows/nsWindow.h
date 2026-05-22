@@ -98,11 +98,10 @@ public:
 
   // nsIWidget interface
   using nsWindowBase::Create; // for Create signature not overridden here
-  virtual [[nodiscard]] nsresult Create(nsIWidget* aParent,
-                                       nsNativeWidget aNativeParent,
-                                       const LayoutDeviceIntRect& aRect,
-                                       nsWidgetInitData* aInitData = nullptr)
-                                       override;
+  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
+                                        nsNativeWidget aNativeParent,
+                                        const LayoutDeviceIntRect& aRect,
+                                        nsWidgetInitData* aInitData = nullptr) override;
   virtual void            Destroy() override;
   NS_IMETHOD              SetParent(nsIWidget *aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
@@ -136,7 +135,7 @@ public:
   NS_IMETHOD              SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
-  virtual [[nodiscard]] nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  [[nodiscard]] virtual nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   void                    SetBackgroundColor(const nscolor& aColor) override;
@@ -203,11 +202,9 @@ public:
   NS_IMETHOD_(InputContext) GetInputContext() override;
   NS_IMETHOD_(TextEventDispatcherListener*)
     GetNativeTextEventDispatcherListener() override;
-#ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void            UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
-#endif // MOZ_XUL
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
   NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   void                    SetDrawsInTitlebar(bool aState) override;
@@ -466,13 +463,11 @@ protected:
   /**
    * Window transparency helpers
    */
-#ifdef MOZ_XUL
 private:
   void                    SetWindowTranslucencyInner(nsTransparencyMode aMode);
   nsTransparencyMode      GetWindowTranslucencyInner() const { return mTransparencyMode; }
   void                    UpdateGlass();
 protected:
-#endif // MOZ_XUL
 
   static bool             IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void                    IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
@@ -486,7 +481,6 @@ protected:
                                               bool aIntersectWithExisting) override;
   nsIntRegion             GetRegionToPaint(bool aForceFullRepaint,
                                            PAINTSTRUCT ps, HDC aDC);
-  static void             ActivateOtherWindowHelper(HWND aWnd);
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
 
@@ -552,7 +546,7 @@ protected:
   static bool           sJustGotDeactivate;
   static bool           sJustGotActivate;
   static bool           sIsInMouseCapture;
-  static int            sTrimOnMinimize;
+  static bool           sHaveInitializedPrefs;
 
   // Always use the helper method to read this property.  See bug 603793.
   static TriStateBool   sHasBogusPopupsDropShadowOnMultiMonitor;
@@ -610,11 +604,9 @@ protected:
   ResizeState mResizeState;
 
   // Transparency
-#ifdef MOZ_XUL
   nsTransparencyMode    mTransparencyMode;
   nsIntRegion           mPossiblyTransparentRegion;
   MARGINS               mGlassMargins;
-#endif // MOZ_XUL
 
   // Win7 Gesture processing and management
   nsWinGesture          mGesture;

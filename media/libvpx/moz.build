@@ -40,6 +40,7 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     else:
         ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
+
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.vpx += files['ARM_EXPORTS']
     ASFLAGS += [
@@ -61,11 +62,6 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         if f.endswith('.c') and 'neon' in f:
             SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
 
-    if CONFIG['OS_TARGET'] == 'Android':
-        # For cpu-features.h
-        LOCAL_INCLUDES += [
-            '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
-        ]
     if CONFIG['CLANG_CXX']:
         ASFLAGS += [
             '-no-integrated-as',
@@ -102,7 +98,7 @@ elif CONFIG['CPU_ARCH'] == 'mips64':
     ASFLAGS += [ '-I%s/media/libvpx/config/linux/mips64/' % TOPSRCDIR ]
     CFLAGS += [ '-I%s/media/libvpx/config/linux/mips64/' % TOPSRCDIR ]
 
-elif CONFIG['CPU_ARCH'] == 'ppc64le':
+elif CONFIG['CPU_ARCH'] == 'ppc64' and CONFIG['TARGET_ENDIANNESS'] == 'little':
     EXPORTS.vpx += files['PPC64LE_EXPORTS']
     SOURCES += files['PPC64LE_SOURCES']
     ASFLAGS += [ '-I%s/media/libvpx/config/linux/ppc64le/' % TOPSRCDIR ]
@@ -132,16 +128,6 @@ FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['HAVE_CONFIG_H'] = 'vpx_config.h'
 
-
-if CONFIG['OS_TARGET'] == 'Android':
-    # Older versions of the Android NDK don't pre-define anything to indicate
-    # the OS they're on, so do it for them.
-    DEFINES['__linux__'] = True
-
-    if not CONFIG['MOZ_WEBRTC']:
-        SOURCES += [
-            '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
-        ]
 
 if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
     for f in SOURCES:
@@ -210,9 +196,3 @@ CFLAGS += [
     '-I%s/media/libvpx/libvpx' % TOPSRCDIR,
     '-I%s/media/libvpx/config' % TOPSRCDIR,
 ]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    # For LIBVPX_RAND
-    ASFLAGS += [
-        '-D__ANDROID__'
-    ]

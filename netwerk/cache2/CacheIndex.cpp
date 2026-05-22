@@ -152,7 +152,7 @@ private:
         if (!mDoNotSearchInUpdates) {
           entry = mIndex->mPendingUpdates.GetEntry(*mHash);
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       case CacheIndex::BUILDING:
       case CacheIndex::UPDATING:
       case CacheIndex::READY:
@@ -459,7 +459,7 @@ CacheIndex::Shutdown()
   switch (oldState) {
     case WRITING:
       index->FinishWrite(false, lock);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case READY:
       if (index->mIndexOnDiskIsValid && !index->mDontMarkIndexClean) {
         if (!sanitize && NS_FAILED(index->WriteLogToDisk())) {
@@ -1153,7 +1153,7 @@ CacheIndex::HasEntry(const SHA1Sum::Hash &hash, EntryStatus *_retval, bool *_pin
     case READING:
     case WRITING:
       entry = index->mPendingUpdates.GetEntry(hash);
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case BUILDING:
     case UPDATING:
     case READY:
@@ -3649,7 +3649,7 @@ CacheIndex::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) cons
 size_t
 CacheIndex::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
-  StaticMutexAutoLock lock(sLock);
+  sLock.AssertCurrentThreadOwns();
 
   if (!gInstance)
     return 0;
@@ -3663,8 +3663,7 @@ CacheIndex::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
   StaticMutexAutoLock lock(sLock);
 
-  return mallocSizeOf(gInstance) +
-         (gInstance ? gInstance->SizeOfExcludingThisInternal(mallocSizeOf) : 0);
+  return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 // static

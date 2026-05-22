@@ -18,8 +18,10 @@
  **************************************************************/
 
 #include "mozilla/dom/ContentParent.h"
+#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginInstanceParent.h"
 using mozilla::plugins::PluginInstanceParent;
+#endif
 
 #include "nsWindowGfx.h"
 #include "nsAppRunner.h"
@@ -163,12 +165,14 @@ void nsWindow::ForcePresent()
 
 bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 {
+#ifdef MOZ_ENABLE_NPAPI
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
   // but view manager will refuse to paint the surface, resulting is black
   // flashes on the plugin rendering surface.
   if (mozilla::ipc::MessageChannel::IsSpinLoopActive() && mPainting)
     return false;
+#endif
 
   DeviceResetReason resetReason = DeviceResetReason::OK;
   if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset(&resetReason)) {
@@ -185,6 +189,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return false;
   }
 
+#ifdef MOZ_ENABLE_NPAPI
   // After we CallUpdateWindow to the child, occasionally a WM_PAINT message
   // is posted to the parent event loop with an empty update rect. Do a
   // dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
@@ -221,6 +226,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     ValidateRect(mWnd, nullptr);
     return true;
   }
+#endif
 
   ClientLayerManager *clientLayerManager = GetLayerManager()->AsClientLayerManager();
 
@@ -233,7 +239,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
   PAINTSTRUCT ps;
 
-#ifdef MOZ_XUL
   if (!aDC && (eTransparencyTransparent == mTransparencyMode))
   {
     // For layered translucent windows all drawing should go to memory DC and no
@@ -248,9 +253,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     // We're guaranteed to have a widget proxy since we called GetLayerManager().
     aDC = mCompositorWidgetDelegate->GetTransparentDC();
   }
-#endif
-
+#ifdef MOZ_ENABLE_NPAPI
   mPainting = true;
+#endif
 
 #ifdef WIDGET_DEBUG_OUTPUT
   HRGN debugPaintFlashRegion = nullptr;
@@ -267,11 +272,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
   mPaintDC = hDC;
 
-#ifdef MOZ_XUL
   bool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
-#else
-  bool forceRepaint = nullptr != aDC;
-#endif
   nsIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
 
   if (clientLayerManager) {
@@ -317,14 +318,12 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         {
           RefPtr<gfxASurface> targetSurface;
 
-#if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
           if (eTransparencyTransparent == mTransparencyMode) {
             // This mutex needs to be held when EnsureTransparentSurface is called.
             MutexAutoLock lock(mBasicLayersSurface->GetTransparentSurfaceLock());
             targetSurface = mBasicLayersSurface->EnsureTransparentSurface();
           }
-#endif
 
           RefPtr<gfxWindowsSurface> targetSurfaceWin;
           if (!targetSurface)
@@ -353,7 +352,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
           // don't need to double buffer with anything but GDI
           BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
-#ifdef MOZ_XUL
           switch (mTransparencyMode) {
             case eTransparencyGlass:
             case eTransparencyBorderlessGlass:
@@ -368,9 +366,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
                                  dt->GetSize().width, dt->GetSize().height));
               break;
           }
-#else
-          doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
-#endif
 
           RefPtr<gfxContext> thebesContext = gfxContext::CreateOrNull(dt);
           MOZ_ASSERT(thebesContext); // already checked draw target above
@@ -382,14 +377,12 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
               this, LayoutDeviceIntRegion::FromUnknownRegion(region));
           }
 
-#ifdef MOZ_XUL
           if (eTransparencyTransparent == mTransparencyMode) {
             // Data from offscreen drawing surface was copied to memory bitmap of transparent
             // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
             // that displayed on the screen.
             mBasicLayersSurface->RedrawTransparentWindow();
           }
-#endif
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
@@ -433,7 +426,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   }
 #endif // WIDGET_DEBUG_OUTPUT
 
+#ifdef MOZ_ENABLE_NPAPI
   mPainting = false;
+#endif
 
   // Re-get the listener since painting may have killed it.
   listener = GetPaintListener();

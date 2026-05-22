@@ -240,10 +240,9 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 class txVariable : public txIGlobalParameter
 {
 public:
-    explicit txVariable(nsIVariant* aValue, txAExprResult* aTxValue)
-      : mValue(aValue)
+    explicit txVariable(nsIVariant* aValue) : mValue(aValue)
     {
-        NS_ASSERTION(aValue && aTxValue, "missing value");
+        NS_ASSERTION(aValue, "missing value");
     }
     explicit txVariable(txAExprResult* aValue) : mTxValue(aValue)
     {
@@ -251,13 +250,12 @@ public:
     }
     nsresult getValue(txAExprResult** aValue)
     {
+        NS_ASSERTION(mValue || mTxValue, "variablevalue is null");
+
         if (!mTxValue) {
-          // XXX: This should not happen as we normally convert values before
-          // we call this function. For corner cases where this isn't true, we
-          // perform the conversion here.
-          nsresult rv = Convert(mValue, getter_AddRefs(mTxValue));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }        
+            nsresult rv = Convert(mValue, getter_AddRefs(mTxValue));
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         *aValue = mTxValue;
         NS_ADDREF(*aValue);
@@ -274,11 +272,11 @@ public:
     {
         return mValue;
     }
-    void setValue(nsIVariant* aValue, txAExprResult* aTxValue)
+    void setValue(nsIVariant* aValue)
     {
-        NS_ASSERTION(aValue && aTxValue, "setting variablevalue to null");
+        NS_ASSERTION(aValue, "setting variablevalue to null");
         mValue = aValue;
-        mTxValue = aTxValue;
+        mTxValue = nullptr;
     }
     void setValue(txAExprResult* aValue)
     {
@@ -287,14 +285,14 @@ public:
         mTxValue = aValue;
     }
 
-    static nsresult Convert(nsIVariant *aValue, txAExprResult** aResult);
-
     friend void ImplCycleCollectionUnlink(txVariable& aVariable);
     friend void ImplCycleCollectionTraverse(
         nsCycleCollectionTraversalCallback& aCallback, txVariable& aVariable,
         const char* aName, uint32_t aFlags);
 
 private:
+    static nsresult Convert(nsIVariant *aValue, txAExprResult** aResult);
+
     nsCOMPtr<nsIVariant> mValue;
     RefPtr<txAExprResult> mTxValue;
 };
@@ -981,17 +979,13 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
     nsCOMPtr<nsIAtom> localName = NS_Atomize(aLocalName);
     txExpandedName varName(nsId, localName);
 
-    RefPtr<txAExprResult> txValue;
-    rv = txVariable::Convert(value, getter_AddRefs(txValue));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
-        var->setValue(value, txValue);
+        var->setValue(value);
         return NS_OK;
     }
 
-    var = new txVariable(value, txValue);
+    var = new txVariable(value);
     return mVariables.add(varName, var);
 }
 

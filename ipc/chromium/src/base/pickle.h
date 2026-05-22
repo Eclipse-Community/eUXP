@@ -1,5 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Copyright (c) 2023, Moonchild Productions.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -111,7 +112,7 @@ class Pickle {
   [[nodiscard]] bool ReadWString(PickleIterator* iter, std::wstring* result) const;
   [[nodiscard]] bool ReadBytesInto(PickleIterator* iter, void* data, uint32_t length) const;
   [[nodiscard]] bool ExtractBuffers(PickleIterator* iter, size_t length, BufferList* buffers,
-                                   uint32_t alignment = sizeof(memberAlignmentType)) const;
+                                    uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.

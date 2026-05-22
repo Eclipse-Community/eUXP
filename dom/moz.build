@@ -39,7 +39,6 @@ DIRS += [
     'animation',
     'apps',
     'base',
-    'archivereader',
     'bindings',
     'browser-element',
     'cache',
@@ -74,7 +73,6 @@ DIRS += [
     'network',
     'permission',
     'plugins/base',
-    'plugins/ipc',
     'indexedDB',
     'system',
     'ipc',
@@ -100,7 +98,10 @@ DIRS += [
     'script',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['MOZ_ENABLE_NPAPI']:
+    DIRS += ['plugins/ipc']
+
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_ENABLE_NPAPI']:
     DIRS += ['plugins/ipc/hangui']
 
 if CONFIG['MOZ_SECUREELEMENT']:

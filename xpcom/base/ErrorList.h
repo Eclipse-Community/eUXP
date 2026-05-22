@@ -745,13 +745,6 @@
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_URILOADER
   ERROR(NS_ERROR_WONT_HANDLE_CONTENT,   FAILURE(1)),
-  /* The load has been cancelled because it was found on a malware or phishing
-   * blacklist. */
-  ERROR(NS_ERROR_MALWARE_URI,           FAILURE(30)),
-  ERROR(NS_ERROR_PHISHING_URI,          FAILURE(31)),
-  ERROR(NS_ERROR_TRACKING_URI,          FAILURE(34)),
-  ERROR(NS_ERROR_UNWANTED_URI,          FAILURE(35)),
-  ERROR(NS_ERROR_BLOCKED_URI,           FAILURE(37)),
   /* Used when "Save Link As..." doesn't see the headers quickly enough to
    * choose a filename.  See nsContextMenu.js. */
   ERROR(NS_ERROR_SAVE_LINK_AS_TIMEOUT,  FAILURE(32)),
@@ -1008,6 +1001,7 @@
   ERROR(NS_ERROR_DOM_UT_INVALID_TIMING_ATTR,          FAILURE(2)),
   ERROR(NS_ERROR_DOM_UT_UNAVAILABLE_ATTR,             FAILURE(3)),
   ERROR(NS_ERROR_DOM_UT_UNAVAILABLE_GLOBAL_OBJECT,    FAILURE(4)),
+  ERROR(NS_ERROR_DOM_UT_QUOTA_ERR,                    FAILURE(5)),
 #undef MODULE
 
   /* ======================================================================= */

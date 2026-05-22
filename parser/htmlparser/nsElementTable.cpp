@@ -109,7 +109,6 @@ static const HTMLElement gHTMLElements[] = {
   ELEM(main,        true, true)
   ELEM(map,         ____, true)
   ELEM(mark,        ____, true)
-  ELEM(marquee,     ____, true)
   ELEM(menu,        true, true)
   ELEM(menuitem,    ____, true)
   ELEM(meta,        ____, ____)

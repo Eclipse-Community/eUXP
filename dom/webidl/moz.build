@@ -9,6 +9,9 @@ GENERATED_WEBIDL_FILES = [
 
 PREPROCESSED_WEBIDL_FILES = [
     'HTMLMediaElement.webidl',
+    'HTMLObjectElement.webidl',
+    'LegacyQueryInterface.webidl',
+    'MimeType.webidl',
     'Navigator.webidl',
     'Node.webidl',
     'Performance.webidl',
@@ -31,8 +34,6 @@ WEBIDL_FILES = [
     'AppInfo.webidl',
     'AppNotificationServiceOptions.webidl',
     'APZTestData.webidl',
-    'ArchiveReader.webidl',
-    'ArchiveRequest.webidl',
     'Attr.webidl',
     'AudioBuffer.webidl',
     'AudioBufferSourceNode.webidl',
@@ -231,7 +232,6 @@ WEBIDL_FILES = [
     'HTMLMetaElement.webidl',
     'HTMLMeterElement.webidl',
     'HTMLModElement.webidl',
-    'HTMLObjectElement.webidl',
     'HTMLOListElement.webidl',
     'HTMLOptGroupElement.webidl',
     'HTMLOptionElement.webidl',
@@ -293,7 +293,6 @@ WEBIDL_FILES = [
     'KeyframeAnimationOptions.webidl',
     'KeyframeEffect.webidl',
     'KeyIdsInitData.webidl',
-    'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
     'ListBoxObject.webidl',
     'LocalMediaStream.webidl',
@@ -319,7 +318,6 @@ WEBIDL_FILES = [
     'MessageChannel.webidl',
     'MessageEvent.webidl',
     'MessagePort.webidl',
-    'MimeType.webidl',
     'MimeTypeArray.webidl',
     'MouseEvent.webidl',
     'MouseScrollEvent.webidl',
@@ -363,8 +361,6 @@ WEBIDL_FILES = [
     'Permissions.webidl',
     'PermissionSettings.webidl',
     'PermissionStatus.webidl',
-    'Plugin.webidl',
-    'PluginArray.webidl',
     'PointerEvent.webidl',
     'PopupBoxObject.webidl',
     'Position.webidl',
@@ -595,22 +591,6 @@ WEBIDL_FILES = [
     'XULElement.webidl',
 ]
 
-if CONFIG['MOZ_EME']:
-    WEBIDL_FILES += [
-        'MediaEncryptedEvent.webidl',
-        'MediaKeyError.webidl',
-        'MediaKeyMessageEvent.webidl',
-        'MediaKeys.webidl',
-        'MediaKeySession.webidl',
-        'MediaKeysRequestStatus.webidl',
-        'MediaKeyStatusMap.webidl',
-        'MediaKeySystemAccess.webidl',
-        'WidevineCDMManifest.webidl',
-    ]
-
-if CONFIG['MOZ_WEBEXTENSIONS']:
-  WEBIDL_FILES += ['AddonManager.webidl']
-
 if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
     WEBIDL_FILES += [
         'AudioChannelManager.webidl',
@@ -685,6 +665,12 @@ if CONFIG['MOZ_SECUREELEMENT']:
          'SecureElementManager.webidl',
     ]
 
+if CONFIG['MOZ_ENABLE_NPAPI']:
+    WEBIDL_FILES += [
+         'Plugin.webidl',
+         'PluginArray.webidl',
+    ]
+
 WEBIDL_FILES += [
     'InstallTrigger.webidl',
 ]
@@ -731,9 +717,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'UserProximityEvent.webidl',
     'WebGLContextEvent.webidl',
 ]
-
-if CONFIG['MOZ_WEBEXTENSIONS']:
-  GENERATED_EVENTS_WEBIDL_FILES += ['AddonEvent.webidl']
 
 if CONFIG['MOZ_WEBRTC']:
     GENERATED_EVENTS_WEBIDL_FILES += [

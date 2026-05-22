@@ -383,6 +383,7 @@ enum SilverlightPresence {
 static SilverlightPresence
 CheckSilverlight()
 {
+#ifdef MOZ_ENABLE_NPAPI
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   if (!pluginHost) {
@@ -398,7 +399,7 @@ CheckSilverlight()
       }
     }
   }
-
+#endif
   return eNoSilverlight;
 }
 
@@ -575,16 +576,9 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       // going through expected decoders from most to least desirable.
 #if defined(XP_WIN)
       if (!formatsRequiringWMF.IsEmpty()) {
-        if (IsVistaOrLater()) {
-          DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
-                  this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
-          ReportAnalysis(mDocument, sMediaWMFNeeded, false, formatsRequiringWMF);
-        } else {
-          DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media before Windows Vista",
-                  this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
-          ReportAnalysis(mDocument, sMediaUnsupportedBeforeWindowsVista,
-                         false, formatsRequiringWMF);
-        }
+        DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
+                this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
+        ReportAnalysis(mDocument, sMediaWMFNeeded, false, formatsRequiringWMF);
         return;
       }
 #endif
@@ -592,10 +586,6 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       if (!formatsRequiringFFMpeg.IsEmpty()) {
         switch (FFmpegRuntimeLinker::LinkStatusCode()) {
           case FFmpegRuntimeLinker::LinkStatus_INVALID_FFMPEG_CANDIDATE:
-          case FFmpegRuntimeLinker::LinkStatus_UNUSABLE_LIBAV57:
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_LIBAV_CANDIDATE:
-          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_FFMPEG:
-          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_LIBAV:
           case FFmpegRuntimeLinker::LinkStatus_INVALID_CANDIDATE:
             DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because of unsupported %s (Reason: %s)",
                     this, mDocument,

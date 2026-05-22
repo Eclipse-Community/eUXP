@@ -36,10 +36,10 @@ protected:
    * channel is opened already.
    */
   [[nodiscard]] nsresult OpenChannel(nsIChannel* channel,
-                                    uint32_t aFlags,
-                                    nsIInterfaceRequestor* aWindowContext,
-                                    bool aChannelOpen,
-                                    nsIStreamListener** aListener);
+                                     uint32_t aFlags,
+                                     nsIInterfaceRequestor* aWindowContext,
+                                     bool aChannelOpen,
+                                     nsIStreamListener** aListener);
 
   /**
    * we shouldn't need to have an owning ref count on registered

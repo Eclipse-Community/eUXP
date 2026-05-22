@@ -39,12 +39,14 @@
 #ifdef XP_WIN
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/widget/AudioSession.h"
-#include "WinUtils.h"
 #include <knownfolders.h>
+#include <shlobj.h>
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
+#ifdef MOZ_ENABLE_NPAPI
 #include "PluginInterposeOSX.h"
+#endif // MOZ_ENABLE_NPAPI
 #include "PluginUtilsOSX.h"
 #endif
 
@@ -133,7 +135,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
         gChromeInstance = this;
     }
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
     if (aIsChrome) {
       mac_plugin_interposing::child::SetUpCocoaInterposing();
     }
@@ -1917,8 +1919,8 @@ GetLocalLowTempPath(size_t aLen, LPWSTR aPath)
 {
     NS_NAMED_LITERAL_STRING(tempname, "\\Temp");
     LPWSTR path;
-    if (SUCCEEDED(WinUtils::SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0,
-                                                 nullptr, &path))) {
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0,
+                                       nullptr, &path))) {
         if (wcslen(path) + tempname.Length() < aLen) {
             wcscpy(aPath, path);
             wcscat(aPath, tempname.get());
@@ -2548,6 +2550,7 @@ PluginModuleChild::ProcessNativeEvents() {
 }
 #endif
 
+#ifdef MOZ_ENABLE_NPAPI
 NPError
 PluginModuleChild::PluginRequiresAudioDeviceChanges(
                           PluginInstanceChild* aInstance,
@@ -2606,3 +2609,4 @@ PluginModuleChild::RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
     return false;
 #endif
 }
+#endif // MOZ_ENABLE_NPAPI

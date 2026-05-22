@@ -266,9 +266,9 @@ public:
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaStreamGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
-  typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput, StreamTime tick);
+  using PanningModelFunction = void (PannerNodeEngine::*)(const AudioBlock&, AudioBlock*, StreamTime);
   PanningModelFunction mPanningModelFunction;
-  typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
+  using DistanceModelFunction = float (PannerNodeEngine::*)(double);
   DistanceModelFunction mDistanceModelFunction;
   AudioParamTimeline mPositionX;
   AudioParamTimeline mPositionY;

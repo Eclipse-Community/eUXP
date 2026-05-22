@@ -18,11 +18,10 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWeakPtr.h"
-#ifdef MOZ_EME
-#include "mozilla/dom/MediaKeySystemAccessManager.h"
-#endif
 
+#ifdef MOZ_ENABLE_NPAPI
 class nsPluginArray;
+#endif
 class nsMimeTypeArray;
 class nsPIDOMWindowInner;
 class nsIDOMNavigatorSystemMessages;
@@ -130,7 +129,9 @@ public:
   void RegisterContentHandler(const nsAString& aMIMEType, const nsAString& aURL,
                               const nsAString& aTitle, ErrorResult& aRv);
   nsMimeTypeArray* GetMimeTypes(ErrorResult& aRv);
+#ifdef MOZ_ENABLE_NPAPI
   nsPluginArray* GetPlugins(ErrorResult& aRv);
+#endif
   Permissions* GetPermissions(ErrorResult& aRv);
   bool GlobalPrivacyControl();
   Geolocation* GetGeolocation(ErrorResult& aRv);
@@ -220,10 +221,8 @@ public:
   dom::Clipboard* Clipboard();
 
   static bool Webdriver();
-
+  
   void GetLanguages(nsTArray<nsString>& aLanguages);
-
-  bool MozE10sEnabled();
 
   StorageManager* Storage();
 
@@ -249,15 +248,6 @@ public:
   // any, else null.
   static already_AddRefed<nsPIDOMWindowInner> GetWindowFromGlobal(JSObject* aGlobal);
 
-#ifdef MOZ_EME
-  already_AddRefed<Promise>
-  RequestMediaKeySystemAccess(const nsAString& aKeySystem,
-                              const Sequence<MediaKeySystemConfiguration>& aConfig,
-                              ErrorResult& aRv);
-private:
-  RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
-#endif
-
 private:
   virtual ~Navigator();
 
@@ -278,7 +268,9 @@ private:
                           ErrorResult& aRv);
 
   RefPtr<nsMimeTypeArray> mMimeTypes;
+#ifdef MOZ_ENABLE_NPAPI
   RefPtr<nsPluginArray> mPlugins;
+#endif
   RefPtr<Permissions> mPermissions;
   RefPtr<Geolocation> mGeolocation;
   RefPtr<DesktopNotificationCenter> mNotification;

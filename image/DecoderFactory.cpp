@@ -19,9 +19,7 @@
 #include "nsICODecoder.h"
 #include "nsIconDecoder.h"
 #include "nsWebPDecoder.h"
-#ifdef MOZ_JXL
-#  include "nsJXLDecoder.h"
-#endif
+#include "nsJXLDecoder.h"
 
 namespace mozilla {
 
@@ -76,16 +74,13 @@ DecoderFactory::GetDecoderType(const char* aMimeType)
     type = DecoderType::ICON;
 
   // WebP
-  } else if (!strcmp(aMimeType, IMAGE_WEBP) &&
-             gfxPrefs::ImageWebPEnabled()) {
+  } else if (!strcmp(aMimeType, IMAGE_WEBP)) {
     type = DecoderType::WEBP;
   }
-#ifdef MOZ_JXL
-    else if (!strcmp(aMimeType, IMAGE_JXL) &&
-             gfxPrefs::ImageJXLEnabled()) {
+  // JPEG-XL
+    else if (!strcmp(aMimeType, IMAGE_JXL)) {
     type = DecoderType::JXL;
   }
-#endif
   return type;
 }
 
@@ -125,11 +120,9 @@ DecoderFactory::GetDecoder(DecoderType aType,
     case DecoderType::WEBP:
       decoder = new nsWebPDecoder(aImage);
       break;
-#ifdef MOZ_JXL
     case DecoderType::JXL:
       decoder = new nsJXLDecoder(aImage);
       break;
-#endif
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown decoder type");
   }
@@ -203,10 +196,8 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   bool validDecoderType = (
              aType == DecoderType::GIF ||
              aType == DecoderType::PNG ||
-             aType == DecoderType::WEBP);
-#ifdef MOZ_JXL
-  validDecoderType = validDecoderType || aType == DecoderType::JXL;
-#endif
+             aType == DecoderType::WEBP ||
+             aType == DecoderType::JXL);
 
   MOZ_ASSERT(validDecoderType,
              "Calling CreateAnimationDecoder for non-animating DecoderType");

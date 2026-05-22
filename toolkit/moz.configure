@@ -4,20 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-# Profiling
-# ==============================================================
-# Some of the options here imply an option from js/moz.configure,
-# so, need to be declared before the include.
-option('--enable-systrace', env='MOZ_USE_SYSTRACE',
-       help='Turn on systrace for the Gecko profiler on android/b2g')
-
-@depends('--enable-systrace', target)
-def systrace(value, target):
-    if value:
-        return True
-
-set_define('MOZ_USE_SYSTRACE', systrace)
-
 # JACK cubeb backend
 # ==============================================================
 option('--enable-jack', env='MOZ_JACK',
@@ -202,12 +188,21 @@ def instrument_event_loop(value, toolkit):
 set_config('MOZ_INSTRUMENT_EVENT_LOOP', instrument_event_loop)
 set_define('MOZ_INSTRUMENT_EVENT_LOOP', instrument_event_loop)
 
+# Apple platform decoder support
 
 # Fontconfig Freetype
 # ==============================================================
+option('--disable-apple-media',
+       help='Disable support for Apple Media')
 option(env='USE_FC_FREETYPE',
        help='Force-enable the use of fontconfig freetype')
 
+@depends('--disable-apple-media', toolkit)
+def applemedia(value, toolkit):
+    enabled = bool(value)
+    if value.origin == 'default':
+        enabled = toolkit in ('cocoa', 'uikit')
+    if enabled:
 @depends('USE_FC_FREETYPE', toolkit)
 def fc_freetype(value, toolkit):
     if value or (toolkit in ('gtk2', 'gtk3') and
@@ -278,11 +273,6 @@ add_old_configure_assignment('FT2_LIBS',
 add_old_configure_assignment('FT2_CFLAGS',
                              delayed_getattr(ft2_info, 'cflags'))
 
-# Apple platform decoder support
-# ==============================================================
-@depends(toolkit)
-def applemedia(toolkit):
-    if toolkit in ('cocoa', 'uikit'):
         return True
 
 set_config('MOZ_APPLEMEDIA', applemedia)

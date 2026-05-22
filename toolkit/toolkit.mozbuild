@@ -13,13 +13,11 @@ if CONFIG['MOZ_MAILNEWS']:
 DIRS += [
     # Depends on NSS and NSPR
     '/security/certverifier',
-    # Depends on certverifier
-    '/security/apps',
 ]
 
-# the signing related bits of libmar depend on nss
-if CONFIG['MOZ_UPDATER']:
-    DIRS += ['/modules/libmar']
+# MAR support at all times.
+DIRS += ['/modules/libmar',
+         '/other-licenses/bsdiff']
 
 DIRS += [
     '/config/external/freetype2',
@@ -31,9 +29,6 @@ DIRS += [
 
 if CONFIG['MOZ_AUTH_EXTENSION']:
     DIRS += ['/extensions/auth']
-
-if CONFIG['MOZ_UPDATER']:
-    DIRS += ['/other-licenses/bsdiff']
 
 # Gecko/Core components.
 
@@ -133,20 +128,9 @@ DIRS += [
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['/toolkit/system/gnome']
 
-if CONFIG['ENABLE_MARIONETTE']:
-    DIRS += [
-        '/testing/firefox-ui',
-        '/testing/marionette',
-    ]
-
 DIRS += [
     '/tools/quitter',
 ]
-
-if CONFIG['MOZ_EME']:
-    DIRS += [
-    '/media/gmp-clearkey/0.1',
-    ]
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += [

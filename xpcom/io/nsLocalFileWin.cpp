@@ -6,7 +6,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/WindowsVersion.h"
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -1631,8 +1630,7 @@ nsLocalFile::Normalize()
   //  "..."   remove from path (any number of dots > 2)
   //
   // The last form is something that Windows 95 and 98 supported and
-  // is a shortcut for changing up multiple directories. Windows XP
-  // and ilk ignore it in a path, as is done here.
+  // is a shortcut for changing up multiple directories. We ignore this form.
   int32_t len, begin, end = rootIdx;
   while (end < (int32_t)path.Length()) {
     // find the current segment (text between the backslashes) to
@@ -1974,13 +1972,11 @@ nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
   // So we only use COPY_FILE_NO_BUFFERING when we have a remote drive.
   int copyOK;
   DWORD dwCopyFlags = COPY_FILE_ALLOW_DECRYPTED_DESTINATION;
-  if (IsVistaOrLater()) {
-    bool path1Remote, path2Remote;
-    if (!IsRemoteFilePath(filePath.get(), path1Remote) ||
-        !IsRemoteFilePath(destPath.get(), path2Remote) ||
-        path1Remote || path2Remote) {
-      dwCopyFlags |= COPY_FILE_NO_BUFFERING;
-    }
+  bool path1Remote, path2Remote;
+  if (!IsRemoteFilePath(filePath.get(), path1Remote) ||
+      !IsRemoteFilePath(destPath.get(), path2Remote) ||
+      path1Remote || path2Remote) {
+    dwCopyFlags |= COPY_FILE_NO_BUFFERING;
   }
 
   if (FilePreferences::IsBlockedUNCPath(destPath)) {

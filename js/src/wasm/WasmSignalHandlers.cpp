@@ -34,13 +34,6 @@ using JS::GenericNaN;
 using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
 
-#if defined(ANDROID)
-# include <sys/system_properties.h>
-# if defined(MOZ_LINKER)
-extern "C" MFBT_API bool IsSignalHandlingBroken();
-# endif
-#endif
-
 // For platforms where the signal/exception handler runs on the same
 // thread/stack as the victim (Unix and Windows), we can use TLS to find any
 // currently executing wasm code.
@@ -77,6 +70,9 @@ class AutoSetHandlingSegFault
         rt->handlingSegFault = false;
     }
 };
+
+// Follow TenFourFox and just disable ASM JS
+#if !(defined(XP_DARWIN) && defined(__ppc__))
 
 #if defined(XP_WIN)
 # define XMM_sig(p,i) ((p)->Xmm##i)
@@ -172,6 +168,11 @@ class AutoSetHandlingSegFault
 #  define RSP_sig(p) ((p)->uc_mcontext.gregs[29])
 #  define RFP_sig(p) ((p)->uc_mcontext.gregs[30])
 # endif
+# if defined(__linux__) && defined(__loongarch__)
+#  define EPC_sig(p) ((p)->uc_mcontext.__pc)
+#  define RSP_sig(p) ((p)->uc_mcontext.__gregs[3])
+#  define RFP_sig(p) ((p)->uc_mcontext.__gregs[22])
+# endif
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
@@ -264,86 +265,6 @@ class AutoSetHandlingSegFault
 # endif
 #endif
 
-#if defined(ANDROID)
-// Not all versions of the Android NDK define ucontext_t or mcontext_t.
-// Detect this and provide custom but compatible definitions. Note that these
-// follow the GLibc naming convention to access register values from
-// mcontext_t.
-//
-// See: https://chromiumcodereview.appspot.com/10829122/
-// See: http://code.google.com/p/android/issues/detail?id=34784
-# if !defined(__BIONIC_HAVE_UCONTEXT_T)
-#  if defined(__arm__)
-
-// GLibc on ARM defines mcontext_t has a typedef for 'struct sigcontext'.
-// Old versions of the C library <signal.h> didn't define the type.
-#   if !defined(__BIONIC_HAVE_STRUCT_SIGCONTEXT)
-#    include <asm/sigcontext.h>
-#   endif
-
-typedef struct sigcontext mcontext_t;
-
-typedef struct ucontext {
-    uint32_t uc_flags;
-    struct ucontext* uc_link;
-    stack_t uc_stack;
-    mcontext_t uc_mcontext;
-    // Other fields are not used so don't define them here.
-} ucontext_t;
-
-#  elif defined(__mips__)
-
-typedef struct {
-    uint32_t regmask;
-    uint32_t status;
-    uint64_t pc;
-    uint64_t gregs[32];
-    uint64_t fpregs[32];
-    uint32_t acx;
-    uint32_t fpc_csr;
-    uint32_t fpc_eir;
-    uint32_t used_math;
-    uint32_t dsp;
-    uint64_t mdhi;
-    uint64_t mdlo;
-    uint32_t hi1;
-    uint32_t lo1;
-    uint32_t hi2;
-    uint32_t lo2;
-    uint32_t hi3;
-    uint32_t lo3;
-} mcontext_t;
-
-typedef struct ucontext {
-    uint32_t uc_flags;
-    struct ucontext* uc_link;
-    stack_t uc_stack;
-    mcontext_t uc_mcontext;
-    // Other fields are not used so don't define them here.
-} ucontext_t;
-
-#  elif defined(__i386__)
-// x86 version for Android.
-typedef struct {
-    uint32_t gregs[19];
-    void* fpregs;
-    uint32_t oldmask;
-    uint32_t cr2;
-} mcontext_t;
-
-typedef uint32_t kernel_sigset_t[2];  // x86 kernel uses 64-bit signal masks
-typedef struct ucontext {
-    uint32_t uc_flags;
-    struct ucontext* uc_link;
-    stack_t uc_stack;
-    mcontext_t uc_mcontext;
-    // Other fields are not used by V8, don't define them here.
-} ucontext_t;
-enum { REG_EIP = 14 };
-#  endif  // defined(__i386__)
-# endif  // !defined(__BIONIC_HAVE_UCONTEXT_T)
-#endif // defined(ANDROID)
-
 #if !defined(XP_WIN)
 # define CONTEXT ucontext_t
 #endif
@@ -392,14 +313,14 @@ struct macos_aarch64_context {
 # define PC_sig(p) R15_sig(p)
 #elif defined(__aarch64__)
 # define PC_sig(p) EPC_sig(p)
-#elif defined(JS_CPU_MIPS)
+#elif defined(JS_CPU_MIPS) || defined(JS_CPU_LOONGARCH64)
 # define PC_sig(p) EPC_sig(p)
 #endif
 
 static uint8_t**
 ContextToPC(CONTEXT* context)
 {
-#ifdef JS_CODEGEN_NONE
+#if defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
@@ -1322,6 +1243,7 @@ JitInterruptHandler(int signum, siginfo_t* info, void* context)
     }
 }
 #endif
+#endif // XP_DARWIN && __ppc__
 
 static bool sTriedInstallSignalHandlers = false;
 static bool sHaveSignalHandlers = false;
@@ -1339,29 +1261,12 @@ ProcessHasSignalHandlers()
     if (getenv("JS_DISABLE_SLOW_SCRIPT_SIGNALS") || getenv("JS_NO_SIGNALS"))
         return false;
 
-#if defined(ANDROID)
-    // Before Android 4.4 (SDK version 19), there is a bug
-    //   https://android-review.googlesource.com/#/c/52333
-    // in Bionic's pthread_join which causes pthread_join to return early when
-    // pthread_kill is used (on any thread). Nobody expects the pthread_cond_wait
-    // EINTRquisition.
-    char version_string[PROP_VALUE_MAX];
-    PodArrayZero(version_string);
-    if (__system_property_get("ro.build.version.sdk", version_string) > 0) {
-        if (atol(version_string) < 19)
-            return false;
-    }
-# if defined(MOZ_LINKER)
-    // Signal handling is broken on some android systems.
-    if (IsSignalHandlingBroken())
-        return false;
-# endif
-#endif
-
     // The interrupt handler allows the main thread to be paused from another
     // thread (see InterruptRunningJitCode).
 #if defined(XP_WIN)
     // Windows uses SuspendThread to stop the main thread from another thread.
+#elif defined(XP_DARWIN) && defined(__ppc__)
+    // For now just skip the signal handler for Mac PowerPC
 #else
     struct sigaction interruptHandler;
     interruptHandler.sa_flags = SA_SIGINFO;
@@ -1424,7 +1329,7 @@ wasm::EnsureSignalHandlers(JSRuntime* rt)
     if (!ProcessHasSignalHandlers())
         return true;
 
-#if defined(XP_DARWIN)
+#if defined(XP_DARWIN) && !defined(__ppc__)
     // On OSX, each JSRuntime gets its own handler thread.
     if (!rt->wasmMachExceptionHandler.installed() && !rt->wasmMachExceptionHandler.install(rt))
         return false;
@@ -1452,6 +1357,8 @@ wasm::HaveSignalHandlers()
 void
 js::InterruptRunningJitCode(JSRuntime* rt)
 {
+// Like TenFourFox, skip this on Mac PowerPC
+#if !(defined(XP_DARWIN) && defined(__ppc__))
     // If signal handlers weren't installed, then Ion and wasm emit normal
     // interrupt checks and don't need asynchronous interruption.
     if (!HaveSignalHandlers())
@@ -1496,6 +1403,7 @@ js::InterruptRunningJitCode(JSRuntime* rt)
     pthread_t thread = (pthread_t)rt->ownerThreadNative();
     pthread_kill(thread, sInterruptSignal);
 #endif
+#endif // XP_DARWIN && __ppc__
 }
 
 MOZ_COLD bool

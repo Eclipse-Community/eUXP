@@ -133,7 +133,8 @@ option(env='PYTHON', nargs=1, help='Python interpreter')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports('distutils.sysconfig')
+@imports(_from='mozpack.path', _import='normsep')
+@imports('sysconfig')
 def virtualenv_python(env_python, build_env, mozconfig, help):
     if help:
         return
@@ -165,6 +166,9 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
             os.path.join(topobjdir, '_virtualenv'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
+    if normsep(sys.executable) == normsep(manager.python_path):
+        return normsep(manager.python_path)
+
     if python:
         # If we're not in the virtualenv, we need the which module for
         # find_program.
@@ -193,10 +197,10 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
         sys.exit(subprocess.call([python] + sys.argv))
 
     # We are now in the virtualenv
-    if not distutils.sysconfig.get_python_lib():
+    if not sysconfig.get_path("purelib"):
         die('Could not determine python site packages directory')
 
-    return python
+    return normsep(python)
 
 set_config('PYTHON', virtualenv_python)
 add_old_configure_assignment('PYTHON', virtualenv_python)
@@ -212,7 +216,7 @@ def early_options():
     def early_options():
         return set(
             option.env
-            for option in __sandbox__._options.itervalues()
+            for option in __sandbox__._options.values()
             if option.env
         )
     return early_options
@@ -240,17 +244,17 @@ def mozconfig_options(mozconfig, help):
                 log.info('  %s' % arg)
                 helper.add(arg, origin='mozconfig', args=helper._args)
 
-        for key, value in mozconfig['env']['added'].iteritems():
+        for key, value in mozconfig['env']['added'].items():
             add(key, value)
             os.environ[key] = value
-        for key, (_, value) in mozconfig['env']['modified'].iteritems():
+        for key, (_, value) in mozconfig['env']['modified'].items():
             add(key, value)
             os.environ[key] = value
-        for key, value in mozconfig['vars']['added'].iteritems():
+        for key, value in mozconfig['vars']['added'].items():
             # mozconfig_loader adds _IS_SET variables that are irrelevant
             if not key.endswith('_IS_SET'):
                 add(key, value)
-        for key, (_, value) in mozconfig['vars']['modified'].iteritems():
+        for key, (_, value) in mozconfig['vars']['modified'].items():
             add(key, value)
 
 
@@ -290,6 +294,7 @@ option('--target', nargs=1,
 @imports(_from='mozbuild.configure.constants', _import='Endianness')
 @imports(_from='mozbuild.configure.constants', _import='Kernel')
 @imports(_from='mozbuild.configure.constants', _import='OS')
+@imports(_from='mozbuild.configure.constants', _import='OS_and_Kernel')
 def split_triplet(triplet):
     # The standard triplet is defined as
     #   CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
@@ -378,6 +383,9 @@ def split_triplet(triplet):
     elif cpu.startswith('aarch64'):
         canonical_cpu = 'aarch64'
         endianness = 'little'
+    elif cpu.startswith('loongarch64'):
+        canonical_cpu = 'loongarch64'
+        endianness = 'little'
     else:
         die('Unknown CPU type: %s' % cpu)
 
@@ -385,8 +393,8 @@ def split_triplet(triplet):
         alias=triplet,
         cpu=CPU(canonical_cpu),
         bitness=CPU_bitness[canonical_cpu],
-        kernel=Kernel(canonical_kernel),
-        os=OS(canonical_os),
+        kernel=OS_and_Kernel(canonical_kernel),
+        os=OS_and_Kernel(canonical_os),
         endianness=Endianness(endianness),
         raw_cpu=cpu,
         raw_os=os,
@@ -400,7 +408,8 @@ def split_triplet(triplet):
 def config_sub(shell, triplet):
     config_sub = os.path.join(os.path.dirname(__file__), '..',
                               'autoconf', 'config.sub')
-    return subprocess.check_output([shell, config_sub, triplet]).strip()
+    return subprocess.check_output([shell, config_sub, triplet],
+                                   universal_newlines=True).strip()
 
 
 @depends('--host', shell)
@@ -410,7 +419,8 @@ def host(value, shell):
     if not value:
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
-        host = subprocess.check_output([shell, config_guess]).strip()
+        host = subprocess.check_output([shell, config_guess],
+                                       universal_newlines=True).strip()
     else:
         host = value[0]
 
@@ -522,6 +532,7 @@ def host_variables(host):
         HOST_OS_ARCH=os_arch,
     )
 
+set_config('HOST_CPU_ARCH', delayed_getattr(host, 'cpu'))
 set_config('HOST_OS_ARCH', delayed_getattr(host_variables, 'HOST_OS_ARCH'))
 add_old_configure_assignment('HOST_OS_ARCH',
                              delayed_getattr(host_variables, 'HOST_OS_ARCH'))
@@ -603,7 +614,7 @@ imply_option('--enable-project', application)
 def default_project(build_env, help):
     if build_env.topobjdir.endswith('/js/src'):
         return 'js'
-    return 'application/xulrunner'
+    return 'xulrunner'
 
 option('--enable-project', nargs=1, default=default_project,
        help='Project to build')
@@ -636,9 +647,10 @@ def external_source_dir(value):
 set_config('EXTERNAL_SOURCE_DIR', external_source_dir)
 add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
 
-@depends('--enable-project', '--with-external-source-dir', check_build_environment, '--help')
+option('--enable-noncomm-build', default=False, help='Allows non-comm-style builds (deprecated)')
+@depends('--enable-noncomm-build','--enable-project', '--with-external-source-dir', check_build_environment, '--help')
 @imports(_from='os.path', _import='exists')
-def build_project(project, external_source_dir, build_env, help):
+def build_project(noncomm_build, project, external_source_dir, build_env, help):
     if not project:
         die('--enable-project is required.')
 
@@ -650,7 +662,12 @@ def build_project(project, external_source_dir, build_env, help):
     build_app = project[0]
 
     if not external_source_dir and build_app not in ('xulrunner', 'js'):
-        die('Cannot find project %s', build_app)
+        if noncomm_build:
+            log.info("=====WARNING WARNING WARNING=====")
+            log.info("UNSUPPORTED NONCOMM-BUILD: Application code SHOULD NOT be put inside the platform tree, and doing so may have unforseen consequences if/when platform code is changed.")
+            log.info("=====WARNING WARNING WARNING=====")
+        else:
+            die('Cannot find project %s', build_app)
 
     build_app_abspath = os.path.join(base_dir, build_app)
 
@@ -665,11 +682,7 @@ set_define('MOZ_BUILD_APP', build_project)
 add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 
 
-# set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
-# The logic works like this:
-# - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
-# - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
-# - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
+# set RELEASE_OR_BETA and NIGHTLY_BUILD variables for compatibility
 @depends(check_build_environment, '--help')
 @imports(_from='__builtin__', _import='open')
 def milestone(build_env, _):
@@ -679,12 +692,8 @@ def milestone(build_env, _):
     with open(milestone_path, 'r') as fh:
         milestone = fh.read().splitlines()[-1]
 
-    is_nightly = is_release_or_beta = None
-
-    if 'a1' in milestone:
-        is_nightly = True
-    elif 'a' not in milestone:
-        is_release_or_beta = True
+    is_nightly = None
+    is_release_or_beta = True
 
     return namespace(version=milestone,
                      is_nightly=is_nightly,
@@ -762,7 +771,7 @@ def enabled_in_nightly(milestone, _):
 def all_configure_options(_):
     result = []
     previous = None
-    for option in __sandbox__._options.itervalues():
+    for option in __sandbox__._options.values():
         # __sandbox__._options contains items for both option.name and
         # option.env. But it's also an OrderedDict, meaning both are
         # consecutive.
@@ -803,13 +812,3 @@ def js_option(*args, **kwargs):
             return value.format(opt.option)
 
     add_old_configure_arg(js_option)
-
-
-# Bug 1278542: This function is a workaround to resolve
-# |android_ndk_include|'s dependency on 'gonkdir.' The
-# actual implementation is located in b2g/moz.configure.
-# Remove this function as soon as 'android_ndk_include'
-# depends on 'target.'
-@depends('--help')
-def gonkdir(_):
-    return None

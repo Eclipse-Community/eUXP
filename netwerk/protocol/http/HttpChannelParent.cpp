@@ -1371,14 +1371,6 @@ HttpChannelParent::SetParentListener(HttpChannelParentListener* aListener)
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyTrackingProtectionDisabled()
-{
-  if (!mIPCClosed)
-    Unused << SendNotifyTrackingProtectionDisabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpChannelParent::Delete()
 {
   if (!mIPCClosed)

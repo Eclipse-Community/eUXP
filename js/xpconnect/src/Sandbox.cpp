@@ -132,10 +132,6 @@ SandboxDump(JSContext* cx, unsigned argc, Value* vp)
     if (!cstr)
         return false;
 
-#ifdef ANDROID
-    __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
-#endif
-
 #if defined(XP_MACOSX)
     // Be nice and convert all \r to \n.
     char* c = cstr;

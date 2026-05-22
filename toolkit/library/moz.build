@@ -116,16 +116,19 @@ if CONFIG['USE_ICU']:
         'icu',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3' and CONFIG['MOZ_ENABLE_NPAPI']:
     USE_LIBS += [
         'mozgtk_stub',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3' and not CONFIG['MOZ_ENABLE_NPAPI']:
+    OS_LIBS += CONFIG['MOZ_GTK3_LIBS']
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT'] or \
         CONFIG['MOZ_TREE_FREETYPE']:
     USE_LIBS += [
         'freetype',
     ]
+
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CXXFLAGS += CONFIG['TK_CFLAGS']
@@ -147,14 +150,22 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     OS_LIBS += [
         '-framework OpenGL',
         '-framework SystemConfiguration',
-        '-framework AVFoundation',
-        '-framework CoreMedia',
         '-framework IOKit',
         '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
         '-framework CoreUI',
-        '-framework CoreSymbolication',
         'cups',
     ]
+    if [int(x) for x in CONFIG['MACOSX_DEPLOYMENT_TARGET'].split('.')] >= [10, 7]:
+        OS_LIBS += [
+            '-framework AVFoundation',
+            '-framework CoreMedia',
+            '-framework CoreSymbolication',
+        ]
+    else:
+        OS_LIBS += [
+            '-framework QTKit',
+        ]
+
 
 if CONFIG['MOZ_WMF']:
     OS_LIBS += [
@@ -196,11 +207,6 @@ if CONFIG['MOZ_ALSA']:
 
 if CONFIG['HAVE_CLOCK_MONOTONIC']:
     OS_LIBS += CONFIG['REALTIME_LIBS']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    OS_LIBS += [
-        'GLESv2',
-    ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     OS_LIBS += [
@@ -261,6 +267,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'psapi',
         'ws2_32',
         'dbghelp',
+        'dwmapi',
         'rasapi32',
         'rasdlg',
         'iphlpapi',

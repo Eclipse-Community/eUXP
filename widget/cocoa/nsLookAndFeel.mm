@@ -161,7 +161,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
         break;
       }
       // Otherwise fall through and return the regular button text:
-
     case eColorID_buttontext:
     case eColorID__moz_buttonhovertext:
       aColor = GetColorFromNSColor([NSColor controlTextColor]);
@@ -356,7 +355,21 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = 4;
       break;
     case eIntID_ScrollArrowStyle:
-      aResult = eScrollArrow_None;
+      if (nsCocoaFeatures::OnLionOrLater()) {
+        // OS X Lion's scrollbars have no arrows
+        aResult = eScrollArrow_None;
+      } else {
+        NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+        if ([buttonPlacement isEqualToString:@"Single"]) {
+          aResult = eScrollArrowStyle_Single;
+        } else if ([buttonPlacement isEqualToString:@"DoubleMin"]) {
+          aResult = eScrollArrowStyle_BothAtTop;
+        } else if ([buttonPlacement isEqualToString:@"DoubleBoth"]) {
+          aResult = eScrollArrowStyle_BothAtEachEnd;
+        } else {
+          aResult = eScrollArrowStyle_BothAtBottom; // The default is BothAtBottom.
+        }
+      }
       break;
     case eIntID_ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
@@ -421,8 +434,29 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = NS_ALERT_TOP;
       break;
     case eIntID_TabFocusModel:
+#if defined(MAC_OS_X_VERSION_10_6) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
       aResult = [NSApp isFullKeyboardAccessEnabled] ?
                   nsIContent::eTabFocus_any : nsIContent::eTabFocus_textControlsMask;
+#else
+    {
+      // we should probably cache this
+      CFPropertyListRef fullKeyboardAccessProperty;
+      fullKeyboardAccessProperty = ::CFPreferencesCopyValue(CFSTR("AppleKeyboardUIMode"),
+                                                            kCFPreferencesAnyApplication,
+                                                            kCFPreferencesCurrentUser,
+                                                            kCFPreferencesAnyHost);
+      aResult = 1;    // default to just textboxes
+      if (fullKeyboardAccessProperty) {
+        int32_t fullKeyboardAccessPrefVal;
+        if (::CFNumberGetValue((CFNumberRef) fullKeyboardAccessProperty, kCFNumberIntType, &fullKeyboardAccessPrefVal)) {
+          // the second bit means  "Full keyboard access" is on
+          if (fullKeyboardAccessPrefVal & (1 << 1))
+            aResult = 7; // everything that can be focused
+        }
+        ::CFRelease(fullKeyboardAccessProperty);
+      }
+    }
+#endif
       break;
     case eIntID_ScrollToClick:
     {
@@ -446,10 +480,12 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       break;
     case eIntID_SwipeAnimationEnabled:
       aResult = 0;
+#if defined(MAC_OS_X_VERSION_10_6) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
       if ([NSEvent respondsToSelector:@selector(
             isSwipeTrackingFromScrollEventsEnabled)]) {
         aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled] ? 1 : 0;
       }
+#endif
       break;
     case eIntID_ColorPickerAvailable:
       aResult = 1;
@@ -505,7 +541,7 @@ bool nsLookAndFeel::SystemWantsOverlayScrollbars()
 
 bool nsLookAndFeel::AllowOverlayScrollbarsOverlap()
 {
-  return (UseOverlayScrollbars());
+  return (UseOverlayScrollbars() && nsCocoaFeatures::OnMountainLionOrLater());
 }
 
 bool

@@ -343,37 +343,37 @@ class Endian : private EndianUtils
 {
 protected:
   /** Read a uint16_t in ThisEndian endianness from |aPtr| and return it. */
-  static [[nodiscard]] uint16_t readUint16(const void* aPtr)
+  [[nodiscard]] static uint16_t readUint16(const void* aPtr)
   {
     return read<uint16_t>(aPtr);
   }
 
   /** Read a uint32_t in ThisEndian endianness from |aPtr| and return it. */
-  static [[nodiscard]] uint32_t readUint32(const void* aPtr)
+  [[nodiscard]] static uint32_t readUint32(const void* aPtr)
   {
     return read<uint32_t>(aPtr);
   }
 
   /** Read a uint64_t in ThisEndian endianness from |aPtr| and return it. */
-  static [[nodiscard]] uint64_t readUint64(const void* aPtr)
+  [[nodiscard]] static uint64_t readUint64(const void* aPtr)
   {
     return read<uint64_t>(aPtr);
   }
 
   /** Read an int16_t in ThisEndian endianness from |aPtr| and return it. */
-  static [[nodiscard]] int16_t readInt16(const void* aPtr)
+  [[nodiscard]] static int16_t readInt16(const void* aPtr)
   {
     return read<int16_t>(aPtr);
   }
 
   /** Read an int32_t in ThisEndian endianness from |aPtr| and return it. */
-  static [[nodiscard]] int32_t readInt32(const void* aPtr)
+  [[nodiscard]] static int32_t readInt32(const void* aPtr)
   {
     return read<uint32_t>(aPtr);
   }
 
   /** Read an int64_t in ThisEndian endianness from |aPtr| and return it. */
-  static [[nodiscard]] int64_t readInt64(const void* aPtr)
+  [[nodiscard]] static int64_t readInt64(const void* aPtr)
   {
     return read<int64_t>(aPtr);
   }

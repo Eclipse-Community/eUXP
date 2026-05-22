@@ -1576,7 +1576,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
         // No URL, so fall through to truncating the path and any query/ref off
         // as well.
       }
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
       default: // (Pref limited to [0,2] enforced by clamp, MOZ_CRASH overkill.)
       case 2: // scheme+host+port+/
         spec.AppendLiteral("/");
@@ -3639,12 +3639,6 @@ HttpBaseChannel::GetPerformance()
   // If performance timing is disabled, there is no need for the Performance
   // object anymore.
   if (!mTimingEnabled) {
-    return nullptr;
-  }
-
-  // There is no point in continuing, since the performance object in the parent
-  // isn't the same as the one in the child which will be reporting resource performance.
-  if (XRE_IsParentProcess() && BrowserTabsRemoteAutostart()) {
     return nullptr;
   }
 

@@ -6,6 +6,7 @@
 #ifndef mozilla_WindowsVersion_h
 #define mozilla_WindowsVersion_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include <stdint.h>
 #include <windows.h>
@@ -15,8 +16,8 @@ namespace mozilla {
 inline bool
 IsWindowsVersionOrLater(uint32_t aVersion)
 {
-  static uint32_t minVersion = 0;
-  static uint32_t maxVersion = UINT32_MAX;
+  static Atomic<uint32_t> minVersion(0);
+  static Atomic<uint32_t> maxVersion(UINT32_MAX);
 
   if (minVersion >= aVersion) {
     return true;
@@ -52,11 +53,13 @@ IsWindowsVersionOrLater(uint32_t aVersion)
   return false;
 }
 
+// Check for specific build number
 inline bool
-IsWindowsBuildOrLater(uint32_t aBuild)
+IsWindows10BuildOrLater(uint32_t aBuild)
 {
-  static uint32_t minBuild = 0;
-  static uint32_t maxBuild = UINT32_MAX;
+  // Cache found builds to prevent unnecessary syscalls.
+  static Atomic<uint32_t> minBuild(0);
+  static Atomic<uint32_t> maxBuild(UINT32_MAX);
 
   if (minBuild >= aBuild) {
     return true;
@@ -69,78 +72,26 @@ IsWindowsBuildOrLater(uint32_t aBuild)
   OSVERSIONINFOEX info;
   ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
   info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  info.dwMajorVersion = 10; // Note: Windows 11 still uses 10 as milestone build number
   info.dwBuildNumber = aBuild;
 
   DWORDLONG conditionMask = 0;
+  VER_SET_CONDITION(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
   VER_SET_CONDITION(conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
 
-  if (VerifyVersionInfo(&info, VER_BUILDNUMBER, conditionMask)) {
+  if (VerifyVersionInfo(&info,
+                        VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER |
+                        VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
+                        conditionMask)) {
     minBuild = aBuild;
     return true;
   }
 
   maxBuild = aBuild;
   return false;
-}
-
-MOZ_ALWAYS_INLINE bool
-IsXPSP3OrLater()
-{
-  return IsWindowsVersionOrLater(0x05010300ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin2003OrLater()
-{
-  return IsWindowsVersionOrLater(0x05020000ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin2003SP2OrLater()
-{
-  return IsWindowsVersionOrLater(0x05020200ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsVistaOrLater()
-{
-  return IsWindowsVersionOrLater(0x06000000ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsVistaSP1OrLater()
-{
-  return IsWindowsVersionOrLater(0x06000100ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin7OrLater()
-{
-  return IsWindowsVersionOrLater(0x06010000ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin7SP1OrLater()
-{
-  return IsWindowsVersionOrLater(0x06010100ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin8OrLater()
-{
-  return IsWindowsVersionOrLater(0x06020000ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin8Point1OrLater()
-{
-  return IsWindowsVersionOrLater(0x06030000ul);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin10OrLater()
-{
-  return IsWindowsVersionOrLater(0x0a000000ul);
 }
 
 enum class WinBuild : uint32_t {
@@ -167,27 +118,50 @@ enum class WinBuild : uint32_t {
   
 // Check for at least named build aBuild taken from WinBuild enum above.
 inline bool
-IsWindows10BuildOrLater(WinBuild aBuild) {
+IsWindowsBuildOrLater(WinBuild aBuild) {
   uint32_t build = static_cast<uint32_t>(aBuild);
-  return IsWin10OrLater() && IsWindowsBuildOrLater(build);
+  return IsWindows10BuildOrLater(build);
+}
+
+// Windows 7
+MOZ_ALWAYS_INLINE bool
+IsWin7SP1OrLater()
+{
+  return IsWindowsVersionOrLater(0x06010100ul);
+}
+
+// Windows 8
+MOZ_ALWAYS_INLINE bool
+IsWin8OrLater()
+{
+  return IsWindowsVersionOrLater(0x06020000ul);
+}
+
+// Windows 8.1
+MOZ_ALWAYS_INLINE bool
+IsWin8Point1OrLater()
+{
+  return IsWindowsVersionOrLater(0x06030000ul);
+}
+
+// Windows 10
+MOZ_ALWAYS_INLINE bool
+IsWin10OrLater()
+{
+  return IsWindowsVersionOrLater(0x0a000000ul);
 }
 
 // Windows 11 RTM
 MOZ_ALWAYS_INLINE bool
 IsWin11OrLater()
 {
-  return IsWindows10BuildOrLater(WinBuild::Win11RTM);
+  return IsWindowsBuildOrLater(WinBuild::Win11RTM);
 }
 
-MOZ_ALWAYS_INLINE bool
-IsNotWin7PreRTM()
+// Compatibility Mode
+inline bool
+IsWin7AndPre2000Compatible()
 {
-  return IsWin7SP1OrLater() || !IsWin7OrLater() ||
-         IsWindowsBuildOrLater(7600);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsWin7AndPre2000Compatible() {
   /*
    * See Bug 1279171.
    * We'd like to avoid using WMF on specific OS version when compatibility
@@ -198,11 +172,11 @@ IsWin7AndPre2000Compatible() {
    * If the compatibility mode is in effect, the GetVersionEx function will
    * report the OS as it identifies itself, which may not be the OS that is
    * installed.
-   * Note : 1) We only target for Win7 build number greater than 7600.
+   * Note : 1) We only target for Win7 SP1 and later.
    *        2) GetVersionEx may be altered or unavailable for release after
    *           Win8.1. Set pragma to avoid build warning as error.
    */
-  bool isWin7 = IsNotWin7PreRTM() && !IsWin8OrLater();
+  bool isWin7 = IsWin7SP1OrLater() && !IsWin8OrLater();
   if (!isWin7) {
     return false;
   }
@@ -212,8 +186,8 @@ IsWin7AndPre2000Compatible() {
 
   info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 #pragma warning(push)
-#pragma warning(disable:4996)
-  bool success = GetVersionEx((LPOSVERSIONINFO) &info);
+#pragma warning(disable : 4996)
+  bool success = GetVersionEx((LPOSVERSIONINFO)&info);
 #pragma warning(pop)
   if (!success) {
     return false;
@@ -221,6 +195,6 @@ IsWin7AndPre2000Compatible() {
   return info.dwMajorVersion < 5;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_WindowsVersion_h */

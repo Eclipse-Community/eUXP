@@ -236,71 +236,8 @@
 #  define MOZ_ALLOCATOR
 #endif
 
-/**
- * [[nodiscard]] tells the compiler to emit a warning if a function's
- * return value is not used by the caller.
- *
- * Place this attribute at the very beginning of a function declaration. For
- * example, write
- *
- *   [[nodiscard]] int foo();
- *
- * or
- *
- *   [[nodiscard]] int foo() { return 42; }
- */
-#if defined(__GNUC__) || defined(__clang__)
-#  define [[nodiscard]] __attribute__ ((warn_unused_result))
-#else
-#  define [[nodiscard]]
-#endif
-
 #ifdef __cplusplus
 
-/**
- * MOZ_FALLTHROUGH is an annotation to suppress compiler warnings about switch
- * cases that fall through without a break or return statement. MOZ_FALLTHROUGH
- * is only needed on cases that have code.
- *
- * MOZ_FALLTHROUGH_ASSERT is an annotation to suppress compiler warnings about
- * switch cases that MOZ_ASSERT(false) (or its alias MOZ_ASSERT_UNREACHABLE) in
- * debug builds, but intentionally fall through in release builds. See comment
- * in Assertions.h for more details.
- *
- * switch (foo) {
- *   case 1: // These cases have no code. No fallthrough annotations are needed.
- *   case 2:
- *   case 3: // This case has code, so a fallthrough annotation is needed!
- *     foo++;
- *     MOZ_FALLTHROUGH;
- *   case 4:
- *     return foo;
- *
- *   default:
- *     // This case asserts in debug builds, falls through in release.
- *     MOZ_FALLTHROUGH_ASSERT("Unexpected foo value?!");
- *   case 5:
- *     return 5;
- * }
- */
-#ifndef __has_cpp_attribute
-#  define __has_cpp_attribute(x) 0
-#endif
-
-#if __has_cpp_attribute(clang::fallthrough)
-#  define MOZ_FALLTHROUGH [[clang::fallthrough]]
-#elif __has_cpp_attribute(gnu::fallthrough)
-#  define MOZ_FALLTHROUGH [[gnu::fallthrough]]
-#elif defined(_MSC_VER)
-   /*
-    * MSVC's __fallthrough annotations are checked by /analyze (Code Analysis):
-    * https://msdn.microsoft.com/en-us/library/ms235402%28VS.80%29.aspx
-    */
-#  include <sal.h>
-#  define MOZ_FALLTHROUGH __fallthrough
-#else
-#  define MOZ_FALLTHROUGH /* FALLTHROUGH */
-#endif
 /*
  * MOZ_ASAN_BLACKLIST is a macro to tell AddressSanitizer (a compile-time
  * instrumentation shipped with Clang and GCC) to not instrument the annotated
@@ -561,7 +498,7 @@
  *   function.  This is intended to be used with operator->() of our smart
  *   pointer classes to ensure that the refcount of an object wrapped in a
  *   smart pointer is not manipulated directly.
- * [[nodiscard]]_TYPE: Applies to type declarations.  Makes it a compile time
+ * MOZ_MUST_USE_TYPE: Applies to type declarations.  Makes it a compile time
  *   error to not use the return value of a function which has this type.  This
  *   is intended to be used with types which it is an error to not use.
  * MOZ_NEEDS_NO_VTABLE_TYPE: Applies to template class declarations.  Makes it
@@ -579,7 +516,7 @@
  * MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS: Applies to template class
  *   declarations where an instance of the template should be considered, for
  *   static analysis purposes, to inherit any type annotations (such as
- *   [[nodiscard]]_TYPE and MOZ_STACK_CLASS) from its template arguments.
+ *   MOZ_MUST_USE_TYPE and MOZ_STACK_CLASS) from its template arguments.
  * MOZ_INIT_OUTSIDE_CTOR: Applies to class member declarations. Occasionally
  *   there are class members that are not initialized in the constructor,
  *   but logic elsewhere in the class ensures they are initialized prior to use.
@@ -623,7 +560,7 @@
 #  define MOZ_NON_OWNING_REF __attribute__((annotate("moz_weak_ref")))
 #  define MOZ_UNSAFE_REF(reason) __attribute__((annotate("moz_weak_ref")))
 #  define MOZ_NO_ADDREF_RELEASE_ON_RETURN __attribute__((annotate("moz_no_addref_release_on_return")))
-#  define [[nodiscard]]_TYPE __attribute__((annotate("[[nodiscard]]_type")))
+#  define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
 #  define MOZ_NEEDS_NO_VTABLE_TYPE __attribute__((annotate("moz_needs_no_vtable_type")))
 #  define MOZ_NON_MEMMOVABLE __attribute__((annotate("moz_non_memmovable")))
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE __attribute__((annotate("moz_needs_memmovable_type")))
@@ -664,7 +601,7 @@
 #  define MOZ_NON_OWNING_REF /* nothing */
 #  define MOZ_UNSAFE_REF(reason) /* nothing */
 #  define MOZ_NO_ADDREF_RELEASE_ON_RETURN /* nothing */
-#  define [[nodiscard]]_TYPE /* nothing */
+#  define MOZ_MUST_USE_TYPE /* nothing */
 #  define MOZ_NEEDS_NO_VTABLE_TYPE /* nothing */
 #  define MOZ_NON_MEMMOVABLE /* nothing */
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE /* nothing */

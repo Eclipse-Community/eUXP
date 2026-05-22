@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define WIN32_LEAN_AND_MEAN
-/* We require Windows 2000 features such as ETO_PDY */
-#if !defined(WINVER) || (WINVER < 0x0500)
-# define WINVER 0x0500
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
 #endif
-#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-# define _WIN32_WINNT 0x0500
+/* We require at least Windows 7 features */
+#if !defined(WINVER) || (WINVER < 0x0601)
+# define WINVER 0x0601
+#endif
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0601)
+# define _WIN32_WINNT 0x0601
 #endif
 
 #include "cairoint.h"
@@ -913,28 +915,14 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
 
     BLENDFUNCTION blend_function;
 
-    /* Check for AlphaBlend dynamically to allow compiling on
-     * MSVC 6 and use on older windows versions
-     */
+    /* Check for AlphaBlend dynamically */
     if (!alpha_blend_checked) {
-	OSVERSIONINFO os;
-
-	os.dwOSVersionInfoSize = sizeof (os);
-	GetVersionEx (&os);
-
-	/* If running on Win98, disable using AlphaBlend()
-	 * to avoid Win98 AlphaBlend() bug */
-	if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
-	    os.dwMajorVersion != 4 || os.dwMinorVersion != 10)
-	{
 	    HMODULE msimg32_dll = LoadLibraryW (L"msimg32");
 
 	    if (msimg32_dll != NULL)
 		alpha_blend = (cairo_alpha_blend_func_t)GetProcAddress (msimg32_dll,
 									"AlphaBlend");
-	}
-
-	alpha_blend_checked = TRUE;
+		alpha_blend_checked = TRUE;
     }
 
     if (alpha_blend == NULL)

@@ -79,17 +79,19 @@ nsNativeAppSupportCocoa::Enable()
 
 NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
 {
-  int major, minor, bugfix;
-  nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
-
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  int major, minor, bugfix;
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
+  [pool release];
 
   // Check that the OS version is supported, if not return false,
   // which will make the browser quit.  In principle we could display an
   // alert here.  But the alert's message and buttons would require custom
   // localization.  So (for now at least) we just log an English message
   // to the console before quitting.
-  if (major < 10 || (major == 10 && minor < 7)) {
+  if (major < 10 || (major == 10 && minor < 5)) {
     NSLog(@"Minimum OS version requirement not met!");
     return NS_OK;
   }

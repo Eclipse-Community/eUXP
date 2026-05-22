@@ -327,7 +327,7 @@ NS_NewLocalFileOutputStream(nsIOutputStream **result,
     return rv;
 }
 
-INLINE_IF_EXTERN [[nodiscard]] nsresult
+[[nodiscard]] INLINE_IF_EXTERN nsresult
 NS_NewBufferedInputStream(nsIInputStream **result,
                           nsIInputStream  *str,
                           uint32_t         bufferSize)

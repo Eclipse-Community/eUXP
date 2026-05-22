@@ -16,15 +16,15 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
 
     NS_IMETHOD LaunchWithFile(nsIFile* aFile);
   protected:
-    virtual [[nodiscard]] nsresult LoadUriInternal(nsIURI *aURI);
+    [[nodiscard]] virtual nsresult LoadUriInternal(nsIURI *aURI);
 #ifdef DEBUG
-    virtual [[nodiscard]] nsresult LaunchDefaultWithFile(nsIFile* aFile) {
+    [[nodiscard]] virtual nsresult LaunchDefaultWithFile(nsIFile* aFile) {
       NS_NOTREACHED("do not call this method, use LaunchWithFile");
       return NS_ERROR_UNEXPECTED;
     }
 #endif
-    static [[nodiscard]] nsresult OpenApplicationWithURI(nsIFile *aApplication,
-                                                        const nsCString& aURI);
+    [[nodiscard]] static nsresult OpenApplicationWithURI(nsIFile *aApplication,
+                                                         const nsCString& aURI);
                                                        
     NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
     

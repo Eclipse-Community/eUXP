@@ -26,10 +26,6 @@ try {
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-#ifdef MOZ_WEBEXTENSIONS
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
-#endif
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
@@ -541,11 +537,7 @@ Blocklist.prototype = {
     dsURI = dsURI.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
     dsURI = dsURI.replace(/%OS_VERSION%/g, gOSVersion);
     dsURI = dsURI.replace(/%LOCALE%/g, getLocale());
-#ifdef MOZ_WEBEXTENSIONS
-    dsURI = dsURI.replace(/%CHANNEL%/g, UpdateUtils.UpdateChannel);
-#else
     dsURI = dsURI.replace(/%CHANNEL%/g, "@MOZ_UPDATE_CHANNEL@");
-#endif
     dsURI = dsURI.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
     dsURI = dsURI.replace(/%DISTRIBUTION%/g,
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION));
@@ -1051,7 +1043,7 @@ Blocklist.prototype = {
 
   // <gfxBlacklistEntry blockID="g60">
   //   <os>WINNT 6.0</os>
-  //   <osversion>14</osversion> currently only used for Android
+  //   <osversion>14</osversion>
   //   <versionRange minVersion="42.0" maxVersion="13.0b2"/>
   //   <vendor>0x8086</vendor>
   //   <devices>

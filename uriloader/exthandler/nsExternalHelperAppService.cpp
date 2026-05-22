@@ -425,9 +425,7 @@ static const nsDefaultMimeTypeEntry defaultMimeEntries[] =
   { TEXT_CSS, "css" },
   { IMAGE_JPEG, "jpeg" },
   { IMAGE_JPEG, "jpg" },
-#ifdef MOZ_JXL
   { IMAGE_JXL, "jxl" },
-#endif
   { IMAGE_SVG_XML, "svg" },
   { TEXT_HTML, "html" },
   { TEXT_HTML, "htm" },
@@ -500,9 +498,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] =
   { IMAGE_GIF, "gif", "GIF Image" },
   { IMAGE_ICO, "ico,cur", "ICO Image" },
   { IMAGE_JPEG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image" },
-#ifdef MOZ_JXL
   { IMAGE_JXL, "jxl", "JPEG-XL Image" },
-#endif
   { IMAGE_PNG, "png", "PNG Image" },
   { IMAGE_APNG, "apng", "APNG Image" },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
@@ -1797,7 +1793,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
           msgId.AssignLiteral("helperAppNotFound");
           break;
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
 
     default:
         // Generic read/write/launch error message.
@@ -2679,13 +2675,14 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
   if (found) {
     return NS_OK;
   }
-
+#ifdef MOZ_ENABLE_NPAPI
   // Try the plugins
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   if (pluginHost &&
       pluginHost->HavePluginForExtension(aFileExt, aContentType)) {
     return NS_OK;
   }
+#endif
 
   // Let's see if an extension added something
   nsCOMPtr<nsICategoryManager> catMan(

@@ -5773,8 +5773,7 @@ TSFTextStore::Initialize()
     return;
   }
 
-  bool enableTsf =
-    IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false);
+  bool enableTsf = Preferences::GetBool(kPrefNameEnableTSF, false);
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("  TSFTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));

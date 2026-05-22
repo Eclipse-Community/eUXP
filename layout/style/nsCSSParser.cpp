@@ -616,7 +616,8 @@ public:
   bool EvaluateSupportsCondition(const nsAString& aCondition,
                                  nsIURI* aDocURL,
                                  nsIURI* aBaseURL,
-                                 nsIPrincipal* aDocPrincipal);
+                                 nsIPrincipal* aDocPrincipal,
+                                 SupportsParsingSettings aSettings = SupportsParsingSettings::Normal);
 
   bool ParseCounterStyleName(const nsAString& aBuffer,
                              nsIURI* aURL,
@@ -1218,9 +1219,7 @@ protected:
   };
   PriorityParsingStatus ParsePriority();
 
-#ifdef MOZ_XUL
   bool ParseTreePseudoElement(nsAtomList **aPseudoElementArgs);
-#endif
 
   // Property specific parsing routines
   bool ParseImageLayers(const nsCSSPropertyID aTable[]);
@@ -2879,7 +2878,8 @@ bool
 CSSParserImpl::EvaluateSupportsCondition(const nsAString& aDeclaration,
                                          nsIURI* aDocURL,
                                          nsIURI* aBaseURL,
-                                         nsIPrincipal* aDocPrincipal)
+                                         nsIPrincipal* aDocPrincipal,
+                                         SupportsParsingSettings aSettings)
 {
   nsCSSScanner scanner(aDeclaration, 0);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
@@ -2887,7 +2887,13 @@ CSSParserImpl::EvaluateSupportsCondition(const nsAString& aDeclaration,
   nsAutoSuppressErrors suppressErrors(this);
 
   bool conditionMet;
-  bool parsedOK = ParseSupportsCondition(conditionMet) && !GetToken(true);
+  bool parsedOK;
+
+  if (aSettings == SupportsParsingSettings::ImpliedParentheses) {
+    parsedOK = ParseSupportsConditionInParensInsideParens(conditionMet) && !GetToken(true);
+  } else {
+    parsedOK = ParseSupportsCondition(conditionMet) && !GetToken(true);
+  }
 
   CLEAR_ERROR();
   ReleaseScanner();
@@ -5019,7 +5025,7 @@ CSSParserImpl::ParseKeyframeSelectorList(InfallibleTArray<float>& aSelectorList)
           value = 1.0f;
           break;
         }
-        MOZ_FALLTHROUGH;
+        [[fallthrough]];
       default:
         UngetToken();
         // The first time through the loop, this means we got an empty
@@ -6865,8 +6871,6 @@ CSSParserImpl::ParseAttributeSelector(int32_t&       aDataMask,
               "language",
               "defer",
               "type",
-              // additional attributes not in HTML4
-              "direction", // marquee
               nullptr
             };
             short i = 0;
@@ -7003,7 +7007,6 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
     }
   }
 
-#ifdef MOZ_XUL
   isTreePseudo = (pseudoElementType == CSSPseudoElementType::XULTree);
   // If a tree pseudo-element is using the function syntax, it will
   // get isTree set here and will pass the check below that only
@@ -7013,7 +7016,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
   // pseudo-elements are allowed to be either functions or not, as
   // desired.
   bool isTree = (eCSSToken_Function == mToken.mType) && isTreePseudo;
-#endif
+
   bool isPseudoElement = (pseudoElementType < CSSPseudoElementType::Count);
   // anonymous boxes are only allowed if they're the tree boxes or we have
   // enabled agent rules
@@ -7039,10 +7042,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
   // If it's a function token, it better be on our "ok" list, and if the name
   // is that of a function pseudo it better be a function token
   if ((eCSSToken_Function == mToken.mType) !=
-      (
-#ifdef MOZ_XUL
-       isTree ||
-#endif
+      (isTree ||
        nsCSSPseudoClasses::HasStringArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasNthPairArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType)) &&
@@ -7220,11 +7220,8 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
     // various -moz-* pseudo-elements) must have |parsingPseudoElement|
     // set.
     if (!parsingPseudoElement &&
-        !nsCSSPseudoElements::IsCSS2PseudoElement(pseudo)
-#ifdef MOZ_XUL
-        && !isTreePseudo
-#endif
-        ) {
+        !nsCSSPseudoElements::IsCSS2PseudoElement(pseudo) &&
+        !isTreePseudo) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelNewStyleOnly);
       UngetToken();
       return eSelectorParsingStatus_Error;
@@ -7235,7 +7232,6 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
       NS_ADDREF(*aPseudoElement = pseudo);
       *aPseudoElementType = pseudoElementType;
 
-#ifdef MOZ_XUL
       if (isTree) {
         // We have encountered a pseudoelement of the form
         // -moz-tree-xxxx(a,b,c).  We parse (a,b,c) and add each
@@ -7245,7 +7241,6 @@ CSSParserImpl::ParsePseudoSelector(int32_t&              aDataMask,
           return eSelectorParsingStatus_Error;
         }
       }
-#endif
 
       // Pseudo-elements can only be followed by user action pseudo-classes
       // or be the end of the selector.  So the next non-whitespace token must
@@ -8458,7 +8453,6 @@ CSSParserImpl::ParseRGBColor(ComponentType& aR,
   return false;
 }
 
-#ifdef MOZ_XUL
 bool
 CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
 {
@@ -8484,7 +8478,6 @@ CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
   fakeSelector.mClassList = nullptr;
   return true;
 }
-#endif
 
 nsCSSKeyword
 CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
@@ -11063,7 +11056,22 @@ CSSParserImpl::ParseGridLine(nsCSSValue& aValue)
   // Make the contained value be defined even though we really want a
   // Nothing here.  This works around an otherwise difficult to avoid
   // Memcheck false positive when this is compiled by gcc-5.3 -O2.
-  // See bug 1301856.
+  // The problem is that gcc 5.4 and later, when using high
+  // optimization, inline Maybe::{isSome,ref} here
+  // 
+  //     if (integer.isSome() && integer.ref() < 0) {
+  // 
+  // and then proceed to evaluate the expression right-to-left, as if it
+  // had been written
+  // 
+  //     integer.ref() < 0 && integer.isSome()
+  // 
+  // This is a legitimate transformation because gcc presumably can prove
+  // via dataflow analysis that integer.isSome() is false whenever integer.ref()
+  // is undefined, so the overall expression result is still defined.  
+  // Valgrind/Memcheck assumes that all conditional branches in the program
+  // are important, and that assumption is deeply wired in, so there is no
+  // easy way to avoid the warning apart from to force-initialise |integer|.
   integer.emplace(0);
   integer.reset();
 #endif
@@ -11966,7 +11974,7 @@ CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
       haveGradientLine = true;
       break;
     }
-    MOZ_FALLTHROUGH;
+    [[fallthrough]];
   case eCSSToken_ID:
   case eCSSToken_Hash:
     // this is a color
@@ -12153,7 +12161,7 @@ CSSParserImpl::ParseWebkitGradientRadius(float& aRadius)
 //   (either a percentage or a number between 0 and 1.0), and a color (any
 //   valid CSS color). In addition the shorthand functions from and to are
 //   supported. These functions only require a color argument and are
-//   equivalent to color-stop(0, ...) and color-stop(1.0, ?? respectively.
+//   equivalent to color-stop(0, ...) and color-stop(1.0, …) respectively.
 bool
 CSSParserImpl::ParseWebkitGradientColorStop(nsCSSValueGradient* aGradient)
 {
@@ -12660,10 +12668,10 @@ CSSParserImpl::ParseBoxProperties(const nsCSSPropertyID aPropIDs[])
   switch (count) {
     case 1: // Make right == top
       result.mRight = result.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2: // Make bottom == top
       result.mBottom = result.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3: // Make left == right
       result.mLeft = result.mRight;
   }
@@ -12733,10 +12741,10 @@ CSSParserImpl::ParseGroupedBoxProperty(int32_t aVariantMask,
   switch (count) {
     case 1: // Make right == top
       result.mRight = result.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2: // Make bottom == top
       result.mBottom = result.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3: // Make left == right
       result.mLeft = result.mRight;
   }
@@ -12837,10 +12845,10 @@ CSSParserImpl::ParseBoxCornerRadiiInternals(nsCSSValue array[])
   switch (countX) {
     case 1: // Make top-right same as top-left
       dimenX.mRight = dimenX.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2: // Make bottom-right same as top-left
       dimenX.mBottom = dimenX.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3: // Make bottom-left same as top-right
       dimenX.mLeft = dimenX.mRight;
   }
@@ -12848,10 +12856,10 @@ CSSParserImpl::ParseBoxCornerRadiiInternals(nsCSSValue array[])
   switch (countY) {
     case 1: // Make top-right same as top-left
       dimenY.mRight = dimenY.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 2: // Make bottom-right same as top-left
       dimenY.mBottom = dimenY.mTop;
-      MOZ_FALLTHROUGH;
+      [[fallthrough]];
     case 3: // Make bottom-left same as top-right
       dimenY.mLeft = dimenY.mRight;
   }
@@ -19969,10 +19977,11 @@ bool
 nsCSSParser::EvaluateSupportsCondition(const nsAString& aCondition,
                                        nsIURI* aDocURL,
                                        nsIURI* aBaseURL,
-                                       nsIPrincipal* aDocPrincipal)
+                                       nsIPrincipal* aDocPrincipal,
+                                       SupportsParsingSettings aSettings)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
-    EvaluateSupportsCondition(aCondition, aDocURL, aBaseURL, aDocPrincipal);
+    EvaluateSupportsCondition(aCondition, aDocURL, aBaseURL, aDocPrincipal, aSettings);
 }
 
 bool

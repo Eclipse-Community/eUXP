@@ -61,11 +61,14 @@ EXPORTS.mozilla.gfx += ['ssse3-scaler.h']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     EXPORTS.mozilla.gfx += [
         'MacIOSurface.h',
+        'SourceSurfaceCG.h',
     ]
     UNIFIED_SOURCES += [
+        'DrawTargetCG.cpp',
         'NativeFontResourceMac.cpp',
         'PathCG.cpp',
         'ScaledFontMac.cpp',
+        'SourceSurfaceCG.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [

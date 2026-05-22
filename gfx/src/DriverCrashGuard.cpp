@@ -5,6 +5,7 @@
 #include "DriverCrashGuard.h"
 #include "gfxEnv.h"
 #include "gfxPrefs.h"
+#include "gfxConfig.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -67,19 +68,11 @@ AreCrashGuardsEnabled()
   if (XRE_IsGPUProcess()) {
     return false;
   }
-#ifdef NIGHTLY_BUILD
-  // We only use the crash guard on non-nightly channels, since the nightly
-  // channel is for development and having graphics features perma-disabled
-  // is rather annoying.  Unless the user forces is with an environment
-  // variable, which comes in handy for testing.
-  return gfxEnv::ForceCrashGuardNightly();
-#else
   // Check to see if all guards have been disabled through the environment.
   if (gfxEnv::DisableCrashGuard()) {
     return false;
   }
   return true;
-#endif
 }
 
 void
@@ -432,10 +425,7 @@ D3D11LayersCrashGuard::UpdateEnvironment()
                     (!gfxPrefs::Direct2DDisabled() && FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT2D));
   changed |= CheckAndUpdateBoolPref("feature-d2d", d2dEnabled);
 
-  bool d3d11Enabled = !gfxPrefs::LayersPreferD3D9();
-  if (!FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)) {
-    d3d11Enabled = false;
-  }
+  bool d3d11Enabled = gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING);
   changed |= CheckAndUpdateBoolPref("feature-d3d11", d3d11Enabled);
 #endif
 

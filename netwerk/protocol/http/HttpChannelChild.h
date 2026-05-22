@@ -104,7 +104,6 @@ public:
 
   bool IsSuspended();
 
-  bool RecvNotifyTrackingProtectionDisabled() override;
   void FlushedForDiversion();
 
 protected:

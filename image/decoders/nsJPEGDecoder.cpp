@@ -405,7 +405,7 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
             mInfo.image_width, mInfo.image_height));
 
     mState = JPEG_START_DECOMPRESS;
-    MOZ_FALLTHROUGH; // to start decompressing.
+    [[fallthrough]]; // to start decompressing.
   }
 
   case JPEG_START_DECOMPRESS: {
@@ -432,7 +432,7 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
     // If this is a progressive JPEG ...
     mState = mInfo.buffered_image ?
              JPEG_DECOMPRESS_PROGRESSIVE : JPEG_DECOMPRESS_SEQUENTIAL;
-    MOZ_FALLTHROUGH; // to decompress sequential JPEG.
+    [[fallthrough]]; // to decompress sequential JPEG.
   }
 
   case JPEG_DECOMPRESS_SEQUENTIAL: {
@@ -454,7 +454,7 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
                    "We didn't process all of the data!");
       mState = JPEG_DONE;
     }
-    MOZ_FALLTHROUGH; // to decompress progressive JPEG.
+    [[fallthrough]]; // to decompress progressive JPEG.
   }
 
   case JPEG_DECOMPRESS_PROGRESSIVE: {
@@ -527,7 +527,7 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
 
       mState = JPEG_DONE;
     }
-    MOZ_FALLTHROUGH; // to finish decompressing.
+    [[fallthrough]]; // to finish decompressing.
   }
 
   case JPEG_DONE: {

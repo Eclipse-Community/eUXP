@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define WIN32_LEAN_AND_MEAN
-/* We require Windows 2000 features such as GetGlyphIndices */
-#if !defined(WINVER) || (WINVER < 0x0500)
-# define WINVER 0x0500
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
 #endif
-#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-# define _WIN32_WINNT 0x0500
+/* We require at least Windows 7 features */
+#if !defined(WINVER) || (WINVER < 0x0601)
+# define WINVER 0x0601
+#endif
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0601)
+# define _WIN32_WINNT 0x0601
 #endif
 
 #include "cairoint.h"
@@ -214,18 +216,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 static cairo_bool_t
 _have_cleartype_quality (void)
 {
-    OSVERSIONINFO version_info;
-
-    version_info.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-
-    if (!GetVersionEx (&version_info)) {
-	_cairo_win32_print_gdi_error ("_have_cleartype_quality");
-	return FALSE;
-    }
-
-    return (version_info.dwMajorVersion > 5 ||
-	    (version_info.dwMajorVersion == 5 &&
-	     version_info.dwMinorVersion >= 1));	/* XP or newer */
+	// All supported versions have cleartype
+	return TRUE;
 }
 
 BYTE

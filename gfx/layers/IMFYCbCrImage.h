@@ -28,8 +28,6 @@ public:
 
 protected:
 
-  TextureClient* GetD3D9TextureClient(KnowsCompositor* aForwarder);
-
   TextureClient* GetD3D11TextureClient(KnowsCompositor* aForwarder);
 
   ~IMFYCbCrImage();

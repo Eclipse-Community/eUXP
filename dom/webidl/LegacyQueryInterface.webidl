@@ -52,8 +52,10 @@ OfflineResourceList includes LegacyQueryInterface;
 PaintRequest includes LegacyQueryInterface;
 PaintRequestList includes LegacyQueryInterface;
 Performance includes LegacyQueryInterface;
+#ifdef MOZ_ENABLE_NPAPI
 Plugin includes LegacyQueryInterface;
 PluginArray includes LegacyQueryInterface;
+#endif
 ProcessingInstruction includes LegacyQueryInterface;
 Range includes LegacyQueryInterface;
 Rect includes LegacyQueryInterface;

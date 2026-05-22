@@ -32,8 +32,7 @@ public:
   NeckoParent();
   virtual ~NeckoParent();
 
-  [[nodiscard]]
-  static const char *
+  [[nodiscard]] static const char*
   GetValidatedOriginAttributes(const SerializedLoadContext& aSerialized,
                                PContentParent* aBrowser,
                                nsIPrincipal* aRequestingPrincipal,
@@ -46,8 +45,7 @@ public:
    *
    * Returns null if successful, or an error string if failed.
    */
-  [[nodiscard]]
-  static const char*
+  [[nodiscard]] static const char*
   CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                            PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,

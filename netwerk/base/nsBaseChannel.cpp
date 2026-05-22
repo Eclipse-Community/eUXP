@@ -15,7 +15,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIStreamConverterService.h"
-#include "nsChannelClassifier.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsProxyRelease.h"
 #include "nsXULAppAPI.h"
@@ -302,25 +301,6 @@ nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result)
   // Drop notification callbacks to prevent cycles.
   mCallbacks = nullptr;
   CallbacksChanged();
-}
-
-void
-nsBaseChannel::ClassifyURI()
-{
-  // For channels created in the child process, delegate to the parent to
-  // classify URIs.
-  if (!XRE_IsParentProcess()) {
-    return;
-  }
-
-  if (mLoadFlags & LOAD_CLASSIFY_URI) {
-    RefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
-    if (classifier) {
-      classifier->Start(this);
-    } else {
-      Cancel(NS_ERROR_OUT_OF_MEMORY);
-    }
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -627,7 +607,6 @@ nsBaseChannel::Open(nsIInputStream **result)
 
   if (NS_SUCCEEDED(rv)) {
     mWasOpened = true;
-    ClassifyURI();
   }
 
   return rv;
@@ -697,8 +676,6 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nullptr);
-
-  ClassifyURI();
 
   return NS_OK;
 }

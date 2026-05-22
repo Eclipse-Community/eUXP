@@ -81,11 +81,6 @@ struct WindowsThemeName {
 const WindowsThemeName themeStrings[] = {
   { LookAndFeel::eWindowsTheme_Aero,       L"aero" },
   { LookAndFeel::eWindowsTheme_AeroLite,   L"aero-lite" },
-  { LookAndFeel::eWindowsTheme_LunaBlue,   L"luna-blue" },
-  { LookAndFeel::eWindowsTheme_LunaOlive,  L"luna-olive" },
-  { LookAndFeel::eWindowsTheme_LunaSilver, L"luna-silver" },
-  { LookAndFeel::eWindowsTheme_Royale,     L"royale" },
-  { LookAndFeel::eWindowsTheme_Zune,       L"zune" },
   { LookAndFeel::eWindowsTheme_Generic,    L"generic" }
 };
 
@@ -96,8 +91,6 @@ struct OperatingSystemVersionInfo {
 
 // Os version identities used in the -moz-os-version media query.
 const OperatingSystemVersionInfo osVersionStrings[] = {
-  { LookAndFeel::eOperatingSystemVersion_WindowsXP,     L"windows-xp" },
-  { LookAndFeel::eOperatingSystemVersion_WindowsVista,  L"windows-vista" },
   { LookAndFeel::eOperatingSystemVersion_Windows7,      L"windows-win7" },
   { LookAndFeel::eOperatingSystemVersion_Windows8,      L"windows-win8" },
   { LookAndFeel::eOperatingSystemVersion_Windows10,     L"windows-win10" },
