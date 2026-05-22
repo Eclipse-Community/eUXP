@@ -2039,7 +2039,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
           nsPIDOMWindowOuter* outer = aWindow->GetOuterWindow();
           vc.mBrowserWindow.Construct(outer->WindowID());
         }
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case MediaSourceEnum::Screen:
       case MediaSourceEnum::Application:
       case MediaSourceEnum::Window:

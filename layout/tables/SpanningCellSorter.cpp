@@ -108,7 +108,7 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
             /* prepare to enumerate the array */
             mState = ENUMERATING_ARRAY;
             mEnumerationIndex = 0;
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
         case ENUMERATING_ARRAY:
             while (mEnumerationIndex < ARRAY_SIZE && !mArray[mEnumerationIndex])
                 ++mEnumerationIndex;
@@ -138,7 +138,7 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
                              SortArray, nullptr);
                 mSortedHashTable = sh;
             }
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
         case ENUMERATING_HASH:
             if (mEnumerationIndex < mHashTable.EntryCount()) {
                 Item *result = mSortedHashTable[mEnumerationIndex]->mItems;
@@ -153,7 +153,7 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
                 return result;
             }
             mState = DONE;
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
         case DONE:
             ;
     }

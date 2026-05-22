@@ -163,7 +163,7 @@ AppendFunction(nsCSSKeyword aTransformFunction)
       break;
     default:
       NS_ERROR("must be a transform function");
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eCSSKeyword_translatex:
     case eCSSKeyword_translatey:
     case eCSSKeyword_translatez:
@@ -2004,7 +2004,7 @@ AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
     case eCSSKeyword_invert:
     case eCSSKeyword_sepia:
       initialVal = 0.0f;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eCSSKeyword_brightness:
     case eCSSKeyword_contrast:
     case eCSSKeyword_opacity:
@@ -2254,7 +2254,7 @@ AddShapeFunction(nsCSSPropertyID aProperty,
                                        resultFuncArgs->Item(2))) {
         return nullptr;
       }
-      [[fallthrough]];  // to handle rx and center point
+      MOZ_FALLTHROUGH;  // to handle rx and center point
     case eCSSKeyword_circle: {
       // Add circles' |r| (or ellipses' |rx|) values:
       if (!AddCSSValuePixelPercentCalc(aRestriction == Restrictions::Enable
@@ -2470,7 +2470,7 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                            arr->Item(4));
           break;
         }
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       }
       case eCSSKeyword_matrix:
       case eCSSKeyword_matrix3d:
@@ -2495,7 +2495,7 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
           }
           break;
         }
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case eCSSKeyword_interpolatematrix: {
         // FIXME: If the matrix contains only numbers then we could decompose
         // here.

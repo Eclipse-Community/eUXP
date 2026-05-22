@@ -1308,7 +1308,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     // will need to fall through and use the default case as before.
     if (IsRegularMenuItem(aFrame))
       break;
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   default:
     {
       WidgetNodeType gtkWidgetType;
@@ -1849,7 +1849,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     if (aFrame && aFrame->GetWritingMode().IsVertical()) {
       return false;
     }
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
 
   case NS_THEME_BUTTON:
   case NS_THEME_BUTTON_FOCUS:

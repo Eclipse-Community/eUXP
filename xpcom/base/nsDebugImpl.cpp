@@ -402,7 +402,7 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
     case NS_ASSERT_STACK_AND_ABORT:
       nsTraceRefcnt::WalkTheStack(stderr);
       // Fall through to abort
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case NS_ASSERT_ABORT:
       Abort(buf.buffer);

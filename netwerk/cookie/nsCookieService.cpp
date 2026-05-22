@@ -873,7 +873,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // Fall through to the next upgrade.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case 2:
       {
@@ -932,7 +932,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // Fall through to the next upgrade.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case 3:
       {
@@ -1029,7 +1029,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // Fall through to the next upgrade.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case 4:
       {
@@ -1077,7 +1077,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
           ("Upgraded database to schema version 5"));
       }
       // Fall through to the next upgrade.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case 5:
       {
@@ -1143,7 +1143,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         COOKIE_LOGSTRING(LogLevel::Debug,
           ("Upgraded database to schema version 6"));
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case 6:
       {
@@ -1279,7 +1279,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
       // No more upgrades. Update the schema version.
       rv = mDefaultDBState->syncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
       NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case COOKIES_SCHEMA_VERSION:
       break;
@@ -1297,7 +1297,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // fall through to downgrade check
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     // downgrading.
     // if columns have been added to the table, we can still use the ones we

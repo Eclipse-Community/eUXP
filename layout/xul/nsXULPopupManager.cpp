@@ -2336,7 +2336,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
         Rollup(0, false, nullptr, nullptr);
         break;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 #endif
 
     case nsIDOMKeyEvent::DOM_VK_LEFT:
@@ -2380,7 +2380,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
         break;
       }
       // Intentional fall-through to RETURN case
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
 
     case nsIDOMKeyEvent::DOM_VK_RETURN: {
       // If there is a popup open, check if the current item needs to be opened.

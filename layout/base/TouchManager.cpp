@@ -213,7 +213,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
     case eTouchEnd:
       aIsHandlingUserInput = true;
       // Fall through to touchcancel code
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eTouchCancel: {
       // Remove the changed touches
       // need to make sure we only remove touches that are ending here

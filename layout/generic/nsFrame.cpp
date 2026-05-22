@@ -7745,7 +7745,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         aPos->mWordMovementType = eEndWord;
       }
       // Intentionally fall through the eSelectWord case.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eSelectWord:
     {
       // wordSelectEatSpace means "are we looking for a boundary between whitespace

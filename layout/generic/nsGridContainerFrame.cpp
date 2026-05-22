@@ -4968,7 +4968,7 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
       NS_WARNING("NYI: 'first/last baseline' (bug 1151204)"); // XXX
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case NS_STYLE_ALIGN_START:
       distribute = false;
       break;

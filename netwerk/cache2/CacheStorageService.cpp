@@ -450,7 +450,7 @@ private:
         }
 
         mPass = ITERATE_METADATA;
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 
       case ITERATE_METADATA:
         // Now grab the context iterator.

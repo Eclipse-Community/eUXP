@@ -961,7 +961,7 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
       break;
     }
     // Intentional fallthrough to ePendingUpdate.
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   }
   case ePendingUpdate: {
     ApplyUpdate(greDir, updatesDir, statusFile, appDir, argc, argv, restart,

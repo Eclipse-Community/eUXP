@@ -2538,7 +2538,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         pn = pn->as<LexicalScopeNode>().scopeBody();
         if (!pn->isKind(PNK_STATEMENTLIST))
             return statement(pn, dst);
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 
       case PNK_STATEMENTLIST:
         return blockStatement(&pn->as<ListNode>(), dst);

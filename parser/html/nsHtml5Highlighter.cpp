@@ -577,7 +577,7 @@ nsHtml5Highlighter::FlushChars()
           // the input data, because there are no reparses in the View Source
           // case, so we won't need the original data in the buffer anymore.
           buf[i] = '\n';
-          [[fallthrough]];
+          MOZ_FALLTHROUGH;
         case '\n': {
           ++i;
           if (mCStart < i) {

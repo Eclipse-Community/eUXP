@@ -3764,7 +3764,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
         LOG(("add_dir_entries: found a non-standard file: " LOG_S,
              ftsdirEntry->fts_path));
         // Fall through and try to remove as a file
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 
       // Files
       case FTS_F:
@@ -3813,7 +3813,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
           rv = OK;
           break;
         }
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 
       case FTS_ERR:
         rv = UNEXPECTED_FILE_OPERATION_ERROR;

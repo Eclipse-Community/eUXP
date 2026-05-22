@@ -1541,7 +1541,7 @@ ParseRegExpFlags(const CharT* chars, size_t length, RegExpFlag* flagsOut, char16
                     return false;
                 break;
             }
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           default:
             return false;
         }

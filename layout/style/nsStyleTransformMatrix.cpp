@@ -639,7 +639,7 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     break;
   case eCSSKeyword_rotatez:
     *aContains3dTransform = true;
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   case eCSSKeyword_rotate:
     ProcessRotateZ(aMatrix, aData);
     break;
