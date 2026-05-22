@@ -19,6 +19,7 @@ const {
 } = require("devtools/shared/layout/utils");
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
 
+const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
 const ROWS = "rows";
 const COLUMNS = "cols";
 const GRID_LINES_PROPERTIES = {
@@ -291,7 +292,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   _show() {
-    if (!this.isGrid()) {
+    if (Services.prefs.getBoolPref(CSS_GRID_ENABLED_PREF) && !this.isGrid()) {
       this.hide();
       return false;
     }
