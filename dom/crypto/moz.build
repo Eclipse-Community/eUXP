@@ -27,6 +27,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/workers',
     '/security/manager/ssl',
+    '/security/pkix/include',
     '/xpcom/build',
 ]
 

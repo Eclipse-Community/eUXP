@@ -2131,9 +2131,10 @@ MOZ_JETPACK=1
 MOZ_DEVTOOLS_SERVER=1
 MOZ_DEVTOOLS=
 MOZ_PLACES=1
+MOZ_SECURITY_SQLSTORE=
 MOZ_SERVICES_SYNC=1
 MOZ_USERINFO=1
-NSS_DISABLE_DBM=1
+NSS_DISABLE_DBM=
 MOZ_MAILNEWS=
 MOZ_MAILNEWS_OAUTH2=
 MOZ_CLASSIC_ACCOUNT_WIZARD=
@@ -2641,14 +2642,38 @@ x86_64 | arm | aarch64 | x86 | ppc* | ia64)
 esac
 
 dnl =========================================================
-dnl = NSS db storage format
+dnl = NSS DBM (BerkeleyDB) Support
+dnl = NOTE: Because we don't expressly control the name of
+dnl = this var --disable-dbm means NSS_DISABLE_DBM=1
 dnl =========================================================
+MOZ_ARG_DISABLE_BOOL(dbm,
+[  --disable-dbm         Disable DBM support in nss],
+    NSS_DISABLE_DBM=1,
+    NSS_DISABLE_DBM=)
 
 if test -n "$NSS_DISABLE_DBM"; then
   AC_DEFINE(NSS_DISABLE_DBM)
 fi
 
 AC_SUBST(NSS_DISABLE_DBM)
+
+dnl =========================================================
+dnl = NSS SQL storage format
+dnl =========================================================
+MOZ_ARG_ENABLE_BOOL(security-sqlstore,
+[  --enable-security-sqlstore Enable the use of SQL storage for NSS],
+    MOZ_SECURITY_SQLSTORE=1,
+    MOZ_SECURITY_SQLSTORE=)
+
+if test -n "$NSS_DISABLE_DBM" -a -z "$MOZ_SECURITY_SQLSTORE"; then
+  AC_MSG_ERROR([DBM storage support is required if not using NSS SQL storage])
+fi
+
+if test -n "$MOZ_SECURITY_SQLSTORE"; then
+  AC_DEFINE(MOZ_SECURITY_SQLSTORE)
+fi
+
+AC_SUBST(MOZ_SECURITY_SQLSTORE)
 
 dnl =========================================================
 dnl = Don't fold mailnews related comps into libXUL
@@ -4879,7 +4904,6 @@ AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-AC_SUBST(NSDISTMODE)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
@@ -5457,6 +5481,17 @@ RC=
 # Run the SpiderMonkey 'configure' script.
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+
+# --with-system-nspr will have been converted into the relevant $NSPR_CFLAGS
+# and $NSPR_LIBS.
+case "${OS_TARGET}" in
+  Darwin|DragonFly|FreeBSD|NetBSD|OpenBSD)
+    ac_configure_args="`echo $ac_configure_args | sed -e 's/--with-system-nspr[^[:space:]]* *//'`"
+    ;;
+  *)
+    ac_configure_args="`echo $ac_configure_args | ${TOOLCHAIN_PREFIX}sed -e 's/--with-system-nspr\S* *//'`"
+    ;;
+esac
 
 if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
