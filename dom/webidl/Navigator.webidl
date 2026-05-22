@@ -313,6 +313,13 @@ partial interface Navigator {
 };
 #endif
 
+#ifdef NIGHTLY_BUILD
+partial interface Navigator {
+  [Func="Navigator::IsE10sEnabled"]
+  readonly attribute boolean mozE10sEnabled;
+};
+#endif
+
 interface mixin NavigatorConcurrentHardware {
   readonly attribute unsigned long long hardwareConcurrency;
 };

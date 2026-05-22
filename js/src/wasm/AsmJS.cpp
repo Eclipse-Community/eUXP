@@ -6782,7 +6782,9 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
 
     // Don't punish release users by crashing if there is a programmer error
     // here, just gracefully return with a cache miss.
-    MOZ_ASSERT(cursor == entry.memory + entry.serializedSize);
+#ifdef NIGHTLY_BUILD
+    MOZ_RELEASE_ASSERT(cursor == entry.memory + entry.serializedSize);
+#endif
     if (cursor != entry.memory + entry.serializedSize)
         return true;
 

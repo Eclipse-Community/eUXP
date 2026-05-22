@@ -1358,9 +1358,14 @@ Navigator::HasUserMediaSupport(JSContext* /* unused */,
 bool
 Navigator::IsE10sEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  // We no longer support this, so always false.
-  // TODO: Remove this.
-  return false;
+  return XRE_IsContentProcess();
+}
+
+bool
+Navigator::MozE10sEnabled()
+{
+  // This will only be called if IsE10sEnabled() is true.
+  return true;
 }
 
 /* static */

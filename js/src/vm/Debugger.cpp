@@ -644,7 +644,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     environments(cx),
     wasmInstanceScripts(cx),
     wasmInstanceSources(cx),
-#ifdef DEBUG
+#ifdef NIGHTLY_BUILD
     traceLoggerLastDrainedSize(0),
     traceLoggerLastDrainedIteration(0),
 #endif
@@ -659,7 +659,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 #ifdef JS_TRACE_LOGGING
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     if (logger) {
-#ifdef DEBUG
+#ifdef NIGHTLY_BUILD
         logger->getIterationAndSize(&traceLoggerLastDrainedIteration, &traceLoggerLastDrainedSize);
 #endif
         logger->getIterationAndSize(&traceLoggerScriptedCallsLastDrainedIteration,
@@ -4889,7 +4889,7 @@ DefineProperty(JSContext* cx, HandleObject obj, HandleId id, const char* value, 
 }
 
 #ifdef JS_TRACE_LOGGING
-# ifdef DEBUG
+# ifdef NIGHTLY_BUILD
 bool
 Debugger::setupTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -5007,7 +5007,7 @@ Debugger::drainTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 
     return true;
 }
-# endif // DEBUG
+# endif // NIGHTLY_BUILD
 
 bool
 Debugger::setupTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
@@ -5260,7 +5260,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("drainTraceLoggerScriptCalls", Debugger::drainTraceLoggerScriptCalls, 0, 0),
     JS_FN("startTraceLogger", Debugger::startTraceLogger, 0, 0),
     JS_FN("endTraceLogger", Debugger::endTraceLogger, 0, 0),
-# ifdef DEBUG
+# ifdef NIGHTLY_BUILD
     JS_FN("setupTraceLogger", Debugger::setupTraceLogger, 1, 0),
     JS_FN("drainTraceLogger", Debugger::drainTraceLogger, 0, 0),
 # endif
