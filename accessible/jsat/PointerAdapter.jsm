@@ -39,6 +39,13 @@ var PointerRelay = { // jshint ignore:line
     delete this._eventsOfInterest;
 
     switch (Utils.widgetToolkit) {
+      case 'android':
+        this._eventsOfInterest = {
+          'touchstart' : true,
+          'touchmove' : true,
+          'touchend' : true };
+        break;
+
       default:
         // Desktop.
         this._eventsOfInterest = {
@@ -102,6 +109,11 @@ var PointerRelay = { // jshint ignore:line
       screenY: aEvent.screenY,
       target: aEvent.target
     }];
+
+    if (Utils.widgetToolkit === 'android' &&
+      changedTouches.length === 1 && changedTouches[0].identifier === 1) {
+      return;
+    }
 
     if (changedTouches.length === 1 &&
         changedTouches[0].identifier === SYNTH_ID) {
