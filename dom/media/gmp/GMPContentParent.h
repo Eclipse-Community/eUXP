@@ -26,7 +26,8 @@ public:
 
   explicit GMPContentParent(GMPParent* aParent = nullptr);
 
-  nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD);
+  nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
+                              uint32_t aDecryptorId);
   void VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder);
 
   nsresult GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE);
@@ -62,7 +63,7 @@ private:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent() override;
+  PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent(const uint32_t& aDecryptorId) override;
   bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) override;
 
   PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() override;
