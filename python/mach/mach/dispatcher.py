@@ -276,7 +276,8 @@ class CommandAction(argparse.Action):
                     group = parser.add_argument_group(title, description)
 
                 description = handler.description
-                group.add_argument(command, help=description)
+                group.add_argument(command, help=description,
+                    action='store_true')
 
         if disabled_commands and 'disabled' in r.categories:
             title, description, _priority = r.categories['disabled']
