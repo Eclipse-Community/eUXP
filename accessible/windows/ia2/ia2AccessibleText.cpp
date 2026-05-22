@@ -27,6 +27,8 @@ bool ia2AccessibleText::sLastTextChangeWasInsert = false;
 STDMETHODIMP
 ia2AccessibleText::addSelection(long aStartOffset, long aEndOffset)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -35,12 +37,16 @@ ia2AccessibleText::addSelection(long aStartOffset, long aEndOffset)
 
   return textAcc->AddToSelection(aStartOffset, aEndOffset) ?
     S_OK : E_INVALIDARG;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_attributes(long aOffset, long *aStartOffset,
                                   long *aEndOffset, BSTR *aTextAttributes)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStartOffset || !aEndOffset || !aTextAttributes)
     return E_INVALIDARG;
 
@@ -67,11 +73,15 @@ ia2AccessibleText::get_attributes(long aOffset, long *aStartOffset,
   *aEndOffset = endOffset;
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_caretOffset(long *aOffset)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aOffset)
     return E_INVALIDARG;
 
@@ -86,6 +96,8 @@ ia2AccessibleText::get_caretOffset(long *aOffset)
   *aOffset = textAcc->CaretOffset();
 
   return *aOffset != -1 ? S_OK : S_FALSE;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -94,6 +106,8 @@ ia2AccessibleText::get_characterExtents(long aOffset,
                                         long* aX, long* aY,
                                         long* aWidth, long* aHeight)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aX || !aY || !aWidth || !aHeight)
     return E_INVALIDARG;
   *aX = *aY = *aWidth = *aHeight = 0;
@@ -114,11 +128,15 @@ ia2AccessibleText::get_characterExtents(long aOffset,
   *aWidth = rect.width;
   *aHeight = rect.height;
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_nSelections(long* aNSelections)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNSelections)
     return E_INVALIDARG;
   *aNSelections = 0;
@@ -132,6 +150,8 @@ ia2AccessibleText::get_nSelections(long* aNSelections)
   *aNSelections = textAcc->SelectionCount();
 
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -139,6 +159,8 @@ ia2AccessibleText::get_offsetAtPoint(long aX, long aY,
                                      enum IA2CoordinateType aCoordType,
                                      long* aOffset)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aOffset)
     return E_INVALIDARG;
   *aOffset = 0;
@@ -156,12 +178,16 @@ ia2AccessibleText::get_offsetAtPoint(long aX, long aY,
   *aOffset = textAcc->OffsetAtPoint(aX, aY, geckoCoordType);
 
   return *aOffset == -1 ? S_FALSE : S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_selection(long aSelectionIndex, long* aStartOffset,
                                  long* aEndOffset)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStartOffset || !aEndOffset)
     return E_INVALIDARG;
   *aStartOffset = *aEndOffset = 0;
@@ -180,11 +206,15 @@ ia2AccessibleText::get_selection(long aSelectionIndex, long* aStartOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR* aText)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aText)
     return E_INVALIDARG;
 
@@ -208,6 +238,8 @@ ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR* aText)
 
   *aText = ::SysAllocStringLen(text.get(), text.Length());
   return *aText ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -216,6 +248,8 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
                                         long* aStartOffset, long* aEndOffset,
                                         BSTR* aText)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStartOffset || !aEndOffset || !aText)
     return E_INVALIDARG;
 
@@ -252,6 +286,8 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
 
   *aText = ::SysAllocStringLen(text.get(), text.Length());
   return *aText ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -260,6 +296,8 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
                                        long* aStartOffset, long* aEndOffset,
                                        BSTR* aText)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStartOffset || !aEndOffset || !aText)
     return E_INVALIDARG;
 
@@ -296,6 +334,8 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
 
   *aText = ::SysAllocStringLen(text.get(), text.Length());
   return *aText ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -304,6 +344,8 @@ ia2AccessibleText::get_textAtOffset(long aOffset,
                                     long* aStartOffset, long* aEndOffset,
                                     BSTR* aText)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aStartOffset || !aEndOffset || !aText)
     return E_INVALIDARG;
 
@@ -338,11 +380,15 @@ ia2AccessibleText::get_textAtOffset(long aOffset,
 
   *aText = ::SysAllocStringLen(text.get(), text.Length());
   return *aText ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::removeSelection(long aSelectionIndex)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -351,11 +397,15 @@ ia2AccessibleText::removeSelection(long aSelectionIndex)
 
   return textAcc->RemoveFromSelection(aSelectionIndex) ?
     S_OK : E_INVALIDARG;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::setCaretOffset(long aOffset)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -367,12 +417,16 @@ ia2AccessibleText::setCaretOffset(long aOffset)
 
   textAcc->SetCaretOffset(aOffset);
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
                                 long aEndOffset)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -381,11 +435,15 @@ ia2AccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
 
   return textAcc->SetSelectionBoundsAt(aSelectionIndex, aStartOffset, aEndOffset) ?
     S_OK : E_INVALIDARG;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_nCharacters(long* aNCharacters)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aNCharacters)
     return E_INVALIDARG;
   *aNCharacters = 0;
@@ -398,12 +456,16 @@ ia2AccessibleText::get_nCharacters(long* aNCharacters)
 
   *aNCharacters  = textAcc->CharacterCount();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
                                      enum IA2ScrollType aScrollType)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -415,6 +477,8 @@ ia2AccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
 
   textAcc->ScrollSubstringTo(aStartIndex, aEndIndex, aScrollType);
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -422,6 +486,8 @@ ia2AccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
                                           enum IA2CoordinateType aCoordType,
                                           long aX, long aY)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   uint32_t geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
@@ -438,18 +504,28 @@ ia2AccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
   textAcc->ScrollSubstringToPoint(aStartIndex, aEndIndex,
                                   geckoCoordType, aX, aY);
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_newText(IA2TextSegment *aNewText)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetModifiedText(true, aNewText);
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleText::get_oldText(IA2TextSegment *aOldText)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   return GetModifiedText(false, aOldText);
+
+  A11Y_TRYBLOCK_END
 }
 
 // ia2AccessibleText

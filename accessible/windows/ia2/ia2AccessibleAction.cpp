@@ -37,6 +37,8 @@ ia2AccessibleAction::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleAction::nActions(long* aActionCount)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aActionCount)
     return E_INVALIDARG;
 
@@ -48,22 +50,30 @@ ia2AccessibleAction::nActions(long* aActionCount)
 
   *aActionCount = acc->ActionCount();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleAction::doAction(long aActionIndex)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
   uint8_t index = static_cast<uint8_t>(aActionIndex);
   return acc->DoAction(index) ? S_OK : E_INVALIDARG;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aDescription)
     return E_INVALIDARG;
   *aDescription = nullptr;
@@ -81,6 +91,8 @@ ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
   *aDescription = ::SysAllocStringLen(description.get(),
                                       description.Length());
   return *aDescription ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -88,6 +100,8 @@ ia2AccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
                                   BSTR **aKeyBinding,
                                   long *aNumBinding)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aKeyBinding)
     return E_INVALIDARG;
   *aKeyBinding = nullptr;
@@ -127,11 +141,15 @@ ia2AccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
 
   *aNumBinding = 1;
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleAction::get_name(long aActionIndex, BSTR *aName)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aName)
     return E_INVALIDARG;
 
@@ -149,14 +167,20 @@ ia2AccessibleAction::get_name(long aActionIndex, BSTR *aName)
 
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aLocalizedName)
     return E_INVALIDARG;
 
   *aLocalizedName = nullptr;
   return E_NOTIMPL;
+
+  A11Y_TRYBLOCK_END
 }

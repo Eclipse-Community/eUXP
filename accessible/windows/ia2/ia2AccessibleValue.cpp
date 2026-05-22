@@ -44,6 +44,8 @@ ia2AccessibleValue::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aCurrentValue)
     return E_INVALIDARG;
 
@@ -64,11 +66,15 @@ ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue)
   aCurrentValue->vt = VT_R8;
   aCurrentValue->dblVal = currentValue;
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleValue::setCurrentValue(VARIANT aValue)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (aValue.vt != VT_R8)
     return E_INVALIDARG;
 
@@ -79,11 +85,15 @@ ia2AccessibleValue::setCurrentValue(VARIANT aValue)
     return CO_E_OBJNOTCONNECTED;
 
   return valueAcc->SetCurValue(aValue.dblVal) ? S_OK : E_FAIL;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aMaximumValue)
     return E_INVALIDARG;
 
@@ -104,11 +114,15 @@ ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue)
   aMaximumValue->vt = VT_R8;
   aMaximumValue->dblVal = maximumValue;
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aMinimumValue)
     return E_INVALIDARG;
 
@@ -129,5 +143,7 @@ ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue)
   aMinimumValue->vt = VT_R8;
   aMinimumValue->dblVal = minimumValue;
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 

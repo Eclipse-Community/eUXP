@@ -17,6 +17,8 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aHyperlinkCount)
     return E_INVALIDARG;
 
@@ -30,12 +32,16 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 
   *aHyperlinkCount = hyperText->LinkCount();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
                                       IAccessibleHyperlink** aHyperlink)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aHyperlink)
     return E_INVALIDARG;
 
@@ -57,11 +63,15 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
     static_cast<IAccessibleHyperlink*>(hyperLink);
   (*aHyperlink)->AddRef();
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkIndex)
 {
+  A11Y_TRYBLOCK_BEGIN
+
   if (!aHyperlinkIndex)
     return E_INVALIDARG;
 
@@ -75,5 +85,7 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkInde
 
   *aHyperlinkIndex = hyperAcc->LinkIndexAtOffset(aCharIndex);
   return S_OK;
+
+  A11Y_TRYBLOCK_END
 }
 
