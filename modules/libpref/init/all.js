@@ -1226,6 +1226,8 @@ pref("privacy.popups.disable_from_plugins", 2);
 
 // Send "Sec-GPC" HTTP header, disabled by default
 pref("privacy.GPCheader.enabled",    false);
+// Enforce tracking protection in all modes
+pref("privacy.trackingprotection.enabled",  false);
 
 // By default, do not clear domain passwords for "Forget about site"
 pref("privacy.forgetaboutsite.clearPasswords", false);
