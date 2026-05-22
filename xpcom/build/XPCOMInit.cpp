@@ -576,6 +576,8 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   NS_StartupLocalFile();
 
+  StartupSpecialSystemDirectory();
+
   nsDirectoryService::RealInit();
 
   bool value;
