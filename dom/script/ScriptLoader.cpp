@@ -1340,8 +1340,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest *aRequest, const nsAString &aType,
       contentPolicyType,
       loadGroup,
       prompter,
-      nsIRequest::LOAD_NORMAL |
-      nsIChannel::LOAD_CLASSIFY_URI);
+      nsIRequest::LOAD_NORMAL);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
