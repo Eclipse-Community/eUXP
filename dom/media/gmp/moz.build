@@ -76,6 +76,16 @@ if CONFIG['MOZ_EME']:
         'GMPCDMProxy.h',
     ]
 
+# We link GMPLoader into xul on B2G/Fennec as its code does not need to be
+# covered by a DRM vendor's voucher.
+if CONFIG['OS_TARGET'] == 'Android':
+    UNIFIED_SOURCES += [
+      'GMPLoader.cpp',
+    ]
+    USE_LIBS += [
+        'rlz',
+    ]
+
 UNIFIED_SOURCES += [
     'GMPAudioDecoderChild.cpp',
     'GMPAudioDecoderParent.cpp',

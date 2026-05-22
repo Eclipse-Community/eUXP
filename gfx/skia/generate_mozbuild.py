@@ -64,8 +64,12 @@ LOCAL_INCLUDES += [
     'skia/src/utils/win',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
+    DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
     'cocoa',
+    'android',
     'gtk2',
     'gtk3',
     'uikit',
@@ -140,7 +144,7 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-unused-private-field',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'android'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
@@ -150,7 +154,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
 
 import json
 
-platforms = ['linux', 'mac', 'win']
+platforms = ['linux', 'mac', 'android', 'win']
 
 def generate_opt_sources():
   opt_sources = {'opts': {''}}
@@ -257,6 +261,14 @@ def generate_separated_sources(platform_sources):
       'skia/src/ports/SkMemory_mozalloc.cpp',
       'skia/src/ports/SkImageEncoder_none.cpp',
       'skia/src/ports/SkImageGenerator_none.cpp',
+    },
+    'android': {
+      # 'skia/src/ports/SkDebug_android.cpp',
+      'skia/src/ports/SkFontHost_cairo.cpp',
+      # 'skia/src/ports/SkFontHost_FreeType.cpp',
+      # 'skia/src/ports/SkFontHost_FreeType_common.cpp',
+      # 'skia/src/ports/SkTime_Unix.cpp',
+      # 'skia/src/utils/SkThreadUtils_pthread.cpp',
     },
     'linux': {
       'skia/src/ports/SkFontHost_cairo.cpp',
@@ -443,6 +455,9 @@ def write_mozbuild(sources):
 
   f.write("if CONFIG['MOZ_ENABLE_SKIA_GPU']:\n")
   write_sources(f, sources['gpu'], 4)
+
+  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):\n")
+  write_sources(f, sources['android'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:\n")
   write_sources(f, sources['mac'], 4)

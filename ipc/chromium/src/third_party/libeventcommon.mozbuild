@@ -26,7 +26,10 @@ else:
          libevent_include_suffix = 'solaris'
     else:
         os_linux = 1
-        libevent_include_suffix = 'linux'
+        if CONFIG['OS_TARGET'] == 'Android':
+            libevent_include_suffix = 'android'
+        else:
+            libevent_include_suffix = 'linux'
 
 if os_posix:
     DEFINES['HAVE_CONFIG_H'] = True

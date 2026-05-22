@@ -777,6 +777,13 @@ class MachCommandConditions(object):
             return False
 
     @staticmethod
+    def is_android(cls):
+        """Must have an Android build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'android'
+        return False
+
+    @staticmethod
     def is_hg(cls):
         """Must have a mercurial source checkout."""
         if hasattr(cls, 'substs'):

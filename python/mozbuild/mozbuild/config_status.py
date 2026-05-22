@@ -32,6 +32,35 @@ from mozbuild.backend import (
 
 log_manager = LoggingManager()
 
+
+ANDROID_IDE_ADVERTISEMENT = '''
+=============
+ADVERTISEMENT
+
+You are building Firefox for Android. After your build completes, you can open
+the top source directory in IntelliJ or Android Studio directly and build using
+Gradle.  See the documentation at
+
+https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build
+
+PLEASE BE AWARE THAT GRADLE AND INTELLIJ/ANDROID STUDIO SUPPORT IS EXPERIMENTAL.
+You should verify any changes using |mach build|.
+=============
+'''.strip()
+
+VISUAL_STUDIO_ADVERTISEMENT = '''
+===============================
+Visual Studio Support Available
+
+You are building Firefox on Windows. You can generate Visual Studio
+files by running:
+
+   mach build-backend --backend=VisualStudio
+
+===============================
+'''.strip()
+
+
 def config_status(topobjdir='.', topsrcdir='.', defines=None,
                   non_global_defines=None, substs=None, source=None,
                   mozconfig=None, args=sys.argv[1:]):
@@ -174,3 +203,11 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
             for path, diff in sorted(the_backend.file_diffs.items()):
                 print('\n'.join(diff))
 
+    # Advertise Visual Studio if appropriate.
+    if os.name == 'nt' and 'VisualStudio' not in options.backend:
+        print(VISUAL_STUDIO_ADVERTISEMENT)
+
+    # Advertise Eclipse if it is appropriate.
+    if MachCommandConditions.is_android(env):
+        if 'AndroidEclipse' not in options.backend:
+            print(ANDROID_IDE_ADVERTISEMENT)

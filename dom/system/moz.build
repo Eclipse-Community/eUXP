@@ -7,10 +7,12 @@ toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit == 'windows':
     DIRS += ['windows']
-elif toolkit == 'cocoa':
-    DIRS += ['mac']
+elif toolkit == 'android':
+    DIRS += ['android']
 elif toolkit in ('gtk2', 'gtk3'):
     DIRS += ['linux']
+elif toolkit == 'cocoa':
+    DIRS += ['mac']
 
 XPIDL_SOURCES += [
     'nsIOSFileConstantsService.idl',
