@@ -13,7 +13,6 @@
 #include "pki3hack.h"
 #include "secerr.h"
 #include "dev.h"
-#include "dev3hack.h"
 #include "utilpars.h"
 #include "pkcs11uri.h"
 
@@ -96,31 +95,29 @@ SECMOD_Shutdown()
     return SECSuccess;
 }
 
-PRBool
-SECMOD_GetSystemFIPSEnabled(void)
+int
+secmod_GetSystemFIPSEnabled(void)
 {
 #ifdef LINUX
-#ifndef NSS_FIPS_DISABLED
     FILE *f;
     char d;
     size_t size;
 
     f = fopen("/proc/sys/crypto/fips_enabled", "r");
     if (!f) {
-        return PR_FALSE;
+        return 0;
     }
 
     size = fread(&d, 1, sizeof(d), f);
     fclose(f);
     if (size != sizeof(d)) {
-        return PR_FALSE;
+        return 0;
     }
     if (d == '1') {
-        return PR_TRUE;
+        return 1;
     }
 #endif
-#endif
-    return PR_FALSE;
+    return 0;
 }
 
 /*
@@ -452,13 +449,11 @@ SECMOD_DeleteModule(const char *name, int *type)
 SECStatus
 SECMOD_DeleteInternalModule(const char *name)
 {
-#ifndef NSS_FIPS_DISABLED
     SECMODModuleList *mlp;
     SECMODModuleList **mlpp;
-#endif
     SECStatus rv = SECFailure;
 
-    if (SECMOD_GetSystemFIPSEnabled() || pendingModule) {
+    if (secmod_GetSystemFIPSEnabled() || pendingModule) {
         PORT_SetError(SEC_ERROR_MODULE_STUCK);
         return rv;
     }
@@ -470,7 +465,8 @@ SECMOD_DeleteInternalModule(const char *name)
 #ifdef NSS_FIPS_DISABLED
     PORT_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR);
     return rv;
-#else
+#endif
+
     SECMOD_GetWriteLock(moduleLock);
     for (mlpp = &modules, mlp = modules;
          mlp != NULL; mlpp = &mlp->next, mlp = *mlpp) {
@@ -542,7 +538,6 @@ SECMOD_DeleteInternalModule(const char *name)
         internalModule = newModule; /* adopt the module */
     }
     return rv;
-#endif
 }
 
 SECStatus
@@ -993,7 +988,7 @@ SECMOD_CanDeleteInternalModule(void)
 #ifdef NSS_FIPS_DISABLED
     return PR_FALSE;
 #else
-    return (PRBool)((pendingModule == NULL) && !SECMOD_GetSystemFIPSEnabled());
+    return (PRBool)((pendingModule == NULL) && !secmod_GetSystemFIPSEnabled());
 #endif
 }
 
@@ -1004,8 +999,6 @@ SECMOD_CanDeleteInternalModule(void)
  * C_GetSlotList(flag, &data, &count) so that the array doesn't accidently
  * grow on the caller. It is permissible for the slots to increase between
  * successive calls with NULL to get the size.
- *
- * Caller must not hold a module list read lock.
  */
 SECStatus
 SECMOD_UpdateSlotList(SECMODModule *mod)
@@ -1271,14 +1264,8 @@ SECMOD_WaitForAnyTokenEvent(SECMODModule *mod, unsigned long flags,
     }
     /* if we are in the delay period for the "isPresent" call, reset
      * the delay since we know things have probably changed... */
-    if (slot) {
-        NSSToken *nssToken = PK11Slot_GetNSSToken(slot);
-        if (nssToken) {
-            if (nssToken->slot) {
-                nssSlot_ResetDelay(nssToken->slot);
-            }
-            (void)nssToken_Destroy(nssToken);
-        }
+    if (slot && slot->nssToken && slot->nssToken->slot) {
+        nssSlot_ResetDelay(slot->nssToken->slot);
     }
     return slot;
 
@@ -1348,27 +1335,14 @@ loser:
 PRBool
 SECMOD_HasRemovableSlots(SECMODModule *mod)
 {
+    int i;
     PRBool ret = PR_FALSE;
+
     if (!moduleLock) {
         PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
         return ret;
     }
     SECMOD_GetReadLock(moduleLock);
-    ret = SECMOD_LockedModuleHasRemovableSlots(mod);
-    SECMOD_ReleaseReadLock(moduleLock);
-    return ret;
-}
-
-PRBool
-SECMOD_LockedModuleHasRemovableSlots(SECMODModule *mod)
-{
-    int i;
-    PRBool ret;
-    if (mod->slotCount == 0) {
-        return PR_TRUE;
-    }
-
-    ret = PR_FALSE;
     for (i = 0; i < mod->slotCount; i++) {
         PK11SlotInfo *slot = mod->slots[i];
         /* perm modules are not inserted or removed */
@@ -1378,6 +1352,10 @@ SECMOD_LockedModuleHasRemovableSlots(SECMODModule *mod)
         ret = PR_TRUE;
         break;
     }
+    if (mod->slotCount == 0) {
+        ret = PR_TRUE;
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
     return ret;
 }
 
@@ -1395,7 +1373,7 @@ secmod_UserDBOp(PK11SlotInfo *slot, CK_OBJECT_CLASS objClass,
 
     PK11_SETATTRS(attrs, CKA_CLASS, &objClass, sizeof(objClass));
     attrs++;
-    PK11_SETATTRS(attrs, CKA_NSS_MODULE_SPEC, (unsigned char *)sendSpec,
+    PK11_SETATTRS(attrs, CKA_NETSCAPE_MODULE_SPEC, (unsigned char *)sendSpec,
                   strlen(sendSpec) + 1);
     attrs++;
 
@@ -1509,7 +1487,7 @@ SECMOD_OpenNewSlot(SECMODModule *mod, const char *moduleSpec)
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return NULL;
     }
-    rv = secmod_UserDBOp(slot, CKO_NSS_NEWSLOT, sendSpec);
+    rv = secmod_UserDBOp(slot, CKO_NETSCAPE_NEWSLOT, sendSpec);
     PR_smprintf_free(sendSpec);
     PK11_FreeSlot(slot);
     if (rv != SECSuccess) {
@@ -1520,12 +1498,8 @@ SECMOD_OpenNewSlot(SECMODModule *mod, const char *moduleSpec)
     if (slot) {
         /* if we are in the delay period for the "isPresent" call, reset
          * the delay since we know things have probably changed... */
-        NSSToken *nssToken = PK11Slot_GetNSSToken(slot);
-        if (nssToken) {
-            if (nssToken->slot) {
-                nssSlot_ResetDelay(nssToken->slot);
-            }
-            (void)nssToken_Destroy(nssToken);
+        if (slot->nssToken && slot->nssToken->slot) {
+            nssSlot_ResetDelay(slot->nssToken->slot);
         }
         /* force the slot info structures to properly reset */
         (void)PK11_IsPresent(slot);
@@ -1651,16 +1625,12 @@ SECMOD_CloseUserDB(PK11SlotInfo *slot)
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return SECFailure;
     }
-    rv = secmod_UserDBOp(slot, CKO_NSS_DELSLOT, sendSpec);
+    rv = secmod_UserDBOp(slot, CKO_NETSCAPE_DELSLOT, sendSpec);
     PR_smprintf_free(sendSpec);
     /* if we are in the delay period for the "isPresent" call, reset
      * the delay since we know things have probably changed... */
-    NSSToken *nssToken = PK11Slot_GetNSSToken(slot);
-    if (nssToken) {
-        if (nssToken->slot) {
-            nssSlot_ResetDelay(nssToken->slot);
-        }
-        (void)nssToken_Destroy(nssToken);
+    if (slot->nssToken && slot->nssToken->slot) {
+        nssSlot_ResetDelay(slot->nssToken->slot);
         /* force the slot info structures to properly reset */
         (void)PK11_IsPresent(slot);
     }

@@ -178,7 +178,7 @@ char *
 NSSUTIL_ArgGetParamValue(const char *paramName, const char *parameters)
 {
     char searchValue[256];
-    size_t paramLen = strlen(paramName);
+    int paramLen = strlen(paramName);
     char *returnValue = NULL;
     int next;
 
@@ -585,7 +585,7 @@ struct nssutilArgSlotFlagTable {
 
 #define NSSUTIL_ARG_ENTRY(arg, flag) \
     {                                \
-#arg, sizeof(#arg) - 1, flag \
+        #arg, sizeof(#arg) - 1, flag \
     }
 static struct nssutilArgSlotFlagTable nssutil_argSlotFlagTable[] = {
     NSSUTIL_ARG_ENTRY(RSA, SECMOD_RSA_FLAG),

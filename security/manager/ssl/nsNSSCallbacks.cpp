@@ -30,7 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsProtectedAuthThread.h"
 #include "nsProxyRelease.h"
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "ssl.h"
 #include "sslproto.h"
 

@@ -166,13 +166,15 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/crypto',
     '/security/certverifier',
+    '/security/pkix/include',
 ]
 
 LOCAL_INCLUDES += [
     '!/dist/public/nss',
 ]
 
-DEFINES['NSS_DISABLE_DBM'] = '1'
+if CONFIG['NSS_DISABLE_DBM']:
+    DEFINES['NSS_DISABLE_DBM'] = '1'
 
 DEFINES['SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES'] = 'True'
 DEFINES['NSS_ENABLE_ECC'] = 'True'
@@ -184,9 +186,6 @@ DEFINES['CERT_AddTempCertToPerm'] = '__CERT_AddTempCertToPerm'
 USE_LIBS += [
     'crmf',
 ]
-
-# mozpkix is always linked statically from the in-tree sources.
-USE_LIBS += [ 'mozpkix' ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -11,7 +11,7 @@
 #include "OCSPCache.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/UniquePtr.h"
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 
 #if defined(_MSC_VER)
 #pragma warning(push)

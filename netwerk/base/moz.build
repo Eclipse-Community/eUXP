@@ -33,6 +33,7 @@ XPIDL_SOURCES += [
     'nsIChildChannel.idl',
     'nsIClassOfService.idl',
     'nsIContentSniffer.idl',
+    'nsICryptoFIPSInfo.idl',
     'nsICryptoHash.idl',
     'nsICryptoHMAC.idl',
     'nsIDashboard.idl',
@@ -295,6 +296,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/protocol/http',
     '/netwerk/socket',
+    '/security/pkix/include'
 ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:

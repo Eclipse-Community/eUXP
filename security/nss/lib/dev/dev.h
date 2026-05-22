@@ -146,6 +146,7 @@ nssModule_GetCertOrder(
  * nssSlot_Destroy
  * nssSlot_AddRef
  * nssSlot_GetName
+ * nssSlot_GetTokenName
  * nssSlot_IsTokenPresent
  * nssSlot_IsPermanent
  * nssSlot_IsFriendly
@@ -173,6 +174,10 @@ nssSlot_ResetDelay(
 
 NSS_EXTERN NSSUTF8 *
 nssSlot_GetName(
+    NSSSlot *slot);
+
+NSS_EXTERN NSSUTF8 *
+nssSlot_GetTokenName(
     NSSSlot *slot);
 
 NSS_EXTERN NSSModule *
@@ -251,7 +256,7 @@ nssSlot_CreateSession(
     NSSSlot *slot,
     NSSArena *arenaOpt,
     PRBool readWrite /* so far, this is the only flag used */
-);
+    );
 
 /* NSSToken
  *

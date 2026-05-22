@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This code is made available to you under your choice of the following sets
  * of licensing terms:
  */
@@ -279,23 +278,6 @@ CheckCertHostname(Input endEntityCertDER, Input hostname,
     MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
-
-// A strict name matching policy for CheckCertHostname which never
-// falls back to searching within the subject name.
-Result StrictNameMatchingPolicy::FallBackToCommonName(
-    Time notBefore,
-    /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) {
-  fallBackToCommonName = FallBackToSearchWithinSubject::No;
-  return Success;
-}
-
-Result
-CheckCertHostname(Input endEntityCertDER, Input hostname)
-{
-  StrictNameMatchingPolicy policy{};
-  return CheckCertHostname(endEntityCertDER, hostname, policy);
-}
-
 
 // 4.2.1.10. Name Constraints
 Result

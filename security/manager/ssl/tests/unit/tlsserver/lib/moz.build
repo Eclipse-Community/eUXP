@@ -8,8 +8,9 @@ UNIFIED_SOURCES += [
     'TLSServer.cpp',
 ]
 
-USE_LIBS += [
-    'mozpkix-testlib',
+LOCAL_INCLUDES += [
+    '../../../../../../pkix/include',
+    '../../../../../../pkix/test/lib',
 ]
 
 Library('tlsserver')

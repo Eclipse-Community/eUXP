@@ -41,13 +41,13 @@ log_item_dump(const char *msg, NSSItem *it)
     char buf[33];
     int i, j;
     for (i = 0; i < 10 && i < it->size; i++) {
-        snprintf(&buf[2 * i], sizeof(buf) - 2 * i, "%02X", ((PRUint8 *)it->data)[i]);
+        sprintf(&buf[2 * i], "%02X", ((PRUint8 *)it->data)[i]);
     }
     if (it->size > 10) {
-        snprintf(&buf[2 * i], sizeof(buf) - 2 * i, "..");
+        sprintf(&buf[2 * i], "..");
         i += 1;
         for (j = it->size - 1; i <= 16 && j > 10; i++, j--) {
-            snprintf(&buf[2 * i], sizeof(buf) - 2 * i, "%02X", ((PRUint8 *)it->data)[j]);
+            sprintf(&buf[2 * i], "%02X", ((PRUint8 *)it->data)[j]);
         }
     }
     PR_LOG(s_log, PR_LOG_DEBUG, ("%s: %s", msg, buf));
@@ -58,7 +58,8 @@ log_item_dump(const char *msg, NSSItem *it)
 static void
 log_cert_ref(const char *msg, NSSCertificate *c)
 {
-    PR_LOG(s_log, PR_LOG_DEBUG, ("%s: %s", msg, (c->nickname) ? c->nickname : c->email));
+    PR_LOG(s_log, PR_LOG_DEBUG, ("%s: %s", msg,
+                                 (c->nickname) ? c->nickname : c->email));
     log_item_dump("\tserial", &c->serial);
     log_item_dump("\tsubject", &c->subject);
 }
@@ -73,7 +74,7 @@ log_cert_ref(const char *msg, NSSCertificate *c)
 
 /* should it live in its own arena? */
 struct nssTDCertificateCacheStr {
-    PZLock *lock; /* Must not be held when calling nssSlot_IsTokenPresent. See bug 1625791. */
+    PZLock *lock;
     NSSArena *arena;
     nssHash *issuerAndSN;
     nssHash *subject;
@@ -711,14 +712,6 @@ add_cert_to_cache(
     cache_entry *ce;
     NSSCertificate *rvCert = NULL;
     NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
-
-    /* Set cc->trust and cc->nssCertificate before taking td->cache->lock.
-     * Otherwise, the sorter in add_subject_entry may eventually call
-     * nssSlot_IsTokenPresent, which must not occur while the cache lock
-     * is held. See bugs 1625791 and 1651564 for details. */
-    if (cert->type == NSSCertificateType_PKIX) {
-        (void)STAN_GetCERTCertificate(cert);
-    }
 
     PZ_Lock(td->cache->lock);
     /* If it exists in the issuer/serial hash, it's already in all */

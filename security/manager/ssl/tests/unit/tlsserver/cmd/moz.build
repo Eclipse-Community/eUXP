@@ -14,9 +14,10 @@ LOCAL_INCLUDES += [
 ]
 
 USE_LIBS += [
-    'mozpkix',
+    'mozillapkix',
     'nspr',
     'nss',
+    'pkixtestutil',
     'tlsserver',
 ]
 

@@ -10,7 +10,7 @@
 #include "nsNSSComponent.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "mozpkix/pkixnss.h"
+#include "pkix/pkixnss.h"
 
 using namespace mozilla::pkix;
 
@@ -171,22 +171,11 @@ CSTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
 }
 
 Result
-CSTrustDomain::VerifyRSAPKCS1SignedData(Input data,
-                                        DigestAlgorithm digestAlgorithm,
-                                        Input signature,
-                                        Input subjectPublicKeyInfo)
+CSTrustDomain::VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                          Input subjectPublicKeyInfo)
 {
-  return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
-                                     subjectPublicKeyInfo, nullptr);
-}
-
-Result
-CSTrustDomain::VerifyRSAPSSSignedData(Input data,
-                                      DigestAlgorithm digestAlgorithm,
-                                      Input signature,
-                                      Input subjectPublicKeyInfo) {
-  return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
-                                   subjectPublicKeyInfo, nullptr);
+  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                       nullptr);
 }
 
 Result
@@ -204,13 +193,11 @@ CSTrustDomain::CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
 }
 
 Result
-CSTrustDomain::VerifyECDSASignedData(Input data,
-                                     DigestAlgorithm digestAlgorithm,
-                                     Input signature,
-                                     Input subjectPublicKeyInfo)
+CSTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                       Input subjectPublicKeyInfo)
 {
-  return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
-                                  subjectPublicKeyInfo, nullptr);
+  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                    nullptr);
 }
 
 Result

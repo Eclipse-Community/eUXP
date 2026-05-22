@@ -13,9 +13,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
-#include "mozpkix/Time.h"
-#include "mozpkix/pkixnss.h"
-#include "mozpkix/pkixtypes.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsCOMPtr.h"
@@ -41,6 +38,9 @@
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "nspr.h"
+#include "pkix/Time.h"
+#include "pkix/pkixnss.h"
+#include "pkix/pkixtypes.h"
 #include "secasn1.h"
 #include "secder.h"
 #include "secerr.h"
@@ -59,8 +59,14 @@ extern LazyLogModule gPIPNSSLog;
 static nsresult
 attemptToLogInWithDefaultPassword()
 {
+#ifdef NSS_DISABLE_DBM
   // The SQL NSS DB requires the user to be authenticated to set certificate
-  // trust settings, even if the user's password is empty.
+  // trust settings, even if the user's password is empty. To maintain
+  // compatibility with the DBM-based database, try to log in with the
+  // default empty password. This will allow, at least, tests that need to
+  // change certificate trust to pass on all platforms. TODO(bug 978120): Do
+  // proper testing and/or implement a better solution so that we are confident
+  // that this does the correct thing outside of xpcshell tests too.
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return MapSECStatus(SECFailure);
@@ -70,6 +76,7 @@ attemptToLogInWithDefaultPassword()
     // has a non-default password.
     Unused << PK11_InitPin(slot.get(), nullptr, nullptr);
   }
+#endif
 
   return NS_OK;
 }

@@ -15,7 +15,7 @@
 #include "selfencrypt.h"
 #include "ssl3ext.h"
 #include "ssl3exthandle.h"
-#include "tls13ech.h"
+#include "tls13esni.h"
 #include "tls13exthandle.h" /* For tls13_ServerSendStatusRequestXtn. */
 
 PRBool
@@ -42,11 +42,13 @@ ssl_ShouldSendSNIExtension(const sslSocket *ss, const char *url)
  */
 SECStatus
 ssl3_ClientFormatServerNameXtn(const sslSocket *ss, const char *url,
-                               unsigned int len, TLSExtensionData *xtnData,
+                               TLSExtensionData *xtnData,
                                sslBuffer *buf)
 {
+    unsigned int len;
     SECStatus rv;
 
+    len = PORT_Strlen(url);
     /* length of server_name_list */
     rv = sslBuffer_AppendNumber(buf, len + 3, 2);
     if (rv != SECSuccess) {
@@ -74,15 +76,17 @@ ssl3_ClientSendServerNameXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     const char *url = ss->url;
 
+    /* We only make an ESNI private key if we are going to
+     * send ESNI. */
+    if (ss->xtnData.esniPrivateKey != NULL) {
+        url = ss->esniKeys->dummySni;
+    }
+
     if (!ssl_ShouldSendSNIExtension(ss, url)) {
         return SECSuccess;
     }
 
-    /* If ECH, write the public name. The real server name
-     * is emplaced while constructing CHInner extensions. */
-    sslEchConfig *cfg = (sslEchConfig *)PR_LIST_HEAD(&ss->echConfigs);
-    const char *sniContents = PR_CLIST_IS_EMPTY(&ss->echConfigs) ? url : cfg->contents.publicName;
-    rv = ssl3_ClientFormatServerNameXtn(ss, sniContents, strlen(sniContents), xtnData, buf);
+    rv = ssl3_ClientFormatServerNameXtn(ss, url, xtnData, buf);
     if (rv != SECSuccess) {
         return SECFailure;
     }
@@ -101,6 +105,13 @@ ssl3_HandleServerNameXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     if (!ss->sec.isServer) {
         return SECSuccess; /* ignore extension */
+    }
+
+    if (ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_sni_xtn)) {
+        /* If we already have ESNI, make sure we don't overwrite
+         * the value. */
+        PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+        return SECSuccess;
     }
 
     /* Server side - consume client data and register server sender. */
@@ -201,7 +212,7 @@ ssl3_FreeSniNameArray(TLSExtensionData *xtnData)
  * Clients sends a filled in session ticket if one is available, and otherwise
  * sends an empty ticket.  Servers always send empty tickets.
  */
-SECStatus
+PRInt32
 ssl3_ClientSendSessionTicketXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                 sslBuffer *buf, PRBool *added)
 {
@@ -308,15 +319,15 @@ ssl3_SelectAppProtocol(const sslSocket *ss, TLSExtensionData *xtnData,
     if (rv != SECSuccess) {
         ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
-        return SECFailure;
+        return rv;
     }
 
     PORT_Assert(ss->nextProtoCallback);
-    /* Neither the cipher suite nor ECH are selected yet Note that extensions
+    /* The cipher suite isn't selected yet.  Note that extensions
      * sometimes affect what cipher suite is selected, e.g., for ECC. */
     PORT_Assert((ss->ssl3.hs.preliminaryInfo &
-                 ssl_preinfo_all & ~ssl_preinfo_cipher_suite & ~ssl_preinfo_ech) ==
-                (ssl_preinfo_all & ~ssl_preinfo_cipher_suite & ~ssl_preinfo_ech));
+                 ssl_preinfo_all & ~ssl_preinfo_cipher_suite) ==
+                (ssl_preinfo_all & ~ssl_preinfo_cipher_suite));
     /* The callback has to make sure that either rv != SECSuccess or that result
      * is not set if there is no common protocol. */
     rv = ss->nextProtoCallback(ss->nextProtoArg, ss->fd, data->data, data->len,
@@ -456,33 +467,20 @@ ssl3_ClientSendAppProtoXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                            sslBuffer *buf, PRBool *added)
 {
     SECStatus rv;
+    const unsigned int len = ss->opt.nextProtoNego.len;
 
     /* Renegotiations do not send this extension. */
-    if (!ss->opt.enableALPN || !ss->opt.nextProtoNego.len || ss->firstHsDone) {
-        PR_ASSERT(!ss->opt.nextProtoNego.data);
+    if (!ss->opt.enableALPN || !ss->opt.nextProtoNego.data || ss->firstHsDone) {
         return SECSuccess;
     }
-    PRBool addGrease = ss->opt.enableGrease && ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3;
 
-    /* The list of protocol strings is prefixed with a 2-byte length */
-    rv = sslBuffer_AppendNumber(buf, ss->opt.nextProtoNego.len + (addGrease ? 3 : 0), 2);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-    /* The list of protocol strings */
-    rv = sslBuffer_Append(buf, ss->opt.nextProtoNego.data, ss->opt.nextProtoNego.len);
-    if (rv != SECSuccess) {
-        return SECFailure;
-    }
-    /* A client MAY select one or more GREASE ALPN identifiers and advertise
-     * them in the "application_layer_protocol_negotiation" extension, if sent
-     * [RFC8701, Section 3.1]. */
-    if (addGrease) {
-        rv = sslBuffer_AppendNumber(buf, 2, 1);
+    if (len > 0) {
+        /* Each protocol string is prefixed with a single byte length. */
+        rv = sslBuffer_AppendNumber(buf, len, 2);
         if (rv != SECSuccess) {
             return SECFailure;
         }
-        rv = sslBuffer_AppendNumber(buf, ss->ssl3.hs.grease->idx[grease_alpn], 2);
+        rv = sslBuffer_Append(buf, ss->opt.nextProtoNego.data, len);
         if (rv != SECSuccess) {
             return SECFailure;
         }
@@ -798,7 +796,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss, const NewSessionTicket *ticket,
      * This is compared to the expected time, which should differ only as a
      * result of clock errors or errors in the RTT estimate.
      */
-    ticketAgeBaseline = ss->ssl3.hs.rttEstimate / PR_USEC_PER_MSEC;
+    ticketAgeBaseline = (ssl_Time(ss) - ss->ssl3.hs.serverHelloTime) / PR_USEC_PER_MSEC;
     ticketAgeBaseline -= ticket->ticket_age_add;
     rv = sslBuffer_AppendNumber(&plaintext, ticketAgeBaseline, 4);
     if (rv != SECSuccess)
@@ -930,13 +928,6 @@ ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-
-#ifndef UNSAFE_FUZZER_MODE
-    PORT_Assert(temp < ssl_auth_size);
-#else
-    temp %= (8 * sizeof(SSLAuthType)) - 1;
-#endif
-
     parsedTicket->authType = (SSLAuthType)temp;
     rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 4, &buffer, &len);
     if (rv != SECSuccess) {
@@ -1043,9 +1034,7 @@ ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-
-    /* Cast to avoid undefined behavior if the top bit is set. */
-    parsedTicket->timestamp = (PRTime)((PRUint64)temp << 32);
+    parsedTicket->timestamp = (PRTime)temp << 32;
     rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 4, &buffer, &len);
     if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -1067,11 +1056,8 @@ ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-#ifndef UNSAFE_FUZZER_MODE
-    /* A well-behaving server should only write 0 or 1. */
     PORT_Assert(temp == PR_TRUE || temp == PR_FALSE);
-#endif
-    parsedTicket->extendedMasterSecretUsed = temp ? PR_TRUE : PR_FALSE;
+    parsedTicket->extendedMasterSecretUsed = (PRBool)temp;
 
     rv = ssl3_ExtConsumeHandshake(ss, &temp, 4, &buffer, &len);
     if (rv != SECSuccess) {
@@ -1661,8 +1647,7 @@ ssl3_SendSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         minVersion = ss->vrange.min; /* ClientHello */
     }
 
-    SECStatus rv = ssl3_EncodeSigAlgs(ss, minVersion, PR_TRUE /* forCert */,
-                                      ss->opt.enableGrease, buf);
+    SECStatus rv = ssl3_EncodeSigAlgs(ss, minVersion, buf);
     if (rv != SECSuccess) {
         return SECFailure;
     }
@@ -1827,16 +1812,8 @@ ssl3_HandleSupportedPointFormatsXtn(const sslSocket *ss,
         }
     }
 
-    /* Poor client doesn't support uncompressed points.
-     *
-     * If the client sends the extension and the extension does not contain the
-     * uncompressed point format, and the client has used the Supported Groups
-     * extension to indicate support for any of the curves defined in this
-     * specification, then the server MUST abort the handshake and return an
-     * illegal_parameter alert. [RFC8422, Section 5.1.2] */
-    ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+    /* Poor client doesn't support uncompressed points. */
     PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
-
     return SECFailure;
 }
 

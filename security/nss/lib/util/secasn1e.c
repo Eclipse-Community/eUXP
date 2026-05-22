@@ -94,12 +94,8 @@ sec_asn1e_push_state(SEC_ASN1EncoderContext *cx,
 {
     sec_asn1e_state *state, *new_state;
 
-    if (theTemplate == NULL) {
-        cx->status = encodeError;
-        return NULL;
-    }
-
     state = cx->current;
+
     new_state = (sec_asn1e_state *)PORT_ArenaZAlloc(cx->our_pool,
                                                     sizeof(*new_state));
     if (new_state == NULL) {
