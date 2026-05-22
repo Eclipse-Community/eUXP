@@ -175,6 +175,9 @@ LoadContext::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
 
   if (Preferences::GetBool("privacy.trackingprotection.enabled", false)) {
     *aIsTrackingProtectionOn = true;
+  } else if ((mOriginAttributes.mPrivateBrowsingId > 0) &&
+             Preferences::GetBool("privacy.trackingprotection.pbmode.enabled", false)) {
+    *aIsTrackingProtectionOn = true;
   } else {
     *aIsTrackingProtectionOn = false;
   }
