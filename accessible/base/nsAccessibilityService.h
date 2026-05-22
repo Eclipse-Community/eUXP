@@ -274,11 +274,13 @@ private:
     CreateAccessibleByFrameType(nsIFrame* aFrame, nsIContent* aContent,
                                 Accessible* aContext);
 
+#ifdef MOZ_XUL
   /**
    * Create accessible for XUL tree element.
    */
   already_AddRefed<Accessible>
     CreateAccessibleForXULTree(nsIContent* aContent, DocAccessible* aDoc);
+#endif
 
   /**
    * Reference for accessibility service instance.

@@ -148,8 +148,10 @@
 #include "nsIXULWindow.h"
 #include "nsITimedChannel.h"
 #include "nsServiceManagerUtils.h"
+#ifdef MOZ_XUL
 #include "nsIDOMXULControlElement.h"
 #include "nsMenuPopupFrame.h"
+#endif
 #include "mozilla/dom/CustomEvent.h"
 #include "nsIJARChannel.h"
 #include "nsIScreenManager.h"
@@ -6154,10 +6156,12 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight, b
 {
   MOZ_ASSERT(IsOuterWindow());
 
+#ifdef MOZ_XUL
   if (!aCallerIsChrome) {
     // if attempting to resize the window, hide any open popups
     nsContentUtils::HidePopupsInDocument(mDoc);
   }
+#endif
 
   // This one is easy. Just ensure the variable is greater than 100;
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
@@ -6221,8 +6225,10 @@ nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop, bool aCal
   // Check security state for use in determing window dimensions
 
   if (!aCallerIsChrome) {
+#ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsContentUtils::HidePopupsInDocument(mDoc);
+#endif
 
     if (nsGlobalWindow* rootWindow = nsGlobalWindow::Cast(GetPrivateRoot())) {
       rootWindow->FlushPendingNotifications(Flush_Layout);
@@ -14101,6 +14107,7 @@ nsGlobalWindow::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
   nsCOMPtr<nsIWidget> widget;
 
   // if a panel was supplied, use its widget instead.
+#ifdef MOZ_XUL
   if (aPanel) {
     nsIFrame* frame = aPanel->GetPrimaryFrame();
     if (!frame || frame->GetType() != nsGkAtoms::menuPopupFrame) {
@@ -14110,8 +14117,11 @@ nsGlobalWindow::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
     widget = (static_cast<nsMenuPopupFrame*>(frame))->GetWidget();
   }
   else {
+#endif
     widget = GetMainWidget();
+#ifdef MOZ_XUL
   }
+#endif
 
   if (!widget) {
     return;
@@ -14282,6 +14292,7 @@ nsGlobalWindow::NotifyDefaultButtonLoaded(Element& aDefaultButton,
                                           ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
+#ifdef MOZ_XUL
   // Don't snap to a disabled button.
   nsCOMPtr<nsIDOMXULControlElement> xulControl =
                                       do_QueryInterface(&aDefaultButton);
@@ -14320,6 +14331,9 @@ nsGlobalWindow::NotifyDefaultButtonLoaded(Element& aDefaultButton,
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
     aError.Throw(rv);
   }
+#else
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+#endif
 }
 
 NS_IMETHODIMP

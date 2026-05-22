@@ -8,12 +8,19 @@ DOMCI_CLASS(DOMPrototype)
 DOMCI_CLASS(DOMConstructor)
 
 // XUL classes
+#ifdef MOZ_XUL
 DOMCI_CLASS(XULCommandDispatcher)
+#endif
 DOMCI_CLASS(XULControllers)
+#ifdef MOZ_XUL
 DOMCI_CLASS(TreeSelection)
 DOMCI_CLASS(TreeContentView)
+#endif
+
+#ifdef MOZ_XUL
 DOMCI_CLASS(XULTemplateBuilder)
 DOMCI_CLASS(XULTreeBuilder)
+#endif
 
 DOMCI_CLASS(ContentFrameMessageManager)
 DOMCI_CLASS(ContentProcessMessageManager)

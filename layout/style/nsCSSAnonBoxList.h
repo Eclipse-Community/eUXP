@@ -82,6 +82,7 @@ CSS_ANON_BOX(rubyBaseContainer, ":-moz-ruby-base-container")
 CSS_ANON_BOX(rubyText, ":-moz-ruby-text")
 CSS_ANON_BOX(rubyTextContainer, ":-moz-ruby-text-container")
 
+#ifdef MOZ_XUL
 CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")
 CSS_ANON_BOX(moztreerow, ":-moz-tree-row")
 CSS_ANON_BOX(moztreeseparator, ":-moz-tree-separator")
@@ -94,6 +95,7 @@ CSS_ANON_BOX(moztreecelltext, ":-moz-tree-cell-text")
 CSS_ANON_BOX(moztreecheckbox, ":-moz-tree-checkbox")
 CSS_ANON_BOX(moztreeprogressmeter, ":-moz-tree-progressmeter")
 CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
+#endif
 
 CSS_ANON_BOX(mozSVGMarkerAnonChild, ":-moz-svg-marker-anon-child")
 CSS_ANON_BOX(mozSVGOuterSVGAnonChild, ":-moz-svg-outer-svg-anon-child")

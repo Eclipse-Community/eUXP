@@ -176,6 +176,7 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
   }
 }
 
+#ifdef MOZ_XUL
 /* virtual */ void
 nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
@@ -185,6 +186,7 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
     }
   }
 }
+#endif
 
 nsRestyleHint
 nsCSSRuleProcessor::HasStateDependentStyle(ElementDependentRuleProcessorData* aData,

@@ -508,7 +508,9 @@ static bool
 IsQuirkContainingBlockHeight(const ReflowInput* rs, nsIAtom* aFrameType)
 {
   if (nsGkAtoms::blockFrame == aFrameType ||
+#ifdef MOZ_XUL
       nsGkAtoms::XULLabelFrame == aFrameType ||
+#endif
       nsGkAtoms::scrollFrame == aFrameType) {
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
@@ -1949,7 +1951,9 @@ CalcQuirkContainingBlockHeight(const ReflowInput* aCBReflowInput)
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block frame and possibly the body/html
     if (nsGkAtoms::blockFrame == frameType ||
+#ifdef MOZ_XUL
         nsGkAtoms::XULLabelFrame == frameType ||
+#endif
         nsGkAtoms::scrollFrame == frameType) {
 
       secondAncestorRI = firstAncestorRI;

@@ -288,6 +288,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
   , mBlockWM(aBlockFrame->GetWritingMode())
   , mAdjustForPixelSnapping(false)
 {
+#ifdef MOZ_XUL
   if (!mScrollableFrame) {
     nsIAtom* pseudoType = aBlockFrame->StyleContext()->GetPseudo();
     if (pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
@@ -300,7 +301,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       mAdjustForPixelSnapping = !mBlockWM.IsBidiLTR();
     }
   }
-
+#endif
   mCanHaveInlineAxisScrollbar = false;
   if (mScrollableFrame) {
     auto scrollbarStyle = mBlockWM.IsVertical() ?

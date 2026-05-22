@@ -502,11 +502,17 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
 {
   int32_t weight = 0;
 
+#ifdef MOZ_XUL
   MOZ_ASSERT(!(IsPseudoElement() &&
                PseudoType() != CSSPseudoElementType::XULTree &&
                mClassList),
              "If non-XUL-tree pseudo-elements can have class selectors "
              "after them, specificity calculation must be updated");
+#else
+  MOZ_ASSERT(!(IsPseudoElement() && mClassList),
+             "If pseudo-elements can have class selectors "
+             "after them, specificity calculation must be updated");
+#endif
   MOZ_ASSERT(!(IsPseudoElement() && (mIDList || mAttrList)),
              "If pseudo-elements can have id or attribute selectors "
              "after them, specificity calculation must be updated");
@@ -520,11 +526,13 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
     list = list->mNext;
   }
   list = mClassList;
+#ifdef MOZ_XUL
   // XUL tree pseudo-elements abuse mClassList to store some private
   // data; ignore that.
   if (PseudoType() == CSSPseudoElementType::XULTree) {
     list = nullptr;
   }
+#endif
   while (nullptr != list) {
     weight += 0x000100;
     list = list->mNext;
@@ -817,6 +825,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
   // Append each class in the linked list
   if (mClassList) {
     if (isPseudoElement) {
+#ifdef MOZ_XUL
       MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(mLowercaseTag),
                  "must be tree pseudo-element");
 
@@ -827,6 +836,9 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       }
       // replace the final comma with a close-paren
       aString.Replace(aString.Length() - 1, 1, char16_t(')'));
+#else
+      NS_ERROR("Can't happen");
+#endif
     } else {
       nsAtomList* list = mClassList;
       while (list != nullptr) {
