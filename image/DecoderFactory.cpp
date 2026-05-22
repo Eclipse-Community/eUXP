@@ -76,11 +76,11 @@ DecoderFactory::GetDecoderType(const char* aMimeType)
     type = DecoderType::ICON;
 
   // WebP
-  } else if (!strcmp(aMimeType, IMAGE_WEBP)) {
+  } else if (!strcmp(aMimeType, IMAGE_WEBP) &&
+             gfxPrefs::ImageWebPEnabled()) {
     type = DecoderType::WEBP;
   }
 #ifdef MOZ_JXL
-  // JPEG-XL
     else if (!strcmp(aMimeType, IMAGE_JXL) &&
              gfxPrefs::ImageJXLEnabled()) {
     type = DecoderType::JXL;
