@@ -1758,10 +1758,7 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
 
     static_assert(sizeof(wasm::ProfilingFrameIterator) <= StorageSpace &&
                   sizeof(jit::JitProfilingFrameIterator) <= StorageSpace,
-                  "ProfilingFrameIterator::storage_ is too small");
-    static_assert(alignof(void*) >= alignof(wasm::ProfilingFrameIterator) &&
-                  alignof(void*) >= alignof(jit::JitProfilingFrameIterator),
-                  "ProfilingFrameIterator::storage_ is too weakly aligned");
+                  "Need to increase storage");
 
     iteratorConstruct(state);
     settle();
@@ -1815,14 +1812,14 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm()) {
-        new (storage()) wasm::ProfilingFrameIterator(*activation_->asWasm(), state);
+        new (storage_.addr()) wasm::ProfilingFrameIterator(*activation_->asWasm(), state);
         // Set savedPrevJitTop_ to the actual jitTop_ from the runtime.
         savedPrevJitTop_ = activation_->cx()->runtime()->jitTop;
         return;
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
-    new (storage()) jit::JitProfilingFrameIterator(rt_, state);
+    new (storage_.addr()) jit::JitProfilingFrameIterator(rt_, state);
 }
 
 void
@@ -1832,13 +1829,13 @@ JS::ProfilingFrameIterator::iteratorConstruct()
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm()) {
-        new (storage()) wasm::ProfilingFrameIterator(*activation_->asWasm());
+        new (storage_.addr()) wasm::ProfilingFrameIterator(*activation_->asWasm());
         return;
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
     MOZ_ASSERT(savedPrevJitTop_ != nullptr);
-    new (storage()) jit::JitProfilingFrameIterator(savedPrevJitTop_);
+    new (storage_.addr()) jit::JitProfilingFrameIterator(savedPrevJitTop_);
 }
 
 void
