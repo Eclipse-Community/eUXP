@@ -39,20 +39,14 @@ MOZ_PKG_PLATFORM := win32
 endif
 endif
 ifeq ($(OS_ARCH),Darwin)
-ifeq ($(TARGET_CPU),x86_64)
-MOZ_PKG_PLATFORM := intel64
-endif
-ifeq ($(TARGET_CPU),x86)
-MOZ_PKG_PLATFORM := intel32
-endif
-ifeq ($(TARGET_CPU),aarch64)
-MOZ_PKG_PLATFORM := arm64
-endif
-ifeq ($(TARGET_CPU),powerpc)
-MOZ_PKG_PLATFORM := powerpc
-endif
 ifdef UNIVERSAL_BINARY
 MOZ_PKG_PLATFORM := mac
+else
+ifeq ($(TARGET_CPU),x86_64)
+MOZ_PKG_PLATFORM := intel64
+else
+MOZ_PKG_PLATFORM := arm64
+endif
 endif
 endif
 ifeq ($(TARGET_OS),linux-gnu)
