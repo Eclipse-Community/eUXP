@@ -97,6 +97,7 @@
 #include <intrin.h>
 #include <math.h>
 #include "cairo/cairo-features.h"
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/mscom/MainThreadRuntime.h"
 #include "mozilla/widget/AudioSession.h"
 
@@ -2794,7 +2795,10 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     // manual font file I/O on _all_ system fonts.  To avoid this, load the
     // dwrite library and create a factory as early as possible so that the
     // FntCache service is ready by the time it's needed.
-    CreateThread(nullptr, 0, &InitDwriteBG, nullptr, 0, nullptr);
+
+    if (IsVistaOrLater()) {
+      CreateThread(nullptr, 0, &InitDwriteBG, nullptr, 0, nullptr);
+    }
   }
 #endif
 
@@ -4136,7 +4140,7 @@ enum {
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
-  // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
+  kE10sDisabledForOperatingSystem = 10,
 };
 
 const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
@@ -4206,6 +4210,19 @@ MultiprocessBlockPolicy() {
     return gMultiprocessBlockPolicy;
   }
 #endif
+
+  /**
+   * Avoids enabling e10s for Windows XP users on the release channel.
+   */
+#if defined(XP_WIN)
+  if (!IsVistaOrLater()) {
+    nsAdoptingCString channelName = Preferences::GetDefaultCString("app.update.channel");
+    if (channelName.EqualsLiteral("release") || channelName.EqualsLiteral("esr")) {
+      gMultiprocessBlockPolicy = kE10sDisabledForOperatingSystem;
+      return gMultiprocessBlockPolicy;
+    }
+  }
+#endif // XP_WIN
 
   /*
    * None of the blocking policies matched, so e10s is allowed to run.
