@@ -1439,6 +1439,7 @@ RuleCascadeData::AddRule(RuleSelectorPair* aRuleInfo)
       aRuleInfo->mSelector->mLowercaseTag,
       RuleValue(*aRuleInfo, 0, mQuirksMode));
   } else {
+#ifdef MOZ_XUL
     NS_ASSERTION(pseudoType == CSSPseudoElementType::XULTree,
                  "Unexpected pseudo type");
     // Index doesn't matter here, since we'll just be walking these
@@ -1447,6 +1448,9 @@ RuleCascadeData::AddRule(RuleSelectorPair* aRuleInfo)
       &mXULTreeRules,
       aRuleInfo->mSelector->mLowercaseTag,
       RuleValue(*aRuleInfo, 0, mQuirksMode));
+#else
+    NS_NOTREACHED("Unexpected pseudo type");
+#endif
   }
 
   for (nsCSSSelector* selector = aRuleInfo->mSelector; selector;

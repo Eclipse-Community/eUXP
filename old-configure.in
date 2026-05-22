@@ -206,7 +206,7 @@ case "$target" in
             # This is a pointless "helpful warning" to use /arch:AVX which we don't want.
             CFLAGS="$CFLAGS -wd4752"
             CXXFLAGS="$CXXFLAGS -wd4752"
-
+            
             # https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
             # for dbghelp.h, imagehlp.h, and shobj.h
             # C4091: 'typedef ': ignored on left of '' when no variable is declared
@@ -217,7 +217,7 @@ case "$target" in
             # 'noexcept' used with no exception handling mode specified;
             # termination on exception is not guaranteed. Specify /EHsc
             CXXFLAGS="$CXXFLAGS -wd4577"
-
+            
             # Silence unhelpful -Qspectre warnings
             CXXFLAGS="$CXXFLAGS -wd5045"
 

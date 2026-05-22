@@ -397,7 +397,7 @@ nsXULTooltipListener::ShowTooltip()
     return NS_OK;
   }
 
-  // Make sure the target node is still attached to some document.
+  // Make sure the target node is still attached to some document. 
   // It might have been deleted.
   if (sourceNode->IsInComposedDoc()) {
 #ifdef MOZ_XUL
@@ -417,7 +417,7 @@ nsXULTooltipListener::ShowTooltip()
 
     // listen for popuphidden on the tooltip node, so that we can
     // be sure DestroyPopup is called even if someone else closes the tooltip
-    currentTooltip->AddSystemEventListener(NS_LITERAL_STRING("popuphiding"),
+    currentTooltip->AddSystemEventListener(NS_LITERAL_STRING("popuphiding"), 
                                            this, false, false);
 
     // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at document level

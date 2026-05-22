@@ -5372,7 +5372,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
   if (rootSH) {
     shistInt->NotifyOnHistoryReload(mCurrentURI, aReloadFlags, &canReload);
   }
-  
+
   // If we're being flooded with reload requests, we should abort early
   // from the reload logic.
   if (IsReloadFlooding()) {

@@ -63,7 +63,7 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_XUL']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'ContainerBoxObject.cpp',
         'ListBoxObject.cpp',
         'MenuBoxObject.cpp',
