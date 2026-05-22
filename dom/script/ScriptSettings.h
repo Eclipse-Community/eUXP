@@ -224,11 +224,11 @@ public:
   // If aGlobalObject represents a web-visible global, errors reported by this
   // AutoJSAPI as it comes off the stack will fire the relevant error events and
   // show up in the corresponding web console.
-  [[nodiscard]] bool Init(nsIGlobalObject* aGlobalObject);
+  MOZ_MUST_USE bool Init(nsIGlobalObject* aGlobalObject);
 
   // This is a helper that grabs the native global associated with aObject and
   // invokes the above Init() with that.
-  [[nodiscard]] bool Init(JSObject* aObject);
+  MOZ_MUST_USE bool Init(JSObject* aObject);
 
   // Unsurprisingly, this uses aCx and enters the compartment of aGlobalObject.
   // If aGlobalObject or its associated JS global are null then it returns
@@ -238,15 +238,15 @@ public:
   // If aGlobalObject represents a web-visible global, errors reported by this
   // AutoJSAPI as it comes off the stack will fire the relevant error events and
   // show up in the corresponding web console.
-  [[nodiscard]] bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
+  MOZ_MUST_USE bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
 
   // Convenience functions to take an nsPIDOMWindow* or nsGlobalWindow*,
   // when it is more easily available than an nsIGlobalObject.
-  [[nodiscard]] bool Init(nsPIDOMWindowInner* aWindow);
-  [[nodiscard]] bool Init(nsPIDOMWindowInner* aWindow, JSContext* aCx);
+  MOZ_MUST_USE bool Init(nsPIDOMWindowInner* aWindow);
+  MOZ_MUST_USE bool Init(nsPIDOMWindowInner* aWindow, JSContext* aCx);
 
-  [[nodiscard]] bool Init(nsGlobalWindow* aWindow);
-  [[nodiscard]] bool Init(nsGlobalWindow* aWindow, JSContext* aCx);
+  MOZ_MUST_USE bool Init(nsGlobalWindow* aWindow);
+  MOZ_MUST_USE bool Init(nsGlobalWindow* aWindow, JSContext* aCx);
 
   JSContext* cx() const {
     MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");
@@ -272,12 +272,12 @@ public:
   //
   // Note that this fails if and only if we OOM while wrapping the exception
   // into the current compartment.
-  [[nodiscard]] bool StealException(JS::MutableHandle<JS::Value> aVal);
+  MOZ_MUST_USE bool StealException(JS::MutableHandle<JS::Value> aVal);
 
   // As for StealException(), but put the saved frames for any stack trace
   // associated with the point the exception was thrown into aStack.
   // aVal will be in the current compartment, but aStack might not be.
-  [[nodiscard]] bool StealExceptionAndStack(JS::MutableHandle<JS::Value> aVal,
+  MOZ_MUST_USE bool StealExceptionAndStack(JS::MutableHandle<JS::Value> aVal,
                                            JS::MutableHandle<JSObject*> aStack);
 
   // Peek the current exception from the JS engine, without stealing it.
@@ -286,7 +286,7 @@ public:
   //
   // Note that this fails if and only if we OOM while wrapping the exception
   // into the current compartment.
-  [[nodiscard]] bool PeekException(JS::MutableHandle<JS::Value> aVal);
+  MOZ_MUST_USE bool PeekException(JS::MutableHandle<JS::Value> aVal);
 
   void ClearException() {
     MOZ_ASSERT(IsStackTop());

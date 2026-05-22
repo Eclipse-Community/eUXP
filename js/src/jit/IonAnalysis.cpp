@@ -4471,7 +4471,7 @@ JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 jit::CreateMIRRootList(IonBuilder& builder)
 {
     MOZ_ASSERT(!builder.info().isAnalysis());

@@ -62,11 +62,11 @@ public:
   virtual ContentParentId ChildID() const = 0;
   virtual bool IsForBrowser() const = 0;
 
-  [[nodiscard]] virtual PBlobParent*
+  MOZ_MUST_USE virtual PBlobParent*
   SendPBlobConstructor(PBlobParent* aActor,
                        const BlobConstructorParams& aParams) = 0;
 
-  [[nodiscard]] virtual PBrowserParent*
+  MOZ_MUST_USE virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* actor,
                           const TabId& aTabId,
                           const IPCTabContext& context,

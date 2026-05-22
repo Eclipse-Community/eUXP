@@ -59,7 +59,7 @@ CallOrNewEmitter::emitNameCallee(JSAtom* name)
     return true;
 }
 
-[[nodiscard]] PropOpEmitter&
+MOZ_MUST_USE PropOpEmitter&
 CallOrNewEmitter::prepareForPropCallee(bool isSuperProp)
 {
     MOZ_ASSERT(state_ == State::Start);
@@ -76,7 +76,7 @@ CallOrNewEmitter::prepareForPropCallee(bool isSuperProp)
     return *poe_;
 }
 
-[[nodiscard]] ElemOpEmitter&
+MOZ_MUST_USE ElemOpEmitter&
 CallOrNewEmitter::prepareForElemCallee(bool isSuperElem)
 {
     MOZ_ASSERT(state_ == State::Start);

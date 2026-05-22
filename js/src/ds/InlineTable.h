@@ -67,7 +67,7 @@ class InlineTable
         return inlNext_ > InlineEntries;
     }
 
-    [[nodiscard]] bool switchToTable() {
+    MOZ_MUST_USE bool switchToTable() {
         MOZ_ASSERT(inlNext_ == InlineEntries);
 
         if (table_.initialized()) {
@@ -90,8 +90,8 @@ class InlineTable
         return true;
     }
 
-    [[nodiscard]] MOZ_NEVER_INLINE
-    bool switchAndAdd(const InlineEntry& entry) {
+    MOZ_NEVER_INLINE
+    MOZ_MUST_USE bool switchAndAdd(const InlineEntry& entry) {
         if (!switchToTable())
             return false;
 
@@ -284,8 +284,8 @@ class InlineTable
 
     template <typename KeyInput,
               typename... Args>
-    [[nodiscard]] MOZ_ALWAYS_INLINE
-    bool add(AddPtr& p, KeyInput&& key, Args&&... args) {
+    MOZ_ALWAYS_INLINE
+    MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& key, Args&&... args) {
         MOZ_ASSERT(!p);
         MOZ_ASSERT(keyNonZero(key));
 
@@ -439,7 +439,7 @@ class InlineMap
             this->value = mozilla::Forward<ValueInput>(value);
         }
 
-        [[nodiscard]] bool moveTo(Map& map) {
+        MOZ_MUST_USE bool moveTo(Map& map) {
             return map.putNew(mozilla::Move(key), mozilla::Move(value));
         }
     };
@@ -530,13 +530,13 @@ class InlineMap
     }
 
     template <typename KeyInput, typename ValueInput>
-    [[nodiscard]] MOZ_ALWAYS_INLINE
-    bool add(AddPtr& p, KeyInput&& key, ValueInput&& value) {
+    MOZ_ALWAYS_INLINE
+    MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& key, ValueInput&& value) {
         return impl_.add(p, mozilla::Forward<KeyInput>(key), mozilla::Forward<ValueInput>(value));
     }
 
     template <typename KeyInput, typename ValueInput>
-    [[nodiscard]] bool put(KeyInput&& key, ValueInput&& value) {
+    MOZ_MUST_USE bool put(KeyInput&& key, ValueInput&& value) {
         AddPtr p = lookupForAdd(key);
         if (p) {
             p->value() = mozilla::Forward<ValueInput>(value);
@@ -577,7 +577,7 @@ class InlineSet
             this->key = mozilla::Forward<TInput>(key);
         }
 
-        [[nodiscard]] bool moveTo(Set& set) {
+        MOZ_MUST_USE bool moveTo(Set& set) {
             return set.putNew(mozilla::Move(key));
         }
     };
@@ -661,13 +661,13 @@ class InlineSet
     }
 
     template <typename TInput>
-    [[nodiscard]] MOZ_ALWAYS_INLINE
-    bool add(AddPtr& p, TInput&& key) {
+    MOZ_ALWAYS_INLINE
+    MOZ_MUST_USE bool add(AddPtr& p, TInput&& key) {
         return impl_.add(p, mozilla::Forward<TInput>(key));
     }
 
     template <typename TInput>
-    [[nodiscard]] bool put(TInput&& key) {
+    MOZ_MUST_USE bool put(TInput&& key) {
         AddPtr p = lookupForAdd(key);
         return p ? true : add(p, mozilla::Forward<TInput>(key));
     }

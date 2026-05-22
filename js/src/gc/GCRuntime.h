@@ -218,7 +218,7 @@ class GCSchedulingTunables
     unsigned minEmptyChunkCount(const AutoLockGC&) const { return minEmptyChunkCount_; }
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
 
-    [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
+    MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
 };
 
 /*
@@ -600,18 +600,18 @@ class GCRuntime
 {
   public:
     explicit GCRuntime(JSRuntime* rt);
-    [[nodiscard]] bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
+    MOZ_MUST_USE bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
     void finishRoots();
     void finish();
 
-    [[nodiscard]] bool addRoot(Value* vp, const char* name);
+    MOZ_MUST_USE bool addRoot(Value* vp, const char* name);
     void removeRoot(Value* vp);
     void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
-    [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
+    MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
-    [[nodiscard]] bool triggerGC(JS::gcreason::Reason reason);
+    MOZ_MUST_USE bool triggerGC(JS::gcreason::Reason reason);
     void maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock);
     // The return value indicates if we were able to do the GC.
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
@@ -754,7 +754,7 @@ class GCRuntime
     static bool initializeSweepActions();
 
     void setGrayRootsTracer(JSTraceDataOp traceOp, void* data);
-    [[nodiscard]] bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
+    MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
     void setMaxMallocBytes(size_t value);
@@ -771,12 +771,12 @@ class GCRuntime
     void setObjectsTenuredCallback(JSObjectsTenuredCallback callback,
                                    void* data);
     void callObjectsTenuredCallback();
-    [[nodiscard]] bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
+    MOZ_MUST_USE bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
     void removeFinalizeCallback(JSFinalizeCallback func);
-    [[nodiscard]] bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback,
+    MOZ_MUST_USE bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback,
                                                       void* data);
     void removeWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback);
-    [[nodiscard]] bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback,
+    MOZ_MUST_USE bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback,
                                                         void* data);
     void removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback);
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
@@ -867,7 +867,7 @@ class GCRuntime
 
     // Allocator
     template <AllowGC allowGC>
-    [[nodiscard]] bool checkAllocatorState(JSContext* cx, AllocKind kind);
+    MOZ_MUST_USE bool checkAllocatorState(JSContext* cx, AllocKind kind);
     template <AllowGC allowGC>
     JSObject* tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicSlots,
                                   const Class* clasp);
@@ -888,7 +888,7 @@ class GCRuntime
     void arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena);
 
     // Allocator internals
-    [[nodiscard]] bool gcIfNeededPerAllocation(JSContext* cx);
+    MOZ_MUST_USE bool gcIfNeededPerAllocation(JSContext* cx);
     template <typename T>
     static void checkIncrementalZoneState(ExclusiveContext* cx, T* t);
     static TenuredCell* refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind,
@@ -923,18 +923,18 @@ class GCRuntime
 
     // Check if the system state is such that GC has been supressed
     // or otherwise delayed.
-    [[nodiscard]] bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
+    MOZ_MUST_USE bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
 
     gcstats::ZoneGCStats scanZonesBeforeGC();
     void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason) JS_HAZ_GC_CALL;
-    [[nodiscard]] bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
+    MOZ_MUST_USE bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
                               JS::gcreason::Reason reason);
     bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
                                  AutoLockForExclusiveAccess& lock);
 
     void purgeRuntime(AutoLockForExclusiveAccess& lock);
-    [[nodiscard]] bool beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
+    MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
@@ -957,7 +957,7 @@ class GCRuntime
 
     void beginSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
     void findZoneGroups(AutoLockForExclusiveAccess& lock);
-    [[nodiscard]] bool findInterZoneEdges();
+    MOZ_MUST_USE bool findInterZoneEdges();
     void getNextZoneGroup();
     void endMarkingZoneGroup();
     void beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock);
@@ -989,7 +989,7 @@ class GCRuntime
     void endCompactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone* zone);
     void sweepZoneAfterCompacting(Zone* zone);
-    [[nodiscard]] bool relocateArenas(Zone* zone, JS::gcreason::Reason reason,
+    MOZ_MUST_USE bool relocateArenas(Zone* zone, JS::gcreason::Reason reason,
                                       Arena*& relocatedListOut, SliceBudget& sliceBudget);
     void updateTypeDescrObjects(MovingTracer* trc, Zone* zone);
     void updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds);

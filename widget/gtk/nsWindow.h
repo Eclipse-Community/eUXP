@@ -96,10 +96,10 @@ public:
 
     // nsIWidget
     using nsBaseWidget::Create; // for Create signature not overridden here
-    [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
-                                          nsNativeWidget aNativeParent,
-                                          const LayoutDeviceIntRect& aRect,
-                                          nsWidgetInitData* aInitData) override;
+    virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
+                                         nsNativeWidget aNativeParent,
+                                         const LayoutDeviceIntRect& aRect,
+                                         nsWidgetInitData* aInitData) override;
     virtual void       Destroy() override;
     virtual nsIWidget *GetParent() override;
     virtual float      GetDPI() override;

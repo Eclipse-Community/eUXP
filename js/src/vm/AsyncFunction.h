@@ -26,11 +26,11 @@ WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleObject
 JSObject*
 WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
                               HandleValue generatorVal, HandleValue value);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
                              HandleValue generatorVal, HandleValue reason);
 

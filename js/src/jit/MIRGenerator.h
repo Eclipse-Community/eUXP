@@ -48,7 +48,7 @@ class MIRGenerator
     MIRGraph& graph() {
         return *graph_;
     }
-    [[nodiscard]] bool ensureBallast() {
+    MOZ_MUST_USE bool ensureBallast() {
         return alloc().ensureBallast();
     }
     const JitRuntime* jitRuntime() const {
@@ -78,7 +78,7 @@ class MIRGenerator
         return error_;
     }
 
-    [[nodiscard]] bool instrumentedProfiling() {
+    MOZ_MUST_USE bool instrumentedProfiling() {
         if (!instrumentedProfilingIsCached_) {
             instrumentedProfiling_ = GetJitContext()->runtime->spsProfiler().enabled();
             instrumentedProfilingIsCached_ = true;

@@ -428,14 +428,14 @@ class XDRIncrementalEncoder : public XDREncoder
     AutoXDRTree::Key getTopLevelTreeKey() const override;
     AutoXDRTree::Key getTreeKey(JSFunction* fun) const override;
 
-    [[nodiscard]] bool init();
+    MOZ_MUST_USE bool init();
 
     void createOrReplaceSubTree(AutoXDRTree* child) override;
     void endSubTree() override;
 
     // Append the content collected during the incremental encoding into the
     // buffer given as argument.
-    [[nodiscard]] bool linearize(JS::TranscodeBuffer& buffer);
+    MOZ_MUST_USE bool linearize(JS::TranscodeBuffer& buffer);
 };
 
 } /* namespace js */

@@ -218,63 +218,63 @@ class MOZ_STACK_CLASS ElemOpEmitter
     ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
 
   private:
-    [[nodiscard]] bool isCall() const {
+    MOZ_MUST_USE bool isCall() const {
         return kind_ == Kind::Call;
     }
 
-    [[nodiscard]] bool isSimpleAssignment() const {
+    MOZ_MUST_USE bool isSimpleAssignment() const {
         return kind_ == Kind::SimpleAssignment;
     }
 
-    [[nodiscard]] bool isPropInit() const {
+    MOZ_MUST_USE bool isPropInit() const {
         return kind_ == Kind::PropInit;
     }
 
-    [[nodiscard]] bool isDelete() const {
+    MOZ_MUST_USE bool isDelete() const {
         return kind_ == Kind::Delete;
     }
 
-    [[nodiscard]] bool isCompoundAssignment() const {
+    MOZ_MUST_USE bool isCompoundAssignment() const {
         return kind_ == Kind::CompoundAssignment;
     }
 
-    [[nodiscard]] bool isIncDec() const {
+    MOZ_MUST_USE bool isIncDec() const {
         return isPostIncDec() || isPreIncDec();
     }
 
-    [[nodiscard]] bool isPostIncDec() const {
+    MOZ_MUST_USE bool isPostIncDec() const {
         return kind_ == Kind::PostIncrement ||
                kind_ == Kind::PostDecrement;
     }
 
-    [[nodiscard]] bool isPreIncDec() const {
+    MOZ_MUST_USE bool isPreIncDec() const {
         return kind_ == Kind::PreIncrement ||
                kind_ == Kind::PreDecrement;
     }
 
-    [[nodiscard]] bool isInc() const {
+    MOZ_MUST_USE bool isInc() const {
         return kind_ == Kind::PostIncrement ||
                kind_ == Kind::PreIncrement;
     }
 
-    [[nodiscard]] bool isSuper() const {
+    MOZ_MUST_USE bool isSuper() const {
         return objKind_ == ObjKind::Super;
     }
 
   public:
-    [[nodiscard]] bool prepareForObj();
-    [[nodiscard]] bool prepareForKey();
+    MOZ_MUST_USE bool prepareForObj();
+    MOZ_MUST_USE bool prepareForKey();
 
-    [[nodiscard]] bool emitGet();
+    MOZ_MUST_USE bool emitGet();
 
-    [[nodiscard]] bool prepareForRhs();
-    [[nodiscard]] bool skipObjAndKeyAndRhs();
+    MOZ_MUST_USE bool prepareForRhs();
+    MOZ_MUST_USE bool skipObjAndKeyAndRhs();
 
-    [[nodiscard]] bool emitDelete();
+    MOZ_MUST_USE bool emitDelete();
 
-    [[nodiscard]] bool emitAssignment();
+    MOZ_MUST_USE bool emitAssignment();
 
-    [[nodiscard]] bool emitIncDec();
+    MOZ_MUST_USE bool emitIncDec();
 };
 
 } /* namespace frontend */

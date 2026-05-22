@@ -11,7 +11,8 @@
 namespace js {
 namespace jit {
 
-[[nodiscard]] bool UnrollLoops(MIRGraph& graph, const LoopIterationBoundVector& bounds);
+MOZ_MUST_USE bool
+UnrollLoops(MIRGraph& graph, const LoopIterationBoundVector& bounds);
 
 } // namespace jit
 } // namespace js

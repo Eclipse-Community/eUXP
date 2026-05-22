@@ -53,20 +53,20 @@ private:
         virtual ~Channel() {}
 
     public:
-        [[nodiscard]] nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
+        MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
 
-        [[nodiscard]] nsresult GetContentStream(nsIURI *, nsIInputStream **);
-        [[nodiscard]] nsresult OpenCacheEntry(nsIURI *);
-        [[nodiscard]] nsresult OpenCacheEntry();
-        [[nodiscard]] nsresult WriteCacheEntryDescription(nsICacheEntry *);
-        [[nodiscard]] nsresult WriteCacheEntryUnavailable();
-        [[nodiscard]] nsresult ParseURI(nsIURI *uri, nsACString &storageName,
+        MOZ_MUST_USE nsresult GetContentStream(nsIURI *, nsIInputStream **);
+        MOZ_MUST_USE nsresult OpenCacheEntry(nsIURI *);
+        MOZ_MUST_USE nsresult OpenCacheEntry();
+        MOZ_MUST_USE nsresult WriteCacheEntryDescription(nsICacheEntry *);
+        MOZ_MUST_USE nsresult WriteCacheEntryUnavailable();
+        MOZ_MUST_USE nsresult ParseURI(nsIURI *uri, nsACString &storageName,
                                        nsILoadContextInfo **loadInfo,
                                        nsCString &enahnceID,
                                        nsIURI **cacheUri);
         void CloseContent();
 
-        [[nodiscard]] static nsresult
+        static MOZ_MUST_USE nsresult
         PrintCacheData(nsIInputStream *aInStream,
                        void *aClosure,
                        const char *aFromSegment,

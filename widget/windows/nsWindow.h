@@ -98,10 +98,11 @@ public:
 
   // nsIWidget interface
   using nsWindowBase::Create; // for Create signature not overridden here
-  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
-                                        nsNativeWidget aNativeParent,
-                                        const LayoutDeviceIntRect& aRect,
-                                        nsWidgetInitData* aInitData = nullptr) override;
+  virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
+                                       nsNativeWidget aNativeParent,
+                                       const LayoutDeviceIntRect& aRect,
+                                       nsWidgetInitData* aInitData = nullptr)
+                                       override;
   virtual void            Destroy() override;
   NS_IMETHOD              SetParent(nsIWidget *aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
@@ -135,7 +136,7 @@ public:
   NS_IMETHOD              SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
-  [[nodiscard]] virtual nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   void                    SetBackgroundColor(const nscolor& aColor) override;

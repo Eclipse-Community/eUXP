@@ -1083,35 +1083,35 @@ FindScriptOrModulePrivateForScript(JSScript* script);
 
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame,
                                          jsbytecode* pc, MutableHandleValue res);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CheckVarNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
                      HandlePropertyName name);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CheckCanDeclareGlobalBinding(JSContext* cx, Handle<GlobalObject*> global,
                              HandlePropertyName name, bool isFunction);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CheckLexicalNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
                          HandleObject varObj, HandlePropertyName name);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CheckGlobalDeclarationConflicts(JSContext* cx, HandleScript script,
                                 Handle<LexicalEnvironmentObject*> lexicalEnv,
                                 HandleObject varObj);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script, HandleObject envChain,
                               HandleObject varObj);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 PushVarEnvironmentObject(JSContext* cx, HandleScope scope, AbstractFramePtr frame);
 
 #ifdef DEBUG

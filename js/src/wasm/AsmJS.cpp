@@ -1597,7 +1597,7 @@ class MOZ_STACK_CLASS ModuleValidator
         MOZ_ASSERT(!moduleFunctionName_);
         moduleFunctionName_ = name;
     }
-    [[nodiscard]] bool initGlobalArgumentName(PropertyName* n) {
+    MOZ_MUST_USE bool initGlobalArgumentName(PropertyName* n) {
         MOZ_ASSERT(n->isTenured());
         globalArgumentName_ = n;
         if (n) {
@@ -1607,7 +1607,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
         return true;
     }
-    [[nodiscard]] bool initImportArgumentName(PropertyName* n) {
+    MOZ_MUST_USE bool initImportArgumentName(PropertyName* n) {
         MOZ_ASSERT(n->isTenured());
         importArgumentName_ = n;
         if (n) {
@@ -1617,7 +1617,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
         return true;
     }
-    [[nodiscard]] bool initBufferArgumentName(PropertyName* n) {
+    MOZ_MUST_USE bool initBufferArgumentName(PropertyName* n) {
         MOZ_ASSERT(n->isTenured());
         bufferArgumentName_ = n;
         if (n) {
@@ -2502,11 +2502,11 @@ class MOZ_STACK_CLASS FunctionValidator
 
     Encoder& encoder() { return *encoder_; }
 
-    [[nodiscard]] bool writeInt32Lit(int32_t i32) {
+    MOZ_MUST_USE bool writeInt32Lit(int32_t i32) {
         return encoder().writeOp(Op::I32Const) &&
                encoder().writeVarS32(i32);
     }
-    [[nodiscard]] bool writeConstExpr(const NumLit& lit) {
+    MOZ_MUST_USE bool writeConstExpr(const NumLit& lit) {
         switch (lit.which()) {
           case NumLit::Fixnum:
           case NumLit::NegativeInt:
@@ -2523,11 +2523,11 @@ class MOZ_STACK_CLASS FunctionValidator
         }
         MOZ_CRASH("unexpected literal type");
     }
-    [[nodiscard]] bool writeCall(ParseNode* pn, Op op) {
+    MOZ_MUST_USE bool writeCall(ParseNode* pn, Op op) {
         return encoder().writeOp(op) &&
                fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
-    [[nodiscard]] bool prepareCall(ParseNode* pn) {
+    MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
         return fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
 };

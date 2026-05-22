@@ -409,18 +409,18 @@ class MOZ_RAII GetPropIRGenerator
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
     PreliminaryObjectAction preliminaryObjectAction_;
 
-    [[nodiscard]] bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    [[nodiscard]] bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    [[nodiscard]] bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj,
+    MOZ_MUST_USE bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj,
                                               ObjOperandId objId);
-    [[nodiscard]] bool tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj,
+    MOZ_MUST_USE bool tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj,
                                            ObjOperandId objId);
-    [[nodiscard]] bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj,
+    MOZ_MUST_USE bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj,
                                             ObjOperandId objId);
-    [[nodiscard]] bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj,
+    MOZ_MUST_USE bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj,
                                                ObjOperandId objId);
 
-    [[nodiscard]] bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);
+    MOZ_MUST_USE bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
@@ -431,7 +431,7 @@ class MOZ_RAII GetPropIRGenerator
 
     bool emitted() const { return emitted_; }
 
-    [[nodiscard]] bool tryAttachStub(mozilla::Maybe<CacheIRWriter>& writer);
+    MOZ_MUST_USE bool tryAttachStub(mozilla::Maybe<CacheIRWriter>& writer);
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;

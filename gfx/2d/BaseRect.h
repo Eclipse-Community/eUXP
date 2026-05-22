@@ -113,7 +113,7 @@ struct BaseRect {
   // Intersection with an empty Rect may not produce an empty Rect if overflow
   // occurs. e.g. {INT_MIN, 0, 0, 20} Intersect { 5000, 0, 500, 20 } gives:
   // the non-emtpy {5000, 0, 500, 20 } instead of {5000, 0, 0, 0}
-  [[nodiscard]] Sub Intersect(const Sub& aRect) const
+  MOZ_MUST_USE Sub Intersect(const Sub& aRect) const
   {
     Sub result;
     result.x = std::max<T>(x, aRect.x);
@@ -129,7 +129,7 @@ struct BaseRect {
   // better. This comes at a tiny cost in performance.
   // e.g. {INT_MIN, 0, 0, 20} Intersect { 5000, 0, 500, 20 } gives:
   // {5000, 0, 0, 0}
-  [[nodiscard]] Sub SafeIntersect(const Sub& aRect) const
+  MOZ_MUST_USE Sub SafeIntersect(const Sub& aRect) const
   {
     Sub result;
     result.x = std::max<T>(x, aRect.x);
@@ -163,7 +163,7 @@ struct BaseRect {
   // If both rectangles are empty, returns this.
   // WARNING! This is not safe against overflow, prefer using SafeUnion instead
   // when dealing with int-based rects.
-  [[nodiscard]] Sub Union(const Sub& aRect) const
+  MOZ_MUST_USE Sub Union(const Sub& aRect) const
   {
     if (IsEmpty()) {
       return aRect;
@@ -178,7 +178,7 @@ struct BaseRect {
   // Thus, empty input rectangles are allowed to affect the result.
   // WARNING! This is not safe against overflow, prefer using SafeUnionEdges
   // instead when dealing with int-based rects.
-  [[nodiscard]] Sub UnionEdges(const Sub& aRect) const
+  MOZ_MUST_USE Sub UnionEdges(const Sub& aRect) const
   {
     Sub result;
     result.x = std::min(x, aRect.x);
@@ -590,7 +590,7 @@ struct BaseRect {
    * Clamp aPoint to this rectangle. It is allowed to end up on any
    * edge of the rectangle.
    */
-  [[nodiscard]] Point ClampPoint(const Point& aPoint) const
+  MOZ_MUST_USE Point ClampPoint(const Point& aPoint) const
   {
     return Point(std::max(x, std::min(XMost(), aPoint.x)),
                  std::max(y, std::min(YMost(), aPoint.y)));
@@ -601,7 +601,7 @@ struct BaseRect {
    * aRect then the dimensions that don't fit will be shrunk so that they
    * do fit. The resulting rect is returned.
    */
-  [[nodiscard]] Sub MoveInsideAndClamp(const Sub& aRect) const
+  MOZ_MUST_USE Sub MoveInsideAndClamp(const Sub& aRect) const
   {
     Sub rect(std::max(aRect.x, x),
              std::max(aRect.y, y),

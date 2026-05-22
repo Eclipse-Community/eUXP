@@ -133,14 +133,14 @@ class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
     size_t length() const { return vector.length(); }
     bool empty() const { return vector.empty(); }
 
-    [[nodiscard]] bool append(const T& v) { return vector.append(v); }
-    [[nodiscard]] bool appendN(const T& v, size_t len) { return vector.appendN(v, len); }
-    [[nodiscard]] bool append(const T* ptr, size_t len) { return vector.append(ptr, len); }
-    [[nodiscard]] bool appendAll(const AutoVectorRooterBase<T>& other) {
+    MOZ_MUST_USE bool append(const T& v) { return vector.append(v); }
+    MOZ_MUST_USE bool appendN(const T& v, size_t len) { return vector.appendN(v, len); }
+    MOZ_MUST_USE bool append(const T* ptr, size_t len) { return vector.append(ptr, len); }
+    MOZ_MUST_USE bool appendAll(const AutoVectorRooterBase<T>& other) {
         return vector.appendAll(other.vector);
     }
 
-    [[nodiscard]] bool insert(T* p, const T& val) { return vector.insert(p, val); }
+    MOZ_MUST_USE bool insert(T* p, const T& val) { return vector.insert(p, val); }
 
     /* For use when space has already been reserved. */
     void infallibleAppend(const T& v) { vector.infallibleAppend(v); }
@@ -148,7 +148,7 @@ class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
     void popBack() { vector.popBack(); }
     T popCopy() { return vector.popCopy(); }
 
-    [[nodiscard]] bool growBy(size_t inc) {
+    MOZ_MUST_USE bool growBy(size_t inc) {
         size_t oldLength = vector.length();
         if (!vector.growByUninitialized(inc))
             return false;
@@ -156,7 +156,7 @@ class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
         return true;
     }
 
-    [[nodiscard]] bool resize(size_t newLength) {
+    MOZ_MUST_USE bool resize(size_t newLength) {
         size_t oldLength = vector.length();
         if (newLength <= oldLength) {
             vector.shrinkBy(oldLength - newLength);
@@ -170,7 +170,7 @@ class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
 
     void clear() { vector.clear(); }
 
-    [[nodiscard]] bool reserve(size_t newLength) {
+    MOZ_MUST_USE bool reserve(size_t newLength) {
         return vector.reserve(newLength);
     }
 
@@ -5289,7 +5289,7 @@ class JS_PUBLIC_API(AutoSaveExceptionState)
  * This is not the same stack as `e.stack` when `e` is an `Error` object. (That
  * would be JS::ExceptionStackOrNull).
  */
-[[nodiscard]] JS_PUBLIC_API(JSObject*)
+MOZ_MUST_USE JS_PUBLIC_API(JSObject*)
 GetPendingExceptionStack(JSContext* cx);
 
 } /* namespace JS */

@@ -536,7 +536,7 @@ class NativeObject : public ShapedObject
      */
     bool setSlotSpan(ExclusiveContext* cx, uint32_t span);
 
-    [[nodiscard]] static bool toDictionaryMode(ExclusiveContext* cx, HandleNativeObject obj);
+    static MOZ_MUST_USE bool toDictionaryMode(ExclusiveContext* cx, HandleNativeObject obj);
 
   private:
     friend class TenuringTracer;
@@ -635,13 +635,13 @@ class NativeObject : public ShapedObject
     }
 
   public:
-    [[nodiscard]] static bool generateOwnShape(ExclusiveContext* cx, HandleNativeObject obj,
+    static MOZ_MUST_USE bool generateOwnShape(ExclusiveContext* cx, HandleNativeObject obj,
                                               Shape* newShape = nullptr)
     {
         return replaceWithNewEquivalentShape(cx, obj, obj->lastProperty(), newShape);
     }
 
-    [[nodiscard]] static bool shadowingShapeChange(ExclusiveContext* cx, HandleNativeObject obj,
+    static MOZ_MUST_USE bool shadowingShapeChange(ExclusiveContext* cx, HandleNativeObject obj,
                                                   const Shape& shape);
     static bool clearFlag(ExclusiveContext* cx, HandleNativeObject obj, BaseShape::Flag flag);
 
@@ -815,7 +815,7 @@ class NativeObject : public ShapedObject
                         unsigned flags, ShapeTable::Entry* entry, bool allowDictionary,
                         const AutoKeepShapeTables& keep);
 
-    [[nodiscard]] static bool fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
+    static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
                                              const Vector<Value>& values, void* priv);
 
   public:

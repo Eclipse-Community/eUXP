@@ -70,7 +70,8 @@ public:
    * Returns false if there is not enough data to deterministically recognize
    * tokens or when the last returned token was EOF.
    */
-  [[nodiscard]] bool Next(Token& aToken);
+  MOZ_MUST_USE
+  bool Next(Token& aToken);
 
   /**
    * Can only be called from inside the consumer callback.

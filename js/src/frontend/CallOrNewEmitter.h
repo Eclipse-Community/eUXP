@@ -265,60 +265,60 @@ class MOZ_STACK_CLASS CallOrNewEmitter
                      ValueUsage valueUsage);
 
   private:
-    [[nodiscard]] bool isCall() const {
+    MOZ_MUST_USE bool isCall() const {
         return op_ == JSOP_CALL || op_ == JSOP_CALL_IGNORES_RV ||
                op_ == JSOP_SPREADCALL ||
                isEval() || isFunApply() || isFunCall();
     }
 
-    [[nodiscard]] bool isNew() const {
+    MOZ_MUST_USE bool isNew() const {
         return op_ == JSOP_NEW || op_ == JSOP_SPREADNEW;
     }
 
-    [[nodiscard]] bool isSuperCall() const {
+    MOZ_MUST_USE bool isSuperCall() const {
         return op_ == JSOP_SUPERCALL || op_ == JSOP_SPREADSUPERCALL;
     }
 
-    [[nodiscard]] bool isEval() const {
+    MOZ_MUST_USE bool isEval() const {
         return op_ == JSOP_EVAL || op_ == JSOP_STRICTEVAL ||
                op_ == JSOP_SPREADEVAL || op_ == JSOP_STRICTSPREADEVAL;
     }
 
-    [[nodiscard]] bool isFunApply() const {
+    MOZ_MUST_USE bool isFunApply() const {
         return op_ == JSOP_FUNAPPLY;
     }
 
-    [[nodiscard]] bool isFunCall() const {
+    MOZ_MUST_USE bool isFunCall() const {
         return op_ == JSOP_FUNCALL;
     }
 
-    [[nodiscard]] bool isSpread() const {
+    MOZ_MUST_USE bool isSpread() const {
         return JOF_OPTYPE(op_) == JOF_BYTE;
     }
 
-    [[nodiscard]] bool isSingleSpreadRest() const {
+    MOZ_MUST_USE bool isSingleSpreadRest() const {
         return argumentsKind_ == ArgumentsKind::SingleSpreadRest;
     }
 
   public:
-    [[nodiscard]] bool emitNameCallee(JSAtom* name);
-    [[nodiscard]] PropOpEmitter& prepareForPropCallee(bool isSuperProp);
-    [[nodiscard]] ElemOpEmitter& prepareForElemCallee(bool isSuperElem);
-    [[nodiscard]] bool prepareForFunctionCallee();
-    [[nodiscard]] bool emitSuperCallee();
-    [[nodiscard]] bool prepareForOtherCallee();
+    MOZ_MUST_USE bool emitNameCallee(JSAtom* name);
+    MOZ_MUST_USE PropOpEmitter& prepareForPropCallee(bool isSuperProp);
+    MOZ_MUST_USE ElemOpEmitter& prepareForElemCallee(bool isSuperElem);
+    MOZ_MUST_USE bool prepareForFunctionCallee();
+    MOZ_MUST_USE bool emitSuperCallee();
+    MOZ_MUST_USE bool prepareForOtherCallee();
 
-    [[nodiscard]] bool emitThis();
+    MOZ_MUST_USE bool emitThis();
 
     // Used by BytecodeEmitter::emitPipeline to reuse CallOrNewEmitter instance
     // across multiple chained calls.
     void reset();
 
-    [[nodiscard]] bool prepareForNonSpreadArguments();
+    MOZ_MUST_USE bool prepareForNonSpreadArguments();
 
     // See the usage in the comment at the top of the class.
-    [[nodiscard]] bool wantSpreadOperand();
-    [[nodiscard]] bool emitSpreadArgumentsTest();
+    MOZ_MUST_USE bool wantSpreadOperand();
+    MOZ_MUST_USE bool emitSpreadArgumentsTest();
 
     // Parameters are the offset in the source code for each character below:
     //
@@ -328,7 +328,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter
     //   beginPos
     //
     // Can be Nothing() if not available.
-    [[nodiscard]] bool emitEnd(uint32_t argc, const mozilla::Maybe<uint32_t>& beginPos);
+    MOZ_MUST_USE bool emitEnd(uint32_t argc, const mozilla::Maybe<uint32_t>& beginPos);
 };
 
 } /* namespace frontend */

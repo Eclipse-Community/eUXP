@@ -282,7 +282,7 @@ private:
     bool     RequestIsConditional();
     nsresult BeginConnect();
     void     HandleBeginConnectContinue();
-    [[nodiscard]] nsresult BeginConnectContinue();
+    MOZ_MUST_USE nsresult BeginConnectContinue();
     nsresult ContinueBeginConnectWithResult();
     void     ContinueBeginConnect();
     nsresult Connect();
