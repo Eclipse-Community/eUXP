@@ -65,7 +65,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
-  [[nodiscard]] nsresult Init(nsIURI* aURI,
+  MOZ_MUST_USE nsresult Init(nsIURI* aURI,
                               nsIURI* aCurrentURI,
                               bool aHadInsecureRedirect,
                               nsIRequest* aRequest,
