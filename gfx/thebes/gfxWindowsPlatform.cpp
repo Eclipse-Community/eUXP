@@ -38,6 +38,8 @@
 #include "DeviceManagerD3D9.h"
 #include "mozilla/layers/ReadbackManagerD3D11.h"
 
+#include "WinUtils.h"
+
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
 #include "gfxDWriteCommon.h"
@@ -56,7 +58,6 @@
 
 #include "nsMemory.h"
 
-#include <dwmapi.h>
 #include <d3d11.h>
 
 #include "nsIMemoryReporter.h"
@@ -1627,9 +1628,10 @@ gfxWindowsPlatform::InitGPUProcessSupport()
 bool
 gfxWindowsPlatform::DwmCompositionEnabled()
 {
+  MOZ_ASSERT(WinUtils::dwmIsCompositionEnabledPtr);
   BOOL dwmEnabled = false;
 
-  if (FAILED(DwmIsCompositionEnabled(&dwmEnabled))) {
+  if (FAILED(WinUtils::dwmIsCompositionEnabledPtr(&dwmEnabled))) {
     return false;
   }
 
@@ -1664,7 +1666,7 @@ public:
         DWM_TIMING_INFO vblankTime;
         // Make sure to init the cbSize, otherwise GetCompositionTiming will fail
         vblankTime.cbSize = sizeof(DWM_TIMING_INFO);
-        HRESULT hr = DwmGetCompositionTimingInfo(0, &vblankTime);
+        HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
         if (SUCCEEDED(hr)) {
           UNSIGNED_RATIO refreshRate = vblankTime.rateRefresh;
           // We get the rate in hertz / time, but we want the rate in ms.
@@ -1749,7 +1751,7 @@ public:
         // Make sure to init the cbSize, otherwise
         // GetCompositionTiming will fail
         vblankTime.cbSize = sizeof(DWM_TIMING_INFO);
-        HRESULT hr = DwmGetCompositionTimingInfo(0, &vblankTime);
+        HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
         if (!SUCCEEDED(hr)) {
             return vsync;
         }
@@ -1831,7 +1833,7 @@ public:
 
           // Using WaitForVBlank, the whole system dies because WaitForVBlank
           // only works if it's run on the same thread as the Present();
-          HRESULT hr = DwmFlush();
+          HRESULT hr = WinUtils::dwmFlushProcPtr();
           if (!SUCCEEDED(hr)) {
             // DWMFlush isn't working, fallback to software vsync.
             ScheduleSoftwareVsync(TimeStamp::Now());
@@ -1911,9 +1913,13 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxWindowsPlatform::CreateHardwareVsyncSource()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
+  if (!WinUtils::dwmIsCompositionEnabledPtr) {
+    NS_WARNING("Dwm composition not available, falling back to software vsync");
+    return gfxPlatform::CreateHardwareVsyncSource();
+  }
 
   BOOL dwmEnabled = false;
-  DwmIsCompositionEnabled(&dwmEnabled);
+  WinUtils::dwmIsCompositionEnabledPtr(&dwmEnabled);
   if (!dwmEnabled) {
     NS_WARNING("DWM not enabled, falling back to software vsync");
     return gfxPlatform::CreateHardwareVsyncSource();
