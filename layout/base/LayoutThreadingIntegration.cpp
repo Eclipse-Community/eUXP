@@ -18,6 +18,7 @@
 #include "nsIFrame.h"
 #include "mozilla/RefPtr.h"
 #include "MediaQueryCache.h"
+#include "../../mozilla/BrowserUIThread.h"
 
 namespace mozilla {
 namespace layout {
@@ -49,12 +50,22 @@ class LayoutThreadingHook {
       return NS_ERROR_NULL_POINTER;
     }
 
+    RefPtr<StyleRecalcTask> task = new StyleRecalcTask(aFrame);
+
+    // Prefer dispatching UI-sensitive style recalculation tasks to a
+    // dedicated single-thread browser-UI pool to avoid starvation by
+    // other background work. Fall back to the regular layout pool if
+    // the UI pool cannot be created.
+    RefPtr<SharedThreadPool> uiPool = mozilla::GetBrowserUIThreadPool();
+    if (uiPool) {
+      return uiPool->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+    }
+
     RefPtr<LayoutWorkerPool> pool = LayoutWorkerPool::Get();
     if (!pool) {
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<StyleRecalcTask> task = new StyleRecalcTask(aFrame);
     return pool->Dispatch(task);
   }
 
@@ -66,12 +77,21 @@ class LayoutThreadingHook {
       return NS_ERROR_NULL_POINTER;
     }
 
+    RefPtr<MeasureTask> task = new MeasureTask(aFrame);
+
+    // Dispatch measurement operations to the single-thread UI pool to
+    // ensure they have a reserved thread and are less likely to be
+    // preempted by other concurrent background tasks.
+    RefPtr<SharedThreadPool> uiPool = mozilla::GetBrowserUIThreadPool();
+    if (uiPool) {
+      return uiPool->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+    }
+
     RefPtr<LayoutWorkerPool> pool = LayoutWorkerPool::Get();
     if (!pool) {
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<MeasureTask> task = new MeasureTask(aFrame);
     return pool->Dispatch(task);
   }
 
