@@ -65,7 +65,7 @@ class SharedImmutableStringsCache
      * returned.
      */
     template <typename IntoOwnedChars>
-    [[nodiscard]] mozilla::Maybe<SharedImmutableString>
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableString>
     getOrCreate(const char* chars, size_t length, IntoOwnedChars intoOwnedChars);
 
     /**
@@ -75,7 +75,7 @@ class SharedImmutableStringsCache
      * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
      * returned.
      */
-    [[nodiscard]] mozilla::Maybe<SharedImmutableString>
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableString>
     getOrCreate(OwnedChars&& chars, size_t length);
 
     /**
@@ -86,7 +86,7 @@ class SharedImmutableStringsCache
      * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
      * returned.
      */
-    [[nodiscard]] mozilla::Maybe<SharedImmutableString>
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableString>
     getOrCreate(const char* chars, size_t length);
 
     /**
@@ -108,7 +108,7 @@ class SharedImmutableStringsCache
      * returned.
      */
     template <typename IntoOwnedTwoByteChars>
-    [[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString>
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString>
     getOrCreate(const char16_t* chars, size_t length, IntoOwnedTwoByteChars intoOwnedTwoByteChars);
 
     /**
@@ -118,7 +118,7 @@ class SharedImmutableStringsCache
      * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
      * returned.
      */
-    [[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString>
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString>
     getOrCreate(OwnedTwoByteChars&& chars, size_t length);
 
     /**
@@ -129,7 +129,7 @@ class SharedImmutableStringsCache
      * On success, `Some` is returned. In the case of OOM failure, `Nothing` is
      * returned.
      */
-    [[nodiscard]] mozilla::Maybe<SharedImmutableTwoByteString>
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString>
     getOrCreate(const char16_t* chars, size_t length);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {

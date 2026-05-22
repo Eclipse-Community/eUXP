@@ -56,10 +56,10 @@ class StupidAllocator : public RegisterAllocator
     {
     }
 
-    [[nodiscard]] bool go();
+    MOZ_MUST_USE bool go();
 
   private:
-    [[nodiscard]] bool init();
+    MOZ_MUST_USE bool init();
 
     void syncForBlockEnd(LBlock* block, LInstruction* ins);
     void allocateForInstruction(LInstruction* ins);

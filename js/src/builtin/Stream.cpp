@@ -179,14 +179,14 @@ js::ReadableStreamReaderIsClosed(const JSObject* reader)
     return !ReaderHasStream(&reader->as<NativeObject>());
 }
 
-[[nodiscard]] inline static ReadableStream*
+inline static MOZ_MUST_USE ReadableStream*
 StreamFromController(const NativeObject* controller)
 {
     MOZ_ASSERT(IsReadableStreamController(controller));
     return &controller->getFixedSlot(ControllerSlot_Stream).toObject().as<ReadableStream>();
 }
 
-[[nodiscard]] inline static NativeObject*
+inline static MOZ_MUST_USE NativeObject*
 ControllerFromStream(const ReadableStream* stream)
 {
     Value controllerVal = stream->getFixedSlot(StreamSlot_Controller);
@@ -211,14 +211,14 @@ ReadableStream::mode() const
            : JS::ReadableStreamMode::Byte;
 }
 
-[[nodiscard]] inline static ReadableStream*
+inline static MOZ_MUST_USE ReadableStream*
 StreamFromReader(const NativeObject* reader)
 {
     MOZ_ASSERT(ReaderHasStream(reader));
     return &reader->getFixedSlot(ReaderSlot_Stream).toObject().as<ReadableStream>();
 }
 
-[[nodiscard]] inline static NativeObject*
+inline static MOZ_MUST_USE NativeObject*
 ReaderFromStream(const NativeObject* stream)
 {
     Value readerVal = stream->getFixedSlot(StreamSlot_Reader);
@@ -232,7 +232,7 @@ HasReader(const ReadableStream* stream)
     return !stream->getFixedSlot(StreamSlot_Reader).isUndefined();
 }
 
-[[nodiscard]] inline static JSFunction*
+inline static MOZ_MUST_USE JSFunction*
 NewHandler(JSContext *cx, Native handler, HandleObject target)
 {
     RootedAtom funName(cx, cx->names().empty);
@@ -246,23 +246,23 @@ NewHandler(JSContext *cx, Native handler, HandleObject target)
 }
 
 template<class T>
-[[nodiscard]] inline static T*
+inline static MOZ_MUST_USE T*
 TargetFromHandler(JSObject& handler)
 {
     return &handler.as<JSFunction>().getExtendedSlot(0).toObject().as<T>();
 }
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 ResetQueue(JSContext* cx, HandleNativeObject container);
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 InvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg,
              MutableHandleValue rval);
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 PromiseInvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg);
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 PromiseRejectedWithPendingError(JSContext* cx) {
     // Not much we can do about uncatchable exceptions, just bail.
     RootedValue exn(cx);
@@ -284,7 +284,7 @@ ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType,
                                               funName, expectedType, bytes.get());
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReturnPromiseRejectedWithPendingError(JSContext* cx, const CallArgs& args)
 {
     JSObject* promise = PromiseRejectedWithPendingError(cx);
@@ -295,7 +295,7 @@ ReturnPromiseRejectedWithPendingError(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 RejectNonGenericMethod(JSContext* cx, const CallArgs& args,
                        const char* className, const char* methodName)
 {
@@ -305,7 +305,7 @@ RejectNonGenericMethod(JSContext* cx, const CallArgs& args,
     return ReturnPromiseRejectedWithPendingError(cx, args);
 }
 
-[[nodiscard]] inline static NativeObject*
+inline static MOZ_MUST_USE NativeObject*
 SetNewList(JSContext* cx, HandleNativeObject container, uint32_t slot)
 {
     NativeObject* list = NewObjectWithNullTaggedProto<PlainObject>(cx);
@@ -315,7 +315,7 @@ SetNewList(JSContext* cx, HandleNativeObject container, uint32_t slot)
     return list;
 }
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 AppendToList(JSContext* cx, HandleNativeObject list, HandleValue value)
 {
     uint32_t length = list->getDenseInitializedLength();
@@ -330,7 +330,7 @@ AppendToList(JSContext* cx, HandleNativeObject list, HandleValue value)
 }
 
 template<class T>
-[[nodiscard]] inline static T*
+inline static MOZ_MUST_USE T*
 PeekList(NativeObject* list)
 {
     MOZ_ASSERT(list->getDenseInitializedLength() > 0);
@@ -338,7 +338,7 @@ PeekList(NativeObject* list)
 }
 
 template<class T>
-[[nodiscard]] inline static T*
+inline static MOZ_MUST_USE T*
 ShiftFromList(JSContext* cx, HandleNativeObject list)
 {
     uint32_t length = list->getDenseInitializedLength();
@@ -645,7 +645,7 @@ ReadableStream::createStream(JSContext* cx, HandleObject proto /* = nullptr */)
     return stream;
 }
 
-[[nodiscard]] static ReadableStreamDefaultController*
+static MOZ_MUST_USE ReadableStreamDefaultController*
 CreateReadableStreamDefaultController(JSContext* cx, Handle<ReadableStream*> stream,
                                       HandleValue underlyingSource, HandleValue size,
                                       HandleValue highWaterMarkVal);
@@ -677,7 +677,7 @@ ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
     return stream;
 }
 
-[[nodiscard]] static ReadableByteStreamController*
+static MOZ_MUST_USE ReadableByteStreamController*
 CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
                                    HandleValue underlyingByteSource,
                                    HandleValue highWaterMarkVal);
@@ -706,7 +706,7 @@ ReadableStream::createByteStream(JSContext* cx, HandleValue underlyingSource,
     return stream;
 }
 
-[[nodiscard]] static ReadableByteStreamController*
+static MOZ_MUST_USE ReadableByteStreamController*
 CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
                                    void* underlyingSource);
 
@@ -807,7 +807,7 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.2.4.1. get locked
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStream_locked_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStream*> stream(cx, &args.thisv().toObject().as<ReadableStream>());
@@ -826,7 +826,7 @@ ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.2.4.2. cancel ( reason )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -856,14 +856,14 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static ReadableStreamDefaultReader*
+static MOZ_MUST_USE ReadableStreamDefaultReader*
 CreateReadableStreamDefaultReader(JSContext* cx, Handle<ReadableStream*> stream);
 
-[[nodiscard]] static ReadableStreamBYOBReader*
+static MOZ_MUST_USE ReadableStreamBYOBReader*
 CreateReadableStreamBYOBReader(JSContext* cx, Handle<ReadableStream*> stream);
 
 // Streams spec, 3.2.4.3. getReader()
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStream_getReader_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStream*> stream(cx, &args.thisv().toObject().as<ReadableStream>());
@@ -916,7 +916,7 @@ ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.2.4.4. pipeThrough({ writable, readable }, options)
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStream_pipeThrough(JSContext* cx, unsigned argc, Value* vp)
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -930,7 +930,7 @@ ReadableStream_pipeThrough(JSContext* cx, unsigned argc, Value* vp)
 
 // Streams spec, 3.2.4.5. pipeTo(dest, { preventClose, preventAbort, preventCancel } = {})
 // TODO: Unimplemented since spec is not complete yet.
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp)
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -938,12 +938,12 @@ ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp)
     return false;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamTee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneForBranch2,
                   MutableHandle<ReadableStream*> branch1, MutableHandle<ReadableStream*> branch2);
 
 // Streams spec, 3.2.4.6. tee()
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStream_tee_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStream*> stream(cx, &args.thisv().toObject().as<ReadableStream>());
@@ -1022,10 +1022,10 @@ ReadableStream::locked() const
     return HasReader(this);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerClose(JSContext* cx,
                                      Handle<ReadableStreamDefaultController*> controller);
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerEnqueue(JSContext* cx,
                                        Handle<ReadableStreamDefaultController*> controller,
                                        HandleValue chunk);
@@ -1111,7 +1111,7 @@ TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> teeState,
                        Handle<ReadableStream*> branchStream)
 {
@@ -1135,7 +1135,7 @@ ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> teeState,
     return JS::CallOriginalPromiseThen(cx, readPromise, onFulfilled, nullptr);
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamTee_Cancel(JSContext* cx, Handle<TeeState*> teeState,
                          Handle<ReadableStreamDefaultController*> branch, HandleValue reason)
 {
@@ -1188,7 +1188,7 @@ ReadableStreamTee_Cancel(JSContext* cx, Handle<TeeState*> teeState,
     return teeState->promise();
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamControllerError(JSContext* cx, HandleNativeObject controller, HandleValue e);
 
 // Streams spec, 3.3.6. step 21:
@@ -1220,7 +1220,7 @@ TeeReaderClosedHandler(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.3.6. ReadableStreamTee ( stream, cloneForBranch2 )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamTee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneForBranch2,
                   MutableHandle<ReadableStream*> branch1Stream,
                   MutableHandle<ReadableStream*> branch2Stream)
@@ -1308,7 +1308,7 @@ ReadableStreamTee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneForBr
 }
 
 // Streams spec, 3.4.1. ReadableStreamAddReadIntoRequest ( stream )
-[[nodiscard]] static PromiseObject*
+static MOZ_MUST_USE PromiseObject*
 ReadableStreamAddReadIntoRequest(JSContext* cx, Handle<ReadableStream*> stream)
 {
     // Step 1: MOZ_ASSERT: ! IsReadableStreamBYOBReader(stream.[[reader]]) is true.
@@ -1337,7 +1337,7 @@ ReadableStreamAddReadIntoRequest(JSContext* cx, Handle<ReadableStream*> stream)
 }
 
 // Streams spec, 3.4.2. ReadableStreamAddReadRequest ( stream )
-[[nodiscard]] static PromiseObject*
+static MOZ_MUST_USE PromiseObject*
 ReadableStreamAddReadRequest(JSContext* cx, Handle<ReadableStream*> stream)
 {
   MOZ_ASSERT(stream->is<ReadableStream>());
@@ -1367,7 +1367,7 @@ ReadableStreamAddReadRequest(JSContext* cx, Handle<ReadableStream*> stream)
   return promise;
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamControllerCancelSteps(JSContext* cx,
                                     HandleNativeObject controller, HandleValue reason);
 
@@ -1380,11 +1380,11 @@ ReturnUndefined(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream);
 
 // Streams spec, 3.4.3. ReadableStreamCancel ( stream, reason )
-/* static */ [[nodiscard]] JSObject*
+/* static */ MOZ_MUST_USE JSObject*
 ReadableStream::cancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
 {
     // Step 1: Set stream.[[disturbed]] to true.
@@ -1425,7 +1425,7 @@ ReadableStream::cancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValu
 }
 
 // Streams spec, 3.4.4. ReadableStreamClose ( stream )
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream)
 {
   // Step 1: Assert: stream.[[state]] is "readable".
@@ -1489,7 +1489,7 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream)
 }
 
 // Streams spec, 3.4.5. ReadableStreamError ( stream, e )
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> stream, HandleValue e)
 {
     // Step 1: Assert: ! IsReadableStream(stream) is true (implicit).
@@ -1552,7 +1552,7 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> stream, Handl
 // Streams spec, 3.4.6. ReadableStreamFulfillReadIntoRequest( stream, chunk, done )
 // Streams spec, 3.4.7. ReadableStreamFulfillReadRequest ( stream, chunk, done )
 // These two spec functions are identical in our implementation.
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*> stream,
                                            HandleValue chunk, bool done)
 {
@@ -1596,7 +1596,7 @@ ReadableStreamGetNumReadRequests(ReadableStream* stream)
 }
 
 // Stream spec 3.4.10. ReadableStreamHasBYOBReader ( stream )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamHasBYOBReader(ReadableStream* stream)
 {
     // Step 1: Let reader be stream.[[reader]].
@@ -1608,7 +1608,7 @@ ReadableStreamHasBYOBReader(ReadableStream* stream)
 }
 
 // Streap spec 3.4.11. ReadableStreamHasDefaultReader ( stream )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamHasDefaultReader(ReadableStream* stream)
 {
     // Step 1: Let reader be stream.[[reader]].
@@ -1619,14 +1619,14 @@ ReadableStreamHasDefaultReader(ReadableStream* stream)
     return reader.isObject() && reader.toObject().is<ReadableStreamDefaultReader>();
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamReaderGenericInitialize(JSContext* cx,
                                       HandleNativeObject reader,
                                       Handle<ReadableStream*> stream);
 
 // Stream spec, 3.5.3. new ReadableStreamDefaultReader ( stream )
 // Steps 2-4.
-[[nodiscard]] static ReadableStreamDefaultReader*
+static MOZ_MUST_USE ReadableStreamDefaultReader*
 CreateReadableStreamDefaultReader(JSContext* cx, Handle<ReadableStream*> stream)
 {
     Rooted<ReadableStreamDefaultReader*> reader(cx);
@@ -1680,7 +1680,7 @@ ReadableStreamDefaultReader::constructor(JSContext* cx, unsigned argc, Value* vp
 }
 
 // Streams spec, 3.5.4.1 get closed
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultReader_closed(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1696,11 +1696,11 @@ ReadableStreamDefaultReader_closed(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamReaderGenericCancel(JSContext* cx, HandleNativeObject reader, HandleValue reason);
 
 // Streams spec, 3.5.4.2. cancel ( reason )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultReader_cancel(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1728,7 +1728,7 @@ ReadableStreamDefaultReader_cancel(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.5.4.3 read ( )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1756,11 +1756,11 @@ ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamReaderGenericRelease(JSContext* cx, HandleNativeObject reader);
 
 // Streams spec, 3.5.4.4. releaseLock ( )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultReader_releaseLock_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultReader*> reader(cx);
@@ -1817,7 +1817,7 @@ CLASS_SPEC(ReadableStreamDefaultReader, 1, ReaderSlotCount, ClassSpec::DontDefin
 
 // Streams spec, 3.6.3 new ReadableStreamBYOBReader ( stream )
 // Steps 2-5.
-[[nodiscard]] static ReadableStreamBYOBReader*
+static MOZ_MUST_USE ReadableStreamBYOBReader*
 CreateReadableStreamBYOBReader(JSContext* cx, Handle<ReadableStream*> stream)
 {
     // Step 2: If ! IsReadableByteStreamController(stream.[[readableStreamController]])
@@ -1877,7 +1877,7 @@ ReadableStreamBYOBReader::constructor(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.6.4.1 get closed
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBReader_closed(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1894,7 +1894,7 @@ ReadableStreamBYOBReader_closed(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.6.4.2. cancel ( reason )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBReader_cancel(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1922,7 +1922,7 @@ ReadableStreamBYOBReader_cancel(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.6.4.3 read ( )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBReader_read(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1972,11 +1972,11 @@ ReadableStreamBYOBReader_read(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamReaderGenericRelease(JSContext* cx, HandleNativeObject reader);
 
 // Streams spec, 3.6.4.4. releaseLock ( )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBReader_releaseLock_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamBYOBReader*> reader(cx);
@@ -2028,7 +2028,7 @@ static const JSFunctionSpec ReadableStreamBYOBReader_methods[] = {
 
 CLASS_SPEC(ReadableStreamBYOBReader, 1, 3, ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 ReadableStreamControllerCallPullIfNeeded(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec, 3.7.1. IsReadableStreamDefaultReader ( x )
@@ -2038,7 +2038,7 @@ ReadableStreamControllerCallPullIfNeeded(JSContext* cx, HandleNativeObject contr
 // Implemented via intrinsic_isInstanceOfBuiltin<ReadableStreamBYOBReader>()
 
 // Streams spec, 3.7.3. ReadableStreamReaderGenericCancel ( reader, reason )
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamReaderGenericCancel(JSContext* cx, HandleNativeObject reader, HandleValue reason)
 {
     // Step 1: Let stream be reader.[[ownerReadableStream]].
@@ -2051,7 +2051,7 @@ ReadableStreamReaderGenericCancel(JSContext* cx, HandleNativeObject reader, Hand
 }
 
 // Streams spec, 3.7.4. ReadableStreamReaderGenericInitialize ( reader, stream )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamReaderGenericInitialize(JSContext* cx, HandleNativeObject reader,
                                       Handle<ReadableStream*> stream)
 {
@@ -2091,7 +2091,7 @@ ReadableStreamReaderGenericInitialize(JSContext* cx, HandleNativeObject reader,
 }
 
 // Streams spec, 3.7.5. ReadableStreamReaderGenericRelease ( reader )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamReaderGenericRelease(JSContext* cx, HandleNativeObject reader)
 {
     // Step 1: Assert: reader.[[ownerReadableStream]] is not undefined.
@@ -2133,13 +2133,13 @@ ReadableStreamReaderGenericRelease(JSContext* cx, HandleNativeObject reader)
     return true;
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerPullInto(JSContext* cx,
                                      Handle<ReadableByteStreamController*> controller,
                                      Handle<ArrayBufferViewObject*> view);
 
 // Streams spec, 3.7.6. ReadableStreamBYOBReaderRead ( reader, view )
-/* static */ [[nodiscard]] JSObject*
+/* static */ MOZ_MUST_USE JSObject*
 ReadableStreamBYOBReader::read(JSContext* cx, Handle<ReadableStreamBYOBReader*> reader,
                                Handle<ArrayBufferViewObject*> view)
 {
@@ -2165,11 +2165,11 @@ ReadableStreamBYOBReader::read(JSContext* cx, Handle<ReadableStreamBYOBReader*> 
     return ReadableByteStreamControllerPullInto(cx, controller, view);
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamControllerPullSteps(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec, 3.7.7. ReadableStreamDefaultReaderRead ( reader )
-[[nodiscard]] JSObject*
+MOZ_MUST_USE JSObject*
 ReadableStreamDefaultReader::read(JSContext* cx, Handle<ReadableStreamDefaultReader*> reader)
 {
     // Step 1: Let stream be reader.[[ownerReadableStream]].
@@ -2230,12 +2230,12 @@ ControllerStartHandler(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerErrorIfNeeded(JSContext* cx,
                                              Handle<ReadableStreamDefaultController*> controller,
                                              HandleValue e);
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamControllerError(JSContext* cx, HandleNativeObject controller, HandleValue e);
 
 // Streams spec, 3.8.3, step 11.b.
@@ -2264,12 +2264,12 @@ ControllerStartFailedHandler(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ValidateAndNormalizeHighWaterMark(JSContext* cx,
                                   HandleValue highWaterMarkVal,
                                   double* highWaterMark);
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ValidateAndNormalizeQueuingStrategy(JSContext* cx,
                                     HandleValue size,
                                     HandleValue highWaterMarkVal,
@@ -2278,7 +2278,7 @@ ValidateAndNormalizeQueuingStrategy(JSContext* cx,
 // Streams spec, 3.8.3 new ReadableStreamDefaultController ( stream, underlyingSource,
 //                                                           size, highWaterMark )
 // Steps 3 - 11.
-[[nodiscard]] static ReadableStreamDefaultController*
+static MOZ_MUST_USE ReadableStreamDefaultController*
 CreateReadableStreamDefaultController(JSContext* cx, Handle<ReadableStream*> stream,
                                       HandleValue underlyingSource, HandleValue size,
                                       HandleValue highWaterMarkVal)
@@ -2380,13 +2380,13 @@ ReadableStreamDefaultController::constructor(JSContext* cx, unsigned argc, Value
     return true;
 }
 
-[[nodiscard]] static double
+static MOZ_MUST_USE double
 ReadableStreamControllerGetDesiredSizeUnchecked(NativeObject* controller);
 
 // Streams spec, 3.8.4.1. get desiredSize
 // and
 // Streams spec, 3.10.4.2. get desiredSize
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamController_desiredSize_impl(JSContext* cx, const CallArgs& args)
 {
     RootedNativeObject controller(cx);
@@ -2424,12 +2424,12 @@ ReadableStreamDefaultController_desiredSize(JSContext* cx, unsigned argc, Value*
                                 ReadableStreamController_desiredSize_impl>(cx, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerClose(JSContext* cx,
                                      Handle<ReadableStreamDefaultController*> controller);
 
 // Unified implementation of steps 2-3 of 3.8.4.2 and 3.10.4.3.
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 VerifyControllerStateForClosing(JSContext* cx, HandleNativeObject controller)
 {
     // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
@@ -2452,7 +2452,7 @@ VerifyControllerStateForClosing(JSContext* cx, HandleNativeObject controller)
 }
 
 // Streams spec, 3.8.4.2 close()
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
@@ -2480,13 +2480,13 @@ ReadableStreamDefaultController_close(JSContext* cx, unsigned argc, Value* vp)
                                 ReadableStreamDefaultController_close_impl>(cx, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerEnqueue(JSContext* cx,
                                        Handle<ReadableStreamDefaultController*> controller,
                                        HandleValue chunk);
 
 // Streams spec, 3.8.4.3. enqueue ( chunk )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultController_enqueue_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
@@ -2527,7 +2527,7 @@ ReadableStreamDefaultController_enqueue(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.8.4.4. error ( e )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultController_error_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
@@ -2581,7 +2581,7 @@ CLASS_SPEC(ReadableStreamDefaultController, 4, 7, ClassSpec::DontDefineConstruct
  * and
  * Streams spec, 3.10.5.1. [[CancelSteps]] ( reason )
  */
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamControllerCancelSteps(JSContext* cx, HandleNativeObject controller,
                                     HandleValue reason)
 {
@@ -2631,7 +2631,7 @@ ReadableStreamControllerCancelSteps(JSContext* cx, HandleNativeObject controller
     return PromiseInvokeOrNoop(cx, underlyingSource, cx->names().cancel, reason);
 }
 
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 DequeueValue(JSContext* cx, HandleNativeObject container, MutableHandleValue chunk);
 
 // Streams spec, 3.8.5.2. ReadableStreamDefaultController [[PullSteps]]()
@@ -2737,13 +2737,13 @@ ControllerPullFailedHandler(JSContext* cx, unsigned argc, Value* vp)
 static bool
 ReadableStreamControllerShouldCallPull(NativeObject* controller);
 
-[[nodiscard]] static double
+static MOZ_MUST_USE double
 ReadableStreamControllerGetDesiredSizeUnchecked(NativeObject* controller);
 
 // Streams spec, 3.9.2 ReadableStreamDefaultControllerCallPullIfNeeded ( controller )
 // and
 // Streams spec, 3.12.3. ReadableByteStreamControllerCallPullIfNeeded ( controller )
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 ReadableStreamControllerCallPullIfNeeded(JSContext* cx, HandleNativeObject controller)
 {
     // Step 1: Let shouldPull be
@@ -2847,7 +2847,7 @@ ReadableStreamControllerShouldCallPull(NativeObject* controller)
 }
 
 // Streams spec, 3.9.4. ReadableStreamDefaultControllerClose ( controller )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerClose(JSContext* cx,
                                      Handle<ReadableStreamDefaultController*> controller)
 {
@@ -2872,12 +2872,12 @@ ReadableStreamDefaultControllerClose(JSContext* cx,
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 EnqueueValueWithSize(JSContext* cx, HandleNativeObject container, HandleValue value,
                      HandleValue sizeVal);
 
 // Streams spec, 3.9.5. ReadableStreamDefaultControllerEnqueue ( controller, chunk )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerEnqueue(JSContext* cx,
                                        Handle<ReadableStreamDefaultController*> controller,
                                        HandleValue chunk)
@@ -2943,13 +2943,13 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerClearPendingPullIntos(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec, 3.9.6. ReadableStreamDefaultControllerError ( controller, e )
 // and
 // Streams spec, 3.12.10. ReadableByteStreamControllerError ( controller, e )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamControllerError(JSContext* cx, HandleNativeObject controller, HandleValue e)
 {
     MOZ_ASSERT(IsReadableStreamController(controller));
@@ -2978,7 +2978,7 @@ ReadableStreamControllerError(JSContext* cx, HandleNativeObject controller, Hand
 }
 
 // Streams spec, 3.9.7. ReadableStreamDefaultControllerErrorIfNeeded ( controller, e ) nothrow
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerErrorIfNeeded(JSContext* cx,
                                              Handle<ReadableStreamDefaultController*> controller,
                                              HandleValue e)
@@ -2994,7 +2994,7 @@ ReadableStreamDefaultControllerErrorIfNeeded(JSContext* cx,
 // Streams spec, 3.9.8. ReadableStreamDefaultControllerGetDesiredSize ( controller )
 // and
 // Streams spec 3.12.13. ReadableByteStreamControllerGetDesiredSize ( controller )
-[[nodiscard]] static double
+static MOZ_MUST_USE double
 ReadableStreamControllerGetDesiredSizeUnchecked(NativeObject* controller)
 {
     // Steps 1-4 done at callsites, so only assert that they have been done.
@@ -3012,7 +3012,7 @@ ReadableStreamControllerGetDesiredSizeUnchecked(NativeObject* controller)
 // Streams spec, 3.10.3 new ReadableByteStreamController ( stream, underlyingSource,
 //                                                         highWaterMark )
 // Steps 3 - 16.
-[[nodiscard]] static ReadableByteStreamController*
+static MOZ_MUST_USE ReadableByteStreamController*
 CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
                                    HandleValue underlyingByteSource,
                                    HandleValue highWaterMarkVal)
@@ -3150,7 +3150,7 @@ ReadableByteStreamController::constructor(JSContext* cx, unsigned argc, Value* v
 
 // Version of the ReadableByteStreamConstructor that's specialized for
 // handling external, embedding-provided, underlying sources.
-[[nodiscard]] static ReadableByteStreamController*
+static MOZ_MUST_USE ReadableByteStreamController*
 CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
                                    void* underlyingSource)
 {
@@ -3213,12 +3213,12 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
     return controller;
 }
 
-[[nodiscard]] static ReadableStreamBYOBRequest*
+static MOZ_MUST_USE ReadableStreamBYOBRequest*
 CreateReadableStreamBYOBRequest(JSContext* cx, Handle<ReadableByteStreamController*> controller,
                                 HandleObject view);
 
 // Streams spec, 3.10.4.1. get byobRequest
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamController_byobRequest_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableByteStreamController*> controller(cx);
@@ -3285,11 +3285,11 @@ ReadableByteStreamController_desiredSize(JSContext* cx, unsigned argc, Value* vp
                                 ReadableStreamController_desiredSize_impl>(cx, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamController*> controller);
 
 // Streams spec, 3.10.4.3. close()
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamController_close_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableByteStreamController*> controller(cx);
@@ -3316,13 +3316,13 @@ ReadableByteStreamController_close(JSContext* cx, unsigned argc, Value* vp)
                                 ReadableByteStreamController_close_impl>(cx, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerEnqueue(JSContext* cx,
                                     Handle<ReadableByteStreamController*> controller,
                                     HandleObject chunk);
 
 // Streams spec, 3.10.4.4. enqueue ( chunk )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamController_enqueue_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableByteStreamController*> controller(cx);
@@ -3373,7 +3373,7 @@ ReadableByteStreamController_enqueue(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.10.4.5. error ( e )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamController_error_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableByteStreamController*> controller(cx);
@@ -3457,7 +3457,7 @@ CLASS_SPEC(ReadableByteStreamController, 3, 9, ClassSpec::DontDefineConstructor,
 // Streams spec, 3.10.5.1. [[PullSteps]] ()
 // Unified with 3.8.5.1 above.
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerHandleQueueDrain(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec, 3.10.5.2. [[PullSteps]] ()
@@ -3601,7 +3601,7 @@ ReadableByteStreamControllerPullSteps(JSContext* cx, HandleNativeObject controll
  * and
  * Streams spec, 3.10.5.2. [[PullSteps]] ()
  */
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableStreamControllerPullSteps(JSContext* cx, HandleNativeObject controller)
 {
     MOZ_ASSERT(IsReadableStreamController(controller));
@@ -3613,7 +3613,7 @@ ReadableStreamControllerPullSteps(JSContext* cx, HandleNativeObject controller)
 }
 
 
-[[nodiscard]] static ReadableStreamBYOBRequest*
+static MOZ_MUST_USE ReadableStreamBYOBRequest*
 CreateReadableStreamBYOBRequest(JSContext* cx, Handle<ReadableByteStreamController*> controller,
                                 HandleObject view)
 {
@@ -3673,7 +3673,7 @@ ReadableStreamBYOBRequest::constructor(JSContext* cx, unsigned argc, Value* vp)
 }
 
 // Streams spec, 3.11.4.1 get view
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBRequest_view_impl(JSContext* cx, const CallArgs& args)
 {
     // Step 2: Return this.[[view]].
@@ -3692,13 +3692,13 @@ ReadableStreamBYOBRequest_view(JSContext* cx, unsigned argc, Value* vp)
                                 ReadableStreamBYOBRequest_view_impl>(cx, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespond(JSContext* cx,
                                     Handle<ReadableByteStreamController*> controller,
                                     HandleValue bytesWrittenVal);
 
 // Streams spec, 3.11.4.2. respond ( bytesWritten )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBRequest_respond_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamBYOBRequest*> request(cx);
@@ -3737,13 +3737,13 @@ ReadableStreamBYOBRequest_respond(JSContext* cx, unsigned argc, Value* vp)
                                 ReadableStreamBYOBRequest_respond_impl>(cx, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespondWithNewView(JSContext* cx,
                                                Handle<ReadableByteStreamController*> controller,
                                                HandleObject view);
 
 // Streams spec, 3.11.4.3. respondWithNewView ( view )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableStreamBYOBRequest_respondWithNewView_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<ReadableStreamBYOBRequest*> request(cx);
@@ -3820,7 +3820,7 @@ static void
 ReadableByteStreamControllerInvalidateBYOBRequest(NativeObject* controller);
 
 // Streams spec, 3.12.4. ReadableByteStreamControllerClearPendingPullIntos ( controller )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerClearPendingPullIntos(JSContext* cx, HandleNativeObject controller)
 {
     MOZ_ASSERT(controller->is<ReadableByteStreamController>());
@@ -3833,7 +3833,7 @@ ReadableByteStreamControllerClearPendingPullIntos(JSContext* cx, HandleNativeObj
 }
 
 // Streams spec, 3.12.5. ReadableByteStreamControllerClose ( controller )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamController*> controller)
 {
     // Step 1: Let stream be controller.[[controlledReadableStream]].
@@ -3886,12 +3886,12 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
     return ReadableStreamCloseInternal(cx, stream);
 }
 
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerConvertPullIntoDescriptor(JSContext* cx,
                                                       Handle<PullIntoDescriptor*> pullIntoDescriptor);
 
 // Streams spec, 3.12.6. ReadableByteStreamControllerCommitPullIntoDescriptor ( stream, pullIntoDescriptor )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerCommitPullIntoDescriptor(JSContext* cx, Handle<ReadableStream*> stream,
                                                      Handle<PullIntoDescriptor*> pullIntoDescriptor)
 {
@@ -3938,7 +3938,7 @@ ReadableByteStreamControllerCommitPullIntoDescriptor(JSContext* cx, Handle<Reada
 }
 
 // Streams spec, 3.12.7. ReadableByteStreamControllerConvertPullIntoDescriptor ( pullIntoDescriptor )
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerConvertPullIntoDescriptor(JSContext* cx,
                                                       Handle<PullIntoDescriptor*> pullIntoDescriptor)
 {
@@ -3972,21 +3972,21 @@ ReadableByteStreamControllerConvertPullIntoDescriptor(JSContext* cx,
     return JS_New(cx, ctor, args);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerEnqueueChunkToQueue(JSContext* cx,
                                                 Handle<ReadableByteStreamController*> controller,
                                                 HandleObject buffer, uint32_t byteOffset,
                                                 uint32_t byteLength);
 
-[[nodiscard]] static ArrayBufferObject*
+static MOZ_MUST_USE ArrayBufferObject*
 TransferArrayBuffer(JSContext* cx, HandleObject buffer);
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(JSContext* cx,
                                                                  Handle<ReadableByteStreamController*> controller);
 
 // Streams spec, 3.12.8. ReadableByteStreamControllerEnqueue ( controller, chunk )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerEnqueue(JSContext* cx,
                                     Handle<ReadableByteStreamController*> controller,
                                     HandleObject chunk)
@@ -4110,7 +4110,7 @@ ReadableByteStreamControllerEnqueue(JSContext* cx,
 // Streams spec, 3.12.9.
 // ReadableByteStreamControllerEnqueueChunkToQueue ( controller, buffer,
 //                                                   byteOffset, byteLength )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerEnqueueChunkToQueue(JSContext* cx,
                                                 Handle<ReadableByteStreamController*> controller,
                                                 HandleObject buffer, uint32_t byteOffset,
@@ -4167,7 +4167,7 @@ ReadableByteStreamControllerFillHeadPullIntoDescriptor(ReadableByteStreamControl
 }
 
 // Streams spec, 3.12.12. ReadableByteStreamControllerFillPullIntoDescriptorFromQueue ( controller, pullIntoDescriptor )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(JSContext* cx,
                                                             Handle<ReadableByteStreamController*> controller,
                                                             Handle<PullIntoDescriptor*> pullIntoDescriptor,
@@ -4336,7 +4336,7 @@ ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(JSContext* cx,
 // Unified with 3.9.8 above.
 
 // Streams spec, 3.12.14. ReadableByteStreamControllerHandleQueueDrain ( controller )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerHandleQueueDrain(JSContext* cx, HandleNativeObject controller)
 {
     MOZ_ASSERT(controller->is<ReadableByteStreamController>());
@@ -4382,11 +4382,11 @@ ReadableByteStreamControllerInvalidateBYOBRequest(NativeObject* controller)
     controller->setFixedSlot(ByteControllerSlot_BYOBRequest, UndefinedValue());
 }
 
-[[nodiscard]] static PullIntoDescriptor*
+static MOZ_MUST_USE PullIntoDescriptor*
 ReadableByteStreamControllerShiftPendingPullInto(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec 3.12.16. ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue ( controller )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(JSContext* cx,
                                                                  Handle<ReadableByteStreamController*> controller)
 {
@@ -4438,7 +4438,7 @@ ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(JSContext* cx,
 }
 
 // Streams spec, 3.12.17. ReadableByteStreamControllerPullInto ( controller, view )
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerPullInto(JSContext* cx,
                                      Handle<ReadableByteStreamController*> controller,
                                      Handle<ArrayBufferViewObject*> view)
@@ -4614,13 +4614,13 @@ ReadableByteStreamControllerPullInto(JSContext* cx,
     return promise;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespondInternal(JSContext* cx,
                                             Handle<ReadableByteStreamController*> controller,
                                             double bytesWritten);
 
 // Streams spec 3.12.18. ReadableByteStreamControllerRespond( controller, bytesWritten )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespond(JSContext* cx,
                                     Handle<ReadableByteStreamController*> controller,
                                     HandleValue bytesWrittenVal)
@@ -4651,7 +4651,7 @@ ReadableByteStreamControllerRespond(JSContext* cx,
 }
 
 // Streams spec 3.12.19. ReadableByteStreamControllerRespondInClosedState( controller, firstDescriptor )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespondInClosedState(JSContext* cx,
                                                    Handle<ReadableByteStreamController*> controller,
                                                    Handle<PullIntoDescriptor*> firstDescriptor)
@@ -4695,7 +4695,7 @@ ReadableByteStreamControllerRespondInClosedState(JSContext* cx,
 
 // Streams spec 3.12.20.
 // ReadableByteStreamControllerRespondInReadableState( controller, bytesWritten, pullIntoDescriptor )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespondInReadableState(JSContext* cx,
                                                    Handle<ReadableByteStreamController*> controller,
                                                    uint32_t bytesWritten,
@@ -4782,7 +4782,7 @@ ReadableByteStreamControllerRespondInReadableState(JSContext* cx,
 }
 
 // Streams spec, 3.12.21. ReadableByteStreamControllerRespondInternal ( controller, bytesWritten )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespondInternal(JSContext* cx,
                                             Handle<ReadableByteStreamController*> controller,
                                             double bytesWritten)
@@ -4822,7 +4822,7 @@ ReadableByteStreamControllerRespondInternal(JSContext* cx,
 }
 
 // Streams spec, 3.12.22. ReadableByteStreamControllerRespondWithNewView ( controller, view )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadableByteStreamControllerRespondWithNewView(JSContext* cx,
                                                Handle<ReadableByteStreamController*> controller,
                                                HandleObject view)
@@ -4868,7 +4868,7 @@ ReadableByteStreamControllerRespondWithNewView(JSContext* cx,
 }
 
 // Streams spec, 3.12.23. ReadableByteStreamControllerShiftPendingPullInto ( controller )
-[[nodiscard]] static PullIntoDescriptor*
+static MOZ_MUST_USE PullIntoDescriptor*
 ReadableByteStreamControllerShiftPendingPullInto(JSContext* cx, HandleNativeObject controller)
 {
     MOZ_ASSERT(controller->is<ReadableByteStreamController>());
@@ -4989,7 +4989,7 @@ CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 #undef CLASS_SPEC
 
 // Streams spec, 6.3.1. DequeueValue ( container ) nothrow
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 DequeueValue(JSContext* cx, HandleNativeObject container, MutableHandleValue chunk)
 {
     // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
@@ -5025,7 +5025,7 @@ DequeueValue(JSContext* cx, HandleNativeObject container, MutableHandleValue chu
 }
 
 // Streams spec, 6.3.2. EnqueueValueWithSize ( container, value, size ) throws
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 EnqueueValueWithSize(JSContext* cx, HandleNativeObject container, HandleValue value,
                      HandleValue sizeVal)
 {
@@ -5068,7 +5068,7 @@ EnqueueValueWithSize(JSContext* cx, HandleNativeObject container, HandleValue va
 
 // Streams spec, 6.3.3. PeekQueueValue ( container ) nothrow
 // Used by WritableStream.
-// [[nodiscard]] static Value
+// static MOZ_MUST_USE Value
 // PeekQueueValue(NativeObject* container)
 // {
 //     // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
@@ -5090,7 +5090,7 @@ EnqueueValueWithSize(JSContext* cx, HandleNativeObject container, HandleValue va
 /**
  * Streams spec, 6.3.4. ResetQueue ( container ) nothrow
  */
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 ResetQueue(JSContext* cx, HandleNativeObject container)
 {
     // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
@@ -5111,7 +5111,7 @@ ResetQueue(JSContext* cx, HandleNativeObject container)
 /**
  * Streams spec, 6.4.1. InvokeOrNoop ( O, P, args )
  */
-[[nodiscard]] inline static bool
+inline static MOZ_MUST_USE bool
 InvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg,
              MutableHandleValue rval)
 {
@@ -5134,7 +5134,7 @@ InvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg
  * Streams spec, 6.4.3. PromiseInvokeOrNoop ( O, P, args )
  * Specialized to one arg, because that's what all stream related callers use.
  */
-[[nodiscard]] static JSObject*
+static MOZ_MUST_USE JSObject*
 PromiseInvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg)
 {
     // Step 1: Assert: O is not undefined.
@@ -5157,7 +5157,7 @@ PromiseInvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleVa
 /**
  * Streams spec, 6.4.4 TransferArrayBuffer ( O )
  */
-[[nodiscard]] static ArrayBufferObject*
+static MOZ_MUST_USE ArrayBufferObject*
 TransferArrayBuffer(JSContext* cx, HandleObject buffer)
 {
     // Step 1 (implicit).
@@ -5185,7 +5185,7 @@ TransferArrayBuffer(JSContext* cx, HandleObject buffer)
 }
 
 // Streams spec, 6.4.5. ValidateAndNormalizeHighWaterMark ( highWaterMark )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ValidateAndNormalizeHighWaterMark(JSContext* cx, HandleValue highWaterMarkVal, double* highWaterMark)
 {
     // Step 1: Set highWaterMark to ? ToNumber(highWaterMark).
@@ -5204,7 +5204,7 @@ ValidateAndNormalizeHighWaterMark(JSContext* cx, HandleValue highWaterMarkVal, d
 }
 
 // Streams spec, 6.4.6. ValidateAndNormalizeQueuingStrategy ( size, highWaterMark )
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ValidateAndNormalizeQueuingStrategy(JSContext* cx, HandleValue size,
                                     HandleValue highWaterMarkVal, double* highWaterMark)
 {
@@ -5224,7 +5224,7 @@ ValidateAndNormalizeQueuingStrategy(JSContext* cx, HandleValue size,
     return true;
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 js::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValue reason)
 {
     MOZ_ASSERT(IsReadableStreamReader(readerObj));
@@ -5233,7 +5233,7 @@ js::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValu
     return ReadableStreamReaderGenericCancel(cx, reader, reason);
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 js::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
 {
     MOZ_ASSERT(IsReadableStreamReader(readerObj));
@@ -5242,7 +5242,7 @@ js::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
     return ReadableStreamReaderGenericRelease(cx, reader);
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStream::enqueue(JSContext* cx, Handle<ReadableStream*> stream, HandleValue chunk)
 {
     Rooted<ReadableStreamDefaultController*> controller(cx);
@@ -5254,7 +5254,7 @@ ReadableStream::enqueue(JSContext* cx, Handle<ReadableStream*> stream, HandleVal
     return ReadableStreamDefaultControllerEnqueue(cx, controller, chunk);
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStream::enqueueBuffer(JSContext* cx, Handle<ReadableStream*> stream,
                               Handle<ArrayBufferObject*> chunk)
 {
@@ -5334,7 +5334,7 @@ ReadableStream::embeddingFlags() const
 //
 // The remaining steps of those two functions perform checks and asserts that
 // don't apply to streams with external underlying sources.
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStream::updateDataAvailableFromSource(JSContext* cx, Handle<ReadableStream*> stream,
                                               uint32_t availableData)
 {
@@ -5429,7 +5429,7 @@ ReadableStream::updateDataAvailableFromSource(JSContext* cx, Handle<ReadableStre
     return true;
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStream::close(JSContext* cx, Handle<ReadableStream*> stream)
 {
     RootedNativeObject controllerObj(cx, ControllerFromStream(stream));
@@ -5447,7 +5447,7 @@ ReadableStream::close(JSContext* cx, Handle<ReadableStream*> stream)
     return ReadableByteStreamControllerClose(cx, controller);
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStream::error(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
 {
     // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
@@ -5462,7 +5462,7 @@ ReadableStream::error(JSContext* cx, Handle<ReadableStream*> stream, HandleValue
     return ReadableStreamControllerError(cx, controller, reason);
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ReadableStream::tee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneForBranch2,
                     MutableHandle<ReadableStream*> branch1Stream,
                     MutableHandle<ReadableStream*> branch2Stream)
@@ -5470,7 +5470,7 @@ ReadableStream::tee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneFor
     return ReadableStreamTee(cx, stream, false, branch1Stream, branch2Stream);
 }
 
-[[nodiscard]] NativeObject*
+MOZ_MUST_USE NativeObject*
 ReadableStream::getReader(JSContext* cx, Handle<ReadableStream*> stream,
                           JS::ReadableStreamReaderMode mode)
 {

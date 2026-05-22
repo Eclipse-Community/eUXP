@@ -287,43 +287,43 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
   public:
     BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script);
-    [[nodiscard]] bool init();
+    MOZ_MUST_USE bool init();
 
     MethodStatus compile();
 
   private:
     MethodStatus emitBody();
 
-    [[nodiscard]] bool emitCheckThis(ValueOperand val);
+    MOZ_MUST_USE bool emitCheckThis(ValueOperand val);
     void emitLoadReturnValue(ValueOperand val);
 
     void emitInitializeLocals();
-    [[nodiscard]] bool emitPrologue();
-    [[nodiscard]] bool emitEpilogue();
-    [[nodiscard]] bool emitOutOfLinePostBarrierSlot();
-    [[nodiscard]] bool emitIC(ICStub* stub, ICEntry::Kind kind);
-    [[nodiscard]] bool emitOpIC(ICStub* stub) {
+    MOZ_MUST_USE bool emitPrologue();
+    MOZ_MUST_USE bool emitEpilogue();
+    MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
+    MOZ_MUST_USE bool emitIC(ICStub* stub, ICEntry::Kind kind);
+    MOZ_MUST_USE bool emitOpIC(ICStub* stub) {
         return emitIC(stub, ICEntry::Kind_Op);
     }
-    [[nodiscard]] bool emitNonOpIC(ICStub* stub) {
+    MOZ_MUST_USE bool emitNonOpIC(ICStub* stub) {
         return emitIC(stub, ICEntry::Kind_NonOp);
     }
 
-    [[nodiscard]] bool emitStackCheck(bool earlyCheck=false);
-    [[nodiscard]] bool emitInterruptCheck();
-    [[nodiscard]] bool emitWarmUpCounterIncrement(bool allowOsr=true);
-    [[nodiscard]] bool emitArgumentTypeChecks();
+    MOZ_MUST_USE bool emitStackCheck(bool earlyCheck=false);
+    MOZ_MUST_USE bool emitInterruptCheck();
+    MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr=true);
+    MOZ_MUST_USE bool emitArgumentTypeChecks();
     void emitIsDebuggeeCheck();
-    [[nodiscard]] bool emitDebugPrologue();
-    [[nodiscard]] bool emitDebugTrap();
-    [[nodiscard]] bool emitTraceLoggerEnter();
-    [[nodiscard]] bool emitTraceLoggerExit();
-    [[nodiscard]] bool emitTraceLoggerResume(Register script, AllocatableGeneralRegisterSet& regs);
+    MOZ_MUST_USE bool emitDebugPrologue();
+    MOZ_MUST_USE bool emitDebugTrap();
+    MOZ_MUST_USE bool emitTraceLoggerEnter();
+    MOZ_MUST_USE bool emitTraceLoggerExit();
+    MOZ_MUST_USE bool emitTraceLoggerResume(Register script, AllocatableGeneralRegisterSet& regs);
 
     void emitProfilerEnterFrame();
     void emitProfilerExitFrame();
 
-    [[nodiscard]] bool initEnvironmentChain();
+    MOZ_MUST_USE bool initEnvironmentChain();
 
     void storeValue(const StackValue* source, const Address& dest,
                     const ValueOperand& scratch);
@@ -333,35 +333,35 @@ class BaselineCompiler : public BaselineCompilerSpecific
 #undef EMIT_OP
 
     // JSOP_NEG, JSOP_BITNOT, JSOP_INC, JSOP_DEC
-    [[nodiscard]] bool emitUnaryArith();
+    MOZ_MUST_USE bool emitUnaryArith();
 
     // JSOP_BITXOR, JSOP_LSH, JSOP_ADD etc.
-    [[nodiscard]] bool emitBinaryArith();
+    MOZ_MUST_USE bool emitBinaryArith();
 
     // Handles JSOP_LT, JSOP_GT, and friends
-    [[nodiscard]] bool emitCompare();
+    MOZ_MUST_USE bool emitCompare();
 
-    [[nodiscard]] bool emitReturn();
+    MOZ_MUST_USE bool emitReturn();
 
-    [[nodiscard]] bool emitToBoolean();
-    [[nodiscard]] bool emitTest(bool branchIfTrue);
-    [[nodiscard]] bool emitAndOr(bool branchIfTrue);
-    [[nodiscard]] bool emitCall();
-    [[nodiscard]] bool emitSpreadCall();
+    MOZ_MUST_USE bool emitToBoolean();
+    MOZ_MUST_USE bool emitTest(bool branchIfTrue);
+    MOZ_MUST_USE bool emitAndOr(bool branchIfTrue);
+    MOZ_MUST_USE bool emitCall();
+    MOZ_MUST_USE bool emitSpreadCall();
 
-    [[nodiscard]] bool emitInitPropGetterSetter();
-    [[nodiscard]] bool emitInitElemGetterSetter();
+    MOZ_MUST_USE bool emitInitPropGetterSetter();
+    MOZ_MUST_USE bool emitInitElemGetterSetter();
 
-    [[nodiscard]] bool emitFormalArgAccess(uint32_t arg, bool get);
+    MOZ_MUST_USE bool emitFormalArgAccess(uint32_t arg, bool get);
 
-    [[nodiscard]] bool emitThrowConstAssignment();
-    [[nodiscard]] bool emitUninitializedLexicalCheck(const ValueOperand& val);
+    MOZ_MUST_USE bool emitThrowConstAssignment();
+    MOZ_MUST_USE bool emitUninitializedLexicalCheck(const ValueOperand& val);
 
-    [[nodiscard]] bool emitIsMagicValue();
+    MOZ_MUST_USE bool emitIsMagicValue();
 
-    [[nodiscard]] bool addPCMappingEntry(bool addIndexEntry);
+    MOZ_MUST_USE bool addPCMappingEntry(bool addIndexEntry);
 
-    [[nodiscard]] bool addYieldAndAwaitOffset();
+    MOZ_MUST_USE bool addYieldAndAwaitOffset();
 
     void getEnvironmentCoordinateObject(Register reg);
     Address getEnvironmentCoordinateAddressFromObject(Register objReg, Register reg);

@@ -49,7 +49,7 @@ CreateCollatorPrototype(JSContext* cx, JS::Handle<JSObject*> Intl,
  *
  * Usage: collator = intl_Collator(locales, options)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_Collator(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -60,7 +60,7 @@ intl_Collator(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: collations = intl_availableCollations(locale)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_availableCollations(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -73,7 +73,7 @@ intl_availableCollations(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: result = intl_CompareStrings(collator, x, y)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -82,7 +82,7 @@ intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: result = intl_isUpperCaseFirst(locale)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_isUpperCaseFirst(JSContext* cx, unsigned argc, Value* vp);
 
 

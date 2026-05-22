@@ -50,7 +50,7 @@ CompileModule(ExclusiveContext* cx, const JS::ReadOnlyCompileOptions& options,
               JS::SourceBufferHolder& srcBuf, LifoAlloc& alloc,
               ScriptSourceObject** sourceObjectOut = nullptr);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
 
 //
@@ -65,32 +65,32 @@ CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* cha
 //     Function("/*", "*/x) {")
 //     Function("x){ if (3", "return x;}")
 //
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
                           const JS::ReadOnlyCompileOptions& options,
                           JS::SourceBufferHolder& srcBuf,
                           mozilla::Maybe<uint32_t> parameterListEnd,
                           HandleScope enclosingScope = nullptr);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
                            const JS::ReadOnlyCompileOptions& options,
                            JS::SourceBufferHolder& srcBuf,
                            mozilla::Maybe<uint32_t> parameterListEnd);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fun,
                                const JS::ReadOnlyCompileOptions& options,
                                JS::SourceBufferHolder& srcBuf,
                                mozilla::Maybe<uint32_t> parameterListEnd);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction fun,
                                 const JS::ReadOnlyCompileOptions& options,
                                 JS::SourceBufferHolder& srcBuf,
                                 mozilla::Maybe<uint32_t> parameterListEnd);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CompileAsyncFunctionBody(JSContext* cx, MutableHandleFunction fun,
                          const JS::ReadOnlyCompileOptions& options,
                          Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);

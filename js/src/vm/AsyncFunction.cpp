@@ -50,8 +50,8 @@ GlobalObject::initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global)
     return true;
 }
 
-[[nodiscard]] static bool AsyncFunctionStart(JSContext* cx, Handle<PromiseObject*> resultPromise,
-                                             HandleValue generatorVal);
+static MOZ_MUST_USE bool AsyncFunctionStart(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                                            HandleValue generatorVal);
 
 #define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
 #define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
@@ -184,7 +184,7 @@ AsyncFunctionResume(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleV
 }
 
 // Async Functions proposal 2.2 steps 3-8.
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 AsyncFunctionStart(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue generatorVal)
 {
     return AsyncFunctionResume(cx, resultPromise, generatorVal, ResumeKind::Normal, UndefinedHandleValue);
@@ -194,7 +194,7 @@ AsyncFunctionStart(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleVa
 // Implemented in js/src/builtin/Promise.cpp
 
 // Async Functions proposal 2.4.
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 js::AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
                                   HandleValue generatorVal, HandleValue value)
 {
@@ -205,7 +205,7 @@ js::AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPr
 }
 
 // Async Functions proposal 2.5.
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 js::AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
                                  HandleValue generatorVal, HandleValue reason)
 {

@@ -1862,7 +1862,7 @@ ScriptSource::functionBodyString(JSContext* cx)
     return substring(cx, start, stop);
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ScriptSource::setSource(ExclusiveContext* cx,
                         mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,
                         size_t length)
@@ -1884,7 +1884,7 @@ ScriptSource::setSource(SharedImmutableTwoByteString&& string)
     data = SourceType(Uncompressed(mozilla::Move(string)));
 }
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 ScriptSource::setCompressedSource(ExclusiveContext* cx,
                                   mozilla::UniquePtr<char[], JS::FreePolicy>&& raw,
                                   size_t rawLength,
@@ -1961,7 +1961,7 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 reallocUniquePtr(UniquePtr<char[], JS::FreePolicy>& unique, size_t size)
 {
     auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));

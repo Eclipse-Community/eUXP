@@ -73,5 +73,5 @@ js::wasm::RenderNaN(StringBuffer& sb, Raw<T> num)
            RenderInBase<16>(sb, payload);
 }
 
-template bool js::wasm::RenderNaN(StringBuffer& b, Raw<float> num);
-template bool js::wasm::RenderNaN(StringBuffer& b, Raw<double> num);
+template MOZ_MUST_USE bool js::wasm::RenderNaN(StringBuffer& b, Raw<float> num);
+template MOZ_MUST_USE bool js::wasm::RenderNaN(StringBuffer& b, Raw<double> num);

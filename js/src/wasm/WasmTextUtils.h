@@ -1,7 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * Copyright 2016 Mozilla Foundation
- * Copyright 2023 Moonchild Productions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +27,14 @@ class StringBuffer;
 namespace wasm {
 
 template<size_t base>
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 RenderInBase(StringBuffer& sb, uint64_t num);
 
 template<class T>
 class Raw;
 
 template<class T>
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 RenderNaN(StringBuffer& sb, Raw<T> num);
 
 }  // namespace wasm

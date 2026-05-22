@@ -21,22 +21,22 @@ class AtomicsObject : public JSObject
   public:
     static const Class class_;
     static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
-    [[nodiscard]] static bool toString(JSContext* cx, unsigned int argc, Value* vp);
+    static MOZ_MUST_USE bool toString(JSContext* cx, unsigned int argc, Value* vp);
 };
 
-[[nodiscard]] bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_add(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_and(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_or(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_xor(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_wait(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_waitAsync(JSContext* cx, unsigned argc, Value* vp);
-[[nodiscard]] bool atomics_notify(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_add(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_and(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_or(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_xor(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_wait(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_waitAsync(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_notify(JSContext* cx, unsigned argc, Value* vp);
 
 /* asm.js callouts */
 namespace wasm { class Instance; }
@@ -53,14 +53,14 @@ class FutexRuntime
     friend class AutoLockFutexAPI;
 
 public:
-    [[nodiscard]] static bool initialize();
+    static MOZ_MUST_USE bool initialize();
     static void destroy();
 
     static void lock();
     static void unlock();
 
     FutexRuntime();
-    [[nodiscard]] bool initInstance();
+    MOZ_MUST_USE bool initInstance();
     void destroyInstance();
 
     // Parameters to notify().
@@ -84,8 +84,8 @@ public:
     // wait.
     //
     // wait() will not wake up spuriously.
-    [[nodiscard]] bool wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
-                            mozilla::Maybe<mozilla::TimeDuration>& timeout, WaitResult* result);
+    MOZ_MUST_USE bool wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
+                           mozilla::Maybe<mozilla::TimeDuration>& timeout, WaitResult* result);
 
     // Notify the thread represented by this Runtime.
     //

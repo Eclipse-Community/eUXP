@@ -23,14 +23,14 @@ enum LibrarySlot {
 
 namespace Library
 {
-  [[nodiscard]] bool Name(JSContext* cx, unsigned argc, JS::Value* vp);
+  MOZ_MUST_USE bool Name(JSContext* cx, unsigned argc, JS::Value* vp);
 
   JSObject* Create(JSContext* cx, JS::HandleValue path, const JSCTypesCallbacks* callbacks);
 
   bool IsLibrary(JSObject* obj);
   PRLibrary* GetLibrary(JSObject* obj);
 
-  [[nodiscard]] bool Open(JSContext* cx, unsigned argc, JS::Value* vp);
+  MOZ_MUST_USE bool Open(JSContext* cx, unsigned argc, JS::Value* vp);
 } // namespace Library
 
 } // namespace ctypes

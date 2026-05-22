@@ -22,11 +22,11 @@ enum class ProtectionSetting {
     Executable,
 };
 
-[[nodiscard]] extern bool ReprotectRegion(void* start, size_t size, ProtectionSetting protection);
+extern MOZ_MUST_USE bool ReprotectRegion(void* start, size_t size, ProtectionSetting protection);
 
 // Functions called at process start-up/shutdown to initialize/release the
 // executable memory region.
-[[nodiscard]] extern bool InitProcessExecutableMemory();
+extern MOZ_MUST_USE bool InitProcessExecutableMemory();
 extern void ReleaseProcessExecutableMemory();
 
 // Allocate/deallocate executable pages.

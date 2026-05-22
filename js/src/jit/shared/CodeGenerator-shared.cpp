@@ -1641,7 +1641,7 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock* mir, Assembler::Condition cond)
 }
 #endif
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 CodeGeneratorShared::addCacheLocations(const CacheLocationList& locs, size_t* numLocs,
                                        size_t* curIndex)
 {

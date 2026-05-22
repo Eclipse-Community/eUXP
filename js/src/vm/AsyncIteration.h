@@ -35,17 +35,17 @@ GetWrappedAsyncGenerator(JSFunction* unwrapped);
 JSFunction*
 GetUnwrappedAsyncGenerator(JSFunction* wrapped);
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncGeneratorAwaitedFulfilled(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                                HandleValue value);
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncGeneratorAwaitedRejected(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                               HandleValue reason);
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncGeneratorYieldReturnAwaitedFulfilled(JSContext* cx,
                                           Handle<AsyncGeneratorObject*> asyncGenObj,
                                           HandleValue value);
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncGeneratorYieldReturnAwaitedRejected(JSContext* cx,
                                          Handle<AsyncGeneratorObject*> asyncGenObj,
                                          HandleValue reason);
@@ -209,7 +209,7 @@ class AsyncGeneratorObject : public NativeObject
         return &getFixedSlot(Slot_Generator).toObject().as<GeneratorObject>();
     }
 
-    [[nodiscard]] static bool
+    static MOZ_MUST_USE bool
     enqueueRequest(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                    Handle<AsyncGeneratorRequest*> request);
 
@@ -287,7 +287,7 @@ class AsyncFromSyncIteratorObject : public NativeObject
     }
 };
 
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 AsyncGeneratorResume(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
                      CompletionKind completionKind, HandleValue argument);
 

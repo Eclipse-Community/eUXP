@@ -149,7 +149,7 @@ js::StackDefs(JSScript* script, jsbytecode* pc)
 
 const char * PCCounts::numExecName = "interp";
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 DumpIonScriptCounts(Sprinter* sp, HandleScript script, jit::IonScriptCounts* ionCounts)
 {
     if (!sp->jsprintf("IonScript [%" PRIuSIZE " blocks]:\n", ionCounts->numBlocks()))
@@ -181,7 +181,7 @@ DumpIonScriptCounts(Sprinter* sp, HandleScript script, jit::IonScriptCounts* ion
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
 {
     MOZ_ASSERT(script->hasScriptCounts());
@@ -696,7 +696,7 @@ js::ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc, uint3
  * current line. If showAll is true, include the source note type and the
  * entry stack depth.
  */
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 DisassembleAtPC(JSContext* cx, JSScript* scriptArg, bool lines,
                 jsbytecode* pc, bool showAll, Sprinter* sp)
 {
@@ -1861,7 +1861,7 @@ js::GetPCCountScriptCount(JSContext* cx)
 
 enum MaybeComma {NO_COMMA, COMMA};
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 AppendJSONProperty(StringBuffer& buf, const char* name, MaybeComma comma = COMMA)
 {
     if (comma && !buf.append(','))

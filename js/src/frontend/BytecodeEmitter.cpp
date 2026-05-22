@@ -145,13 +145,13 @@ class MOZ_RAII OptionalEmitter
     Other
   };
 
-  [[nodiscard]] bool emitJumpShortCircuit();
-  [[nodiscard]] bool emitJumpShortCircuitForCall();
+  MOZ_MUST_USE bool emitJumpShortCircuit();
+  MOZ_MUST_USE bool emitJumpShortCircuitForCall();
 
   // JSOp is the op code to be emitted, Kind is if we are dealing with a
   // reference (in which case we need two elements on the stack) or other value
   // (which needs one element on the stack)
-  [[nodiscard]] bool emitOptionalJumpTarget(JSOp op, Kind kind = Kind::Other);
+  MOZ_MUST_USE bool emitOptionalJumpTarget(JSOp op, Kind kind = Kind::Other);
 };
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
@@ -715,7 +715,7 @@ class NonLocalExitControl
 
     NonLocalExitControl(const NonLocalExitControl&) = delete;
 
-    [[nodiscard]] bool leaveScope(EmitterScope* scope);
+    MOZ_MUST_USE bool leaveScope(EmitterScope* scope);
 
   public:
     NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
@@ -732,9 +732,9 @@ class NonLocalExitControl
         bce_->stackDepth = savedDepth_;
     }
 
-    [[nodiscard]] bool prepareForNonLocalJump(NestableControl* target);
+    MOZ_MUST_USE bool prepareForNonLocalJump(NestableControl* target);
 
-    [[nodiscard]] bool prepareForNonLocalJumpToOutermost() {
+    MOZ_MUST_USE bool prepareForNonLocalJumpToOutermost() {
         return prepareForNonLocalJump(nullptr);
     }
 };

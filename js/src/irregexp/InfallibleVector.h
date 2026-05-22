@@ -1,7 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-// Copyright 2012 the V8 project authors.
-// Copyright 2023 Moonchild Productions.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -39,7 +38,7 @@ namespace irregexp {
 
 // InfallibleVector is like Vector, but all its methods are infallible (they
 // crash on OOM). We use this class instead of Vector to avoid a ton of
-// [[nodiscard]] warnings in irregexp code (imported from V8).
+// MOZ_MUST_USE warnings in irregexp code (imported from V8).
 template<typename T, size_t N>
 class InfallibleVector
 {

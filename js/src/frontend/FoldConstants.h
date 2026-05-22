@@ -24,10 +24,10 @@ namespace frontend {
 //        return false;
 //    if (!FoldConstants(cx, &pn, parser))
 //        return false;
-[[nodiscard]] bool
+MOZ_MUST_USE bool
 FoldConstants(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>* parser);
 
-[[nodiscard]] inline bool
+inline MOZ_MUST_USE bool
 FoldConstants(ExclusiveContext* cx, SyntaxParseHandler::Node* pnp,
               Parser<SyntaxParseHandler>* parser)
 {

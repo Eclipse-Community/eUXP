@@ -67,7 +67,7 @@ class StringBuffer
         return cb.ref<TwoByteCharBuffer>();
     }
 
-    [[nodiscard]] bool inflateChars();
+    MOZ_MUST_USE bool inflateChars();
 
   public:
     explicit StringBuffer(ExclusiveContext* cx)
@@ -92,12 +92,12 @@ class StringBuffer
         else
             twoByteChars().clear();
     }
-    [[nodiscard]] bool reserve(size_t len) {
+    MOZ_MUST_USE bool reserve(size_t len) {
         if (len > reserved_)
             reserved_ = len;
         return isLatin1() ? latin1Chars().reserve(len) : twoByteChars().reserve(len);
     }
-    [[nodiscard]] bool resize(size_t len) {
+    MOZ_MUST_USE bool resize(size_t len) {
         return isLatin1() ? latin1Chars().resize(len) : twoByteChars().resize(len);
     }
     bool empty() const {
@@ -110,7 +110,7 @@ class StringBuffer
         return isLatin1() ? latin1Chars()[idx] : twoByteChars()[idx];
     }
 
-    [[nodiscard]] bool ensureTwoByteChars() {
+    MOZ_MUST_USE bool ensureTwoByteChars() {
         if (isLatin1() && !inflateChars())
             return false;
 
@@ -120,7 +120,7 @@ class StringBuffer
         return true;
     }
 
-    [[nodiscard]] bool append(const char16_t c) {
+    MOZ_MUST_USE bool append(const char16_t c) {
         if (isLatin1()) {
             if (c <= JSString::MAX_LATIN1_CHAR)
                 return latin1Chars().append(Latin1Char(c));
@@ -129,10 +129,10 @@ class StringBuffer
         }
         return twoByteChars().append(c);
     }
-    [[nodiscard]] bool append(Latin1Char c) {
+    MOZ_MUST_USE bool append(Latin1Char c) {
         return isLatin1() ? latin1Chars().append(c) : twoByteChars().append(c);
     }
-    [[nodiscard]] bool append(char c) {
+    MOZ_MUST_USE bool append(char c) {
         return append(Latin1Char(c));
     }
 
@@ -141,37 +141,37 @@ class StringBuffer
         return twoByteChars();
     }
 
-    [[nodiscard]] inline bool append(const char16_t* begin, const char16_t* end);
+    inline MOZ_MUST_USE bool append(const char16_t* begin, const char16_t* end);
 
-    [[nodiscard]] bool append(const char16_t* chars, size_t len) {
+    MOZ_MUST_USE bool append(const char16_t* chars, size_t len) {
         return append(chars, chars + len);
     }
 
-    [[nodiscard]] bool append(const Latin1Char* begin, const Latin1Char* end) {
+    MOZ_MUST_USE bool append(const Latin1Char* begin, const Latin1Char* end) {
         return isLatin1() ? latin1Chars().append(begin, end) : twoByteChars().append(begin, end);
     }
-    [[nodiscard]] bool append(const Latin1Char* chars, size_t len) {
+    MOZ_MUST_USE bool append(const Latin1Char* chars, size_t len) {
         return append(chars, chars + len);
     }
 
-    [[nodiscard]] bool append(const JS::ConstCharPtr chars, size_t len) {
+    MOZ_MUST_USE bool append(const JS::ConstCharPtr chars, size_t len) {
         return append(chars.get(), chars.get() + len);
     }
-    [[nodiscard]] bool appendN(Latin1Char c, size_t n) {
+    MOZ_MUST_USE bool appendN(Latin1Char c, size_t n) {
         return isLatin1() ? latin1Chars().appendN(c, n) : twoByteChars().appendN(c, n);
     }
 
-    [[nodiscard]] inline bool append(JSString* str);
-    [[nodiscard]] inline bool append(JSLinearString* str);
-    [[nodiscard]] inline bool appendSubstring(JSString* base, size_t off, size_t len);
-    [[nodiscard]] inline bool appendSubstring(JSLinearString* base, size_t off, size_t len);
+    inline MOZ_MUST_USE bool append(JSString* str);
+    inline MOZ_MUST_USE bool append(JSLinearString* str);
+    inline MOZ_MUST_USE bool appendSubstring(JSString* base, size_t off, size_t len);
+    inline MOZ_MUST_USE bool appendSubstring(JSLinearString* base, size_t off, size_t len);
 
-    [[nodiscard]] bool append(const char* chars, size_t len) {
+    MOZ_MUST_USE bool append(const char* chars, size_t len) {
         return append(reinterpret_cast<const Latin1Char*>(chars), len);
     }
 
     template <size_t ArrayLength>
-    [[nodiscard]] bool append(const char (&array)[ArrayLength]) {
+    MOZ_MUST_USE bool append(const char (&array)[ArrayLength]) {
         return append(array, ArrayLength - 1); /* No trailing '\0'. */
     }
 

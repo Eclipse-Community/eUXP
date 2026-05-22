@@ -635,7 +635,7 @@ RegisterScriptPathWithModuleLoader(JSContext* cx, HandleScript script, const cha
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 {
     SkipUTF8BOM(file);
@@ -750,7 +750,7 @@ GetImportMethod(JSContext* cx, HandleObject loader, MutableHandleFunction result
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 {
     // Execute a module by calling |Reflect.Loader.import(filename)|.
@@ -977,7 +977,7 @@ EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
 {
     ShellContext* sc = GetShellContext(cx);
@@ -1078,7 +1078,7 @@ ReportCantOpenErrorUnknownEncoding(JSContext* cx, const char* filename)
                                filename, strerror(errno));
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = FileScript)
 {
     FILE* file;
@@ -2495,7 +2495,7 @@ UpdateSwitchTableBounds(JSContext* cx, HandleScript script, unsigned offset,
     *end = *start + (unsigned)(n * jmplen);
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 {
     if (sp->put("\nSource notes:\n") < 0 ||
@@ -2671,7 +2671,7 @@ TryNoteName(JSTryNoteKind kind)
     MOZ_CRASH("Bad JSTryNoteKind");
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 {
     if (!script->hasTrynotes())
@@ -2694,7 +2694,7 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ScopeNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 {
     if (!script->hasScopeNotes())
@@ -2726,7 +2726,7 @@ ScopeNotes(JSContext* cx, HandleScript script, Sprinter* sp)
     return true;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
                   bool lines, bool recursive, bool sourceNotes, Sprinter* sp)
 {
@@ -7508,7 +7508,7 @@ OptionFailure(const char* option, const char* str)
     return false;
 }
 
-[[nodiscard]] static bool
+static MOZ_MUST_USE bool
 ProcessArgs(JSContext* cx, OptionParser* op)
 {
     ShellContext* sc = GetShellContext(cx);

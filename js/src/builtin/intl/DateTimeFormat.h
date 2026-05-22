@@ -51,7 +51,7 @@ CreateDateTimeFormatPrototype(JSContext* cx, JS::Handle<JSObject*> Intl,
  *
  * Usage: dateTimeFormat = intl_DateTimeFormat(locales, options)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -62,7 +62,7 @@ intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: calendars = intl_availableCalendars(locale)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -72,7 +72,7 @@ intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: calendar = intl_defaultCalendar(locale)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_defaultCalendar(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -85,7 +85,7 @@ intl_defaultCalendar(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: ianaTimeZone = intl_IsValidTimeZoneName(timeZone)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_IsValidTimeZoneName(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -94,7 +94,7 @@ intl_IsValidTimeZoneName(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: ianaTimeZone = intl_canonicalizeTimeZone(timeZone)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -102,7 +102,7 @@ intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: icuDefaultTimeZone = intl_defaultTimeZone()
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -110,7 +110,7 @@ intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: defaultTimeZoneOffset = intl_defaultTimeZoneOffset()
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -121,7 +121,7 @@ intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: pattern = intl_patternForSkeleton(locale, skeleton, hourCycle)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -155,7 +155,7 @@ intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
  * Usage: pattern = intl_patternForStyle(locale, dateStyle, timeStyle, timeZone,
  *                                       hour12, hourCycle)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -167,7 +167,7 @@ intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x, formatToParts)
  */
-[[nodiscard]] extern bool
+extern MOZ_MUST_USE bool
 intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 
 
