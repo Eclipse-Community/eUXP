@@ -70,6 +70,7 @@
   ['main', ''],
   ['map', 'Map'],
   ['mark', ''],
+  ['marquee', 'Div'],
   ['menu', 'Menu'],
   ['meta', 'Meta'],
   ['meter', 'Meter'],
