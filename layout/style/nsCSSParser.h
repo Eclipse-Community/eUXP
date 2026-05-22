@@ -34,12 +34,6 @@ namespace css {
 class Rule;
 class Declaration;
 class StyleRule;
-
-enum class SupportsParsingSettings {
-  Normal,
-  ImpliedParentheses
-};
-
 } // namespace css
 } // namespace mozilla
 
@@ -263,17 +257,11 @@ public:
   /**
    * Parse an @supports condition and returns the result of evaluating the
    * condition.
-   *
-   * The one-argument CSS.supports() allows for providing an @supports condition
-   * without parentheses, i.e. the parentheses are "implied". In such a case,
-   * aSettings can be set to ImpliedParentheses.
    */
   bool EvaluateSupportsCondition(const nsAString& aCondition,
                                  nsIURI* aDocURL,
                                  nsIURI* aBaseURL,
-                                 nsIPrincipal* aDocPrincipal,
-                                 mozilla::css::SupportsParsingSettings aSettings
-                                   = mozilla::css::SupportsParsingSettings::Normal);
+                                 nsIPrincipal* aDocPrincipal);
 
   typedef void (*VariableEnumFunc)(const nsAString&, void*);
 
