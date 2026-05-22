@@ -873,7 +873,7 @@ this.DownloadIntegration = {
 
   /**
    * Force a save on _store if it exists. Used to ensure downloads do not
-   * persist after being sanitized.
+   * persist after being sanitized on Android.
    *
    * @return {Promise}
    * @resolves When _store.save() completes.

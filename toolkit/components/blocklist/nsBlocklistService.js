@@ -1051,7 +1051,7 @@ Blocklist.prototype = {
 
   // <gfxBlacklistEntry blockID="g60">
   //   <os>WINNT 6.0</os>
-  //   <osversion>14</osversion>
+  //   <osversion>14</osversion> currently only used for Android
   //   <versionRange minVersion="42.0" maxVersion="13.0b2"/>
   //   <vendor>0x8086</vendor>
   //   <devices>

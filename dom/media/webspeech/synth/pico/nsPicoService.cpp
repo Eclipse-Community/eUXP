@@ -513,8 +513,12 @@ nsPicoService::Init()
     return;
   }
 
-  // Use environment variable
+  // Use environment variable, or default android/b2g path
   nsAutoCString langPath(PR_GetEnv("PICO_LANG_PATH"));
+
+  if (langPath.IsEmpty()) {
+    langPath.AssignLiteral(GONK_PICO_LANG_PATH);
+  }
 
   nsCOMPtr<nsIFile> voicesDir;
   NS_NewNativeLocalFile(langPath, true, getter_AddRefs(voicesDir));

@@ -253,10 +253,16 @@ this.Downloads = {
 
   /**
    * Returns the system downloads directory asynchronously.
-   *   Windows:
+   *   Mac OSX:
+   *     User downloads directory
+   *   XP/2K:
+   *     My Documents/Downloads
+   *   Vista and others:
    *     User downloads directory
    *   Linux:
    *     XDG user dir spec, with a fallback to Home/Downloads
+   *   Android:
+   *     standard downloads directory i.e. /sdcard
    *
    * @return {Promise}
    * @resolves The downloads directory string path.

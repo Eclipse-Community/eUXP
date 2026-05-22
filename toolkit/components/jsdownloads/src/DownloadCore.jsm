@@ -1626,7 +1626,8 @@ this.DownloadError.prototype = {
    * Indicates the download was blocked because a runtime permission required to
    * download files was not granted.
    *
-   * This does not apply to all systems.
+   * This does not apply to all systems. On Android this flag is set to true if
+   * a needed runtime permission (storage) has not been granted by the user.
    */
   becauseBlockedByRuntimePermissions: false,
 
