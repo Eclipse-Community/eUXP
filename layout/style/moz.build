@@ -141,6 +141,7 @@ UNIFIED_SOURCES += [
     'IncrementalClearCOMRuleArray.cpp',
     'LayerAnimationInfo.cpp',
     'Loader.cpp',
+    'MediaQueryCache.cpp',
     'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',

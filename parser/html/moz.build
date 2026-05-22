@@ -91,6 +91,8 @@ UNIFIED_SOURCES += [
     'nsHtml5UTF16Buffer.cpp',
     'nsHtml5ViewSourceUtils.cpp',
     'nsParserUtils.cpp',
+    'ParallelHTMLTokenizer.cpp',
+    'ParserThreadingIntegration.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

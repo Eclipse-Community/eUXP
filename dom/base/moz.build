@@ -240,6 +240,8 @@ UNIFIED_SOURCES += [
     'DocGroup.cpp',
     'DocumentFragment.cpp',
     'DocumentType.cpp',
+    'DOMBatchedMutations.cpp',
+    'DOMBatchingIntegration.cpp',
     'DOMCursor.cpp',
     'DOMError.cpp',
     'DOMException.cpp',
