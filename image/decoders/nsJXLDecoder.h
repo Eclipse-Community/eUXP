@@ -21,8 +21,6 @@ class nsJXLDecoder final : public Decoder {
  public:
   virtual ~nsJXLDecoder();
 
-  DecoderType GetType() const override { return DecoderType::JXL; }
-
  protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;

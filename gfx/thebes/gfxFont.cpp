@@ -479,7 +479,7 @@ gfxFontShaper::MergeFontFeatures(
         case NS_FONT_VARIANT_CAPS_ALLSMALL:
             mergedFeatures.Put(HB_TAG('c','2','s','c'), 1);
             // fall through to the small-caps case
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
 
         case NS_FONT_VARIANT_CAPS_SMALLCAPS:
             mergedFeatures.Put(HB_TAG('s','m','c','p'), 1);
@@ -489,7 +489,7 @@ gfxFontShaper::MergeFontFeatures(
             mergedFeatures.Put(aAddSmallCaps ? HB_TAG('c','2','s','c') :
                                                HB_TAG('c','2','p','c'), 1);
             // fall through to the petite-caps case
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
 
         case NS_FONT_VARIANT_CAPS_PETITECAPS:
             mergedFeatures.Put(aAddSmallCaps ? HB_TAG('s','m','c','p') :
@@ -623,7 +623,7 @@ gfxFontShaper::GetRoundOffsetsToPixels(DrawTarget* aDrawTarget,
                     DWRITE_MEASURING_MODE_NATURAL) {
                 return;
             }
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
 #endif
         case CAIRO_FONT_TYPE_QUARTZ:
             // Quartz surfaces implement show_glyphs for Quartz fonts
@@ -854,8 +854,7 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
     mStyle(*aFontStyle),
     mAdjustedSize(0.0),
     mFUnitsConvFactor(-1.0f), // negative to indicate "not yet initialized"
-    mAntialiasOption(anAAOption),
-    mSpacingKludge(false)
+    mAntialiasOption(anAAOption)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
@@ -884,11 +883,9 @@ gfxFont::GetGlyphHAdvance(DrawTarget* aDrawTarget, uint16_t aGID)
     if (!SetupCairoFont(aDrawTarget)) {
         return 0;
     }
-#if !defined(XP_MACOSX) || (defined(XP_MACOSX) && !(defined(__ppc__) || defined(__ppc64__)))
     if (ProvidesGlyphWidths()) {
         return GetGlyphWidth(*aDrawTarget, aGID) / 65536.0;
     }
-#endif
     if (mFUnitsConvFactor < 0.0f) {
         GetMetrics(eHorizontal);
     }
@@ -3134,7 +3131,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
             case kUppercaseReduce:
                 // use reduced-size font, then fall through to uppercase the text
                 f = smallCapsFont;
-                [[fallthrough]];
+                MOZ_FALLTHROUGH;
 
             case kUppercase:
                 // apply uppercase transform to the string

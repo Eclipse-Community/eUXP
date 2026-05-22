@@ -156,9 +156,6 @@ protected:
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, nsIFrame *aFrame);
 
   // Scrollbars
-  void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
-  void GetScrollbarDrawInfo (HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
-                             const CGSize& aSize, bool aShouldGetButtonStates);
   void GetScrollbarPressStates(nsIFrame *aFrame,
                                mozilla::EventStates aButtonStates[]);
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);

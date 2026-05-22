@@ -8,9 +8,9 @@
 #include <new>
 #include <stdint.h>
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
-#include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 
 #ifndef mozilla_Variant_h
@@ -22,6 +22,22 @@ template<typename... Ts>
 class Variant;
 
 namespace detail {
+
+// MaxSizeOf computes the maximum sizeof(T) for each T in Ts.
+
+template<typename T, typename... Ts>
+struct MaxSizeOf
+{
+  static const size_t size = sizeof(T) > MaxSizeOf<Ts...>::size
+    ? sizeof(T)
+    : MaxSizeOf<Ts...>::size;
+};
+
+template<typename T>
+struct MaxSizeOf<T>
+{
+  static const size_t size = sizeof(T);
+};
 
 // The `IsVariant` helper is used in conjunction with static_assert and
 // `mozilla::EnableIf` to catch passing non-variant types to `Variant::is<T>()`
@@ -413,35 +429,23 @@ struct AsVariantTemporary
  *
  *       ...
  *     };
- *
- * Because Variant must be aligned suitable to hold any value stored within it,
- * and because |alignas| requirements don't affect platform ABI with respect to
- * how parameters are laid out in memory, Variant can't be used as the type of a
- * function parameter.  Pass Variant to functions by pointer or reference
- * instead.
  */
 template<typename... Ts>
-class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_NON_PARAM Variant
+class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Variant
 {
   using Tag = typename detail::VariantTag<Ts...>::Type;
   using Impl = detail::VariantImplementation<Tag, 0, Ts...>;
-
-  static const size_t RawDataAlignment = tl::Max<alignof(Ts)...>::value;
-  static const size_t RawDataSize = tl::Max<sizeof(Ts)...>::value;
+  using RawData = AlignedStorage<detail::MaxSizeOf<Ts...>::size>;
 
   // Raw storage for the contained variant value.
-  alignas(RawDataAlignment) unsigned char rawData[RawDataSize];
+  RawData raw;
 
   // Each type is given a unique tag value that lets us keep track of the
   // contained variant value's type.
   Tag tag;
 
   void* ptr() {
-    return rawData;
-  }
-
-  const void* ptr() const {
-    return rawData;
+    return reinterpret_cast<void*>(&raw);
   }
 
 public:
@@ -548,7 +552,7 @@ public:
     static_assert(detail::IsVariant<T, Ts...>::value,
                   "provided a type not found in this Variant's type list");
     MOZ_ASSERT(is<T>());
-    return *static_cast<T*>(ptr());
+    return *reinterpret_cast<T*>(&raw);
   }
 
   /** Immutable const reference. */
@@ -557,7 +561,7 @@ public:
     static_assert(detail::IsVariant<T, Ts...>::value,
                   "provided a type not found in this Variant's type list");
     MOZ_ASSERT(is<T>());
-    return *static_cast<const T*>(ptr());
+    return *reinterpret_cast<const T*>(&raw);
   }
 
   /**

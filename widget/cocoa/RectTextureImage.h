@@ -7,8 +7,6 @@
 #define RectTextureImage_h_
 
 #include "mozilla/RefPtr.h"
-#include <functional>
-#include <utility>
 
 class MacIOSurface;
 
@@ -28,13 +26,7 @@ namespace widget {
 // OMTC BasicLayers drawing.
 class RectTextureImage {
 public:
-
-// Back out 1281686 when we do not have IOSurface
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   RectTextureImage();
-#else
-  explicit RectTextureImage(gl::GLContext* aGLContext);
-#endif
 
   virtual ~RectTextureImage();
 
@@ -42,17 +34,16 @@ public:
     BeginUpdate(const LayoutDeviceIntSize& aNewSize,
                 const LayoutDeviceIntRegion& aDirtyRegion =
                   LayoutDeviceIntRegion());
-  void EndUpdate(bool aKeepSurface = false);
+  void EndUpdate();
 
-  template<typename Function, typename... Args>
   void UpdateIfNeeded(const LayoutDeviceIntSize& aNewSize,
                       const LayoutDeviceIntRegion& aDirtyRegion,
-                      Function aCallback,
-                      Args&&... aArgs)
+                      void (^aCallback)(gfx::DrawTarget*,
+                                        const LayoutDeviceIntRegion&))
   {
     RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
     if (drawTarget) {
-      aCallback(drawTarget, GetUpdateRegion(), std::forward<Args>(aArgs)...);
+      aCallback(drawTarget, GetUpdateRegion());
       EndUpdate();
     }
   }
@@ -70,32 +61,15 @@ public:
             const LayoutDeviceIntPoint& aLocation,
             const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
-#if !defined(MAC_OS_X_VERSION_10_6) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6)
-  static LayoutDeviceIntSize TextureSizeForSize(
-    const LayoutDeviceIntSize& aSize);
-#endif
 
 protected:
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   void DeleteTexture();
   void BindIOSurfaceToTexture(gl::GLContext* aGL);
-#endif
 
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   RefPtr<MacIOSurface> mIOSurface;
-#else
-  RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
-  UniquePtr<unsigned char[]> mUpdateDrawTargetData;
-#endif
   gl::GLContext* mGLContext;
   LayoutDeviceIntRegion mUpdateRegion;
-#if !defined(MAC_OS_X_VERSION_10_6) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6)
-  LayoutDeviceIntSize mUsedSize;
-#endif
   LayoutDeviceIntSize mBufferSize;
-#if !defined(MAC_OS_X_VERSION_10_6) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6)
-  LayoutDeviceIntSize mTextureSize;
-#endif
   GLuint mTexture;
   bool mInUpdate;
 };

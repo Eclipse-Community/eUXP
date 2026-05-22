@@ -74,9 +74,7 @@
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Move.h"
 #include "mozilla/net/NeckoParent.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginBridge.h"
-#endif
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
@@ -218,6 +216,11 @@
 #include "Benchmark.h"
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
+
+#if defined(XP_WIN)
+// e10s forced enable pref, defined in nsAppRunner.cpp
+extern const char* kForceEnableE10sPref;
+#endif
 
 using base::ChildPrivileges;
 using base::KillProcess;
@@ -655,7 +658,7 @@ ContentParent::GetInitialProcessPriority(Element* aFrameElement)
   return PROCESS_PRIORITY_FOREGROUND;
 }
 
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_WIN)
 extern const wchar_t* kPluginWidgetContentParentProperty;
 
 /*static*/ void
@@ -673,10 +676,7 @@ ContentParent::SendAsyncUpdate(nsIWidget* aWidget)
     Unused << cp->SendUpdateWindow((uintptr_t)hwnd);
   }
 }
-#elif defined(XP_WIN)
-/*static*/ void
-ContentParent::SendAsyncUpdate(nsIWidget* aWidget) {}
-#endif
+#endif // defined(XP_WIN)
 
 bool
 ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
@@ -771,16 +771,11 @@ ContentParent::RecvCreateGMPService()
 }
 #endif
 
-
 bool
 ContentParent::RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv, uint32_t* aRunID)
 {
-#ifdef MOZ_ENABLE_NPAPI
   *aRv = NS_OK;
   return mozilla::plugins::SetupBridge(aPluginId, this, false, aRv, aRunID);
-#else
-  return false;
-#endif
 }
 
 bool
@@ -803,7 +798,6 @@ ContentParent::RecvRemovePermission(const IPC::Principal& aPrincipal,
   return true;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 bool
 ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv)
 {
@@ -814,17 +808,14 @@ ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv)
   uint32_t dummy = 0;
   return mozilla::plugins::SetupBridge(aPluginId, this, true, aRv, &dummy);
 }
-#endif
 
 bool
 ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
                                      uint32_t* aState)
 {
-#ifdef MOZ_ENABLE_NPAPI
   *aState = nsIBlocklistService::STATE_BLOCKED;
 
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  
   if (!pluginHost) {
     NS_WARNING("Plugin host not found");
     return false;
@@ -838,12 +829,8 @@ ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
   }
 
   return NS_SUCCEEDED(tag->GetBlocklistState(aState));
-#else
-  return false;
-#endif
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 bool
 ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
                                nsresult* aRv,
@@ -853,7 +840,6 @@ ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
   *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
   return true;
 }
-#endif
 
 /*static*/ TabParent*
 ContentParent::CreateBrowser(const TabContext& aContext,
@@ -1026,6 +1012,12 @@ ContentParent::Init()
   if (nsIPresShell::IsAccessibilityActive()) {
 #if !defined(XP_WIN)
       Unused << SendActivateA11y(0);
+#else
+    // On Windows we currently only enable a11y in the content process
+    // for testing purposes.
+    if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+      Unused << SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+    }
 #endif
   }
 #endif
@@ -2189,6 +2181,12 @@ ContentParent::Observe(nsISupports* aSubject,
       // accessibility gets initiated in chrome process.
 #if !defined(XP_WIN)
       Unused << SendActivateA11y(0);
+#else
+      // On Windows we currently only enable a11y in the content process
+      // for testing purposes.
+      if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+        Unused << SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      }
 #endif
     } else {
       // If possible, shut down accessibility in content process when

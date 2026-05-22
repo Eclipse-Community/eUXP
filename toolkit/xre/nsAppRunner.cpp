@@ -97,6 +97,7 @@
 #include <intrin.h>
 #include <math.h>
 #include "cairo/cairo-features.h"
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/mscom/MainThreadRuntime.h"
 #include "mozilla/widget/AudioSession.h"
 
@@ -843,12 +844,39 @@ nsXULAppInfo::GetUniqueProcessID(uint64_t* aResult)
   return NS_OK;
 }
 
+static bool gBrowserTabsRemoteAutostart = false;
+static uint64_t gBrowserTabsRemoteStatus = 0;
+static bool gBrowserTabsRemoteAutostartInitialized = false;
+
+static bool gMultiprocessBlockPolicyInitialized = false;
+static uint32_t gMultiprocessBlockPolicy = 0;
+
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) {
   if (!nsCRT::strcmp(aTopic, "getE10SBlocked")) {
+    nsCOMPtr<nsISupportsPRUint64> ret = do_QueryInterface(aSubject);
+    if (!ret)
+      return NS_ERROR_FAILURE;
+
+    ret->SetData(gBrowserTabsRemoteStatus);
+
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetBrowserTabsRemoteAutostart(bool* aResult)
+{
+  *aResult = BrowserTabsRemoteAutostart();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetMultiprocessBlockPolicy(uint32_t* aResult)
+{
+  *aResult = MultiprocessBlockPolicy();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2749,13 +2777,27 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 
   SetupErrorHandling(gArgv[0]);
 
-  // Set up environment for NSS database
+#if 0
+  // Set up environment for NSS database choice
+#ifndef NSS_DISABLE_DBM
+  // Allow iteration counts in DBM mode
+  SaveToEnv("NSS_ALLOW_LEGACY_DBM_ITERATION_COUNT=1");
+#endif
+
 #ifdef DEBUG
   // Reduce the number of rounds for debug builds for perf/test reasons.
   SaveToEnv("NSS_MAX_MP_PBE_ITERATION_COUNT=15");
 #else
-  // We're using SQL; NSS's defaults for rounds are fine, so no tweaking required.
+#ifdef MOZ_SECURITY_SQLSTORE
+  // We're using SQL; NSS's defaults for rounds are fine.
+#else
+  // Set default Master Password rounds to a sane value for DBM which is slower
+  // than SQL for PBKDF. The NSS hard-coded default of 10,000 is too much.
+  // See also Bug 1606992 for perf issues.
+  SaveToEnv("NSS_MAX_MP_PBE_ITERATION_COUNT=500");
 #endif
+#endif
+#endif //0
 
 #ifdef CAIRO_HAS_DWRITE_FONT
   {
@@ -2768,7 +2810,10 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     // manual font file I/O on _all_ system fonts.  To avoid this, load the
     // dwrite library and create a factory as early as possible so that the
     // FntCache service is ready by the time it's needed.
-    CreateThread(nullptr, 0, &InitDwriteBG, nullptr, 0, nullptr);
+
+    if (IsVistaOrLater()) {
+      CreateThread(nullptr, 0, &InitDwriteBG, nullptr, 0, nullptr);
+    }
   }
 #endif
 
@@ -4098,6 +4143,21 @@ XRE_IsContentProcess()
   return XRE_GetProcessType() == GeckoProcessType_Content;
 }
 
+// If you add anything to this enum, please update about:support to reflect it
+enum {
+  kE10sEnabledByUser = 0,
+  kE10sEnabledByDefault = 1,
+  kE10sDisabledByUser = 2,
+  // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
+  kE10sDisabledForAccessibility = 4,
+  // kE10sDisabledForMacGfx = 5, was removed in bug 1068674.
+  // kE10sDisabledForBidi = 6, removed in bug 1309599
+  kE10sDisabledForAddons = 7,
+  kE10sForceDisabled = 8,
+  // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
+  kE10sDisabledForOperatingSystem = 10,
+};
+
 const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
 const char* kAccessibilityLoadedLastSessionPref = "accessibility.loadedInLastSession";
 
@@ -4110,19 +4170,136 @@ PRTimeToSeconds(PRTime t_usec)
 }
 #endif
 
+const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
+const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
+
+uint32_t
+MultiprocessBlockPolicy() {
+  if (gMultiprocessBlockPolicyInitialized) {
+    return gMultiprocessBlockPolicy;
+  }
+  gMultiprocessBlockPolicyInitialized = true;
+
+  /**
+   * Avoids enabling e10s if there are add-ons installed.
+   */
+  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
+  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
+
+  if (addonsCanDisable && disabledByAddons) {
+    gMultiprocessBlockPolicy = kE10sDisabledForAddons;
+  }
+
+#if defined(XP_WIN)
+  bool disabledForA11y = false;
+  /**
+    * Avoids enabling e10s if accessibility has recently loaded. Performs the
+    * following checks:
+    * 1) Checks a pref indicating if a11y loaded in the last session. This pref
+    * is set in nsBrowserGlue.js. If a11y was loaded in the last session we
+    * do not enable e10s in this session.
+    * 2) Accessibility stores a last run date (PR_IntervalNow) when it is
+    * initialized (see nsBaseWidget.cpp). We check if this pref exists and
+    * compare it to now. If a11y hasn't run in an extended period of time or
+    * if the date pref does not exist we load e10s.
+    */
+  disabledForA11y = Preferences::GetBool(kAccessibilityLoadedLastSessionPref, false);
+  if (!disabledForA11y  &&
+      Preferences::HasUserValue(kAccessibilityLastRunDatePref)) {
+    #define ONE_WEEK_IN_SECONDS (60*60*24*7)
+    uint32_t a11yRunDate = Preferences::GetInt(kAccessibilityLastRunDatePref, 0);
+    MOZ_ASSERT(0 != a11yRunDate);
+    // If a11y hasn't run for a period of time, clear the pref and load e10s
+    uint32_t now = PRTimeToSeconds(PR_Now());
+    uint32_t difference = now - a11yRunDate;
+    if (difference > ONE_WEEK_IN_SECONDS || !a11yRunDate) {
+      Preferences::ClearUser(kAccessibilityLastRunDatePref);
+    } else {
+      disabledForA11y = true;
+    }
+  }
+
+  if (disabledForA11y) {
+    gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
+  }
+#endif
+  
+  // We do not support E10S, block by policy.
+  gMultiprocessBlockPolicy = kE10sForceDisabled;
+
+  return gMultiprocessBlockPolicy;
+}
+
+bool
+mozilla::BrowserTabsRemoteAutostart()
+{
+  if (gBrowserTabsRemoteAutostartInitialized) {
+    return gBrowserTabsRemoteAutostart;
+  }
+  gBrowserTabsRemoteAutostartInitialized = true;
+
+  // If we're in the content process, we are running E10S.
+  if (XRE_IsContentProcess()) {
+    gBrowserTabsRemoteAutostart = true;
+    return gBrowserTabsRemoteAutostart;
+  }
+
+  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
+  bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
+  bool prefEnabled = optInPref || trialPref;
+  int status;
+  if (optInPref) {
+    status = kE10sEnabledByUser;
+  } else if (trialPref) {
+    status = kE10sEnabledByDefault;
+  } else {
+    status = kE10sDisabledByUser;
+  }
+
+  if (prefEnabled) {
+    uint32_t blockPolicy = MultiprocessBlockPolicy();
+    if (blockPolicy != 0) {
+      status = blockPolicy;
+    } else {
+      gBrowserTabsRemoteAutostart = true;
+    }
+  }
+
+  // Uber override pref for manual testing purposes
+  if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+    gBrowserTabsRemoteAutostart = true;
+    prefEnabled = true;
+    status = kE10sEnabledByUser;
+  }
+
+  // Uber override pref for emergency blocking
+  if (gBrowserTabsRemoteAutostart &&
+      (Preferences::GetBool(kForceDisableE10sPref, false) ||
+       EnvHasValue("MOZ_FORCE_DISABLE_E10S"))) {
+    gBrowserTabsRemoteAutostart = false;
+    status = kE10sForceDisabled;
+  }
+
+  gBrowserTabsRemoteStatus = status;
+
+  return gBrowserTabsRemoteAutostart;
+}
+
 void
 SetupErrorHandling(const char* progname)
 {
 #ifdef XP_WIN
+  /* On Windows XPSP3 and Windows Vista if DEP is configured off-by-default
+     we still want DEP protection: enable it explicitly and programmatically.
+
+     This function is not available on WinXPSP2 so we dynamically load it.
+  */
+
   HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
   SetProcessDEPPolicyFunc _SetProcessDEPPolicy =
     (SetProcessDEPPolicyFunc) GetProcAddress(kernel32, "SetProcessDEPPolicy");
-  if (_SetProcessDEPPolicy) {
+  if (_SetProcessDEPPolicy)
     _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
-  } else {
-    // Running without DEP is unsafe.
-    MOZ_CRASH("DEP unavailable -- unsupported configuration");
-  }
 #endif
 
 #ifdef XP_WIN32

@@ -547,7 +547,7 @@ void Tokenizer::tokenizeHeaders(nsIUTF8StringEnumerator * aHeaderNames, nsIUTF8S
         if (Substring(headerName, 0, 9).Equals("x-mozilla"))
           break;
         // fall through
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
     case 'u':
         addTokenForHeader(headerName.get(), headerValue);
         break;

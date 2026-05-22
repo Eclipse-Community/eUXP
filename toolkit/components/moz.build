@@ -20,6 +20,7 @@ DIRS += [
     'commandlines',
     'console',
     'contentprefs',
+    'contextualidentity',
     'cookie',
     'crashmonitor',
     'downloads',
@@ -39,6 +40,7 @@ DIRS += [
     'perf',
     'perfmonitoring',
     'places',
+    'privatebrowsing',
     'processsingleton',
     'promiseworker',
     'prompts',
@@ -59,6 +61,9 @@ DIRS += [
     'xulstore'
 ]
 
+if CONFIG['MOZ_WEBEXTENSIONS']:
+    DIRS += ['webextensions']
+
 DIRS += ['mozintl']
 
 DIRS += ['narrate', 'viewsource'];
@@ -72,7 +77,8 @@ if CONFIG['BUILD_CTYPES']:
 if CONFIG['MOZ_FEEDS']:
     DIRS += ['feeds']
 
-DIRS += ['autocomplete', 'satchel']
+if CONFIG['MOZ_XUL']:
+    DIRS += ['autocomplete', 'satchel']
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['filepicker']
@@ -81,6 +87,9 @@ if CONFIG['MOZ_TOOLKIT_SEARCH'] and not CONFIG['MC_BASILISK'] \
                                 and not CONFIG['HYPE_ICEDOVE'] \
                                 and not CONFIG['HYPE_ICEWEASEL']:
     DIRS += ['search']
+
+if CONFIG['MOZ_URL_CLASSIFIER']:
+    DIRS += ['url-classifier']
 
 DIRS += ['captivedetect']
 

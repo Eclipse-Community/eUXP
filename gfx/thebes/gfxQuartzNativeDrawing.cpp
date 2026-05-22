@@ -25,8 +25,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
 
   DrawTarget *dt = mDrawTarget;
   if (dt->IsDualDrawTarget() || dt->IsTiledDrawTarget() ||
-      (dt->GetBackendType() != BackendType::SKIA &&
-       dt->GetBackendType() != BackendType::COREGRAPHICS)) {
+      dt->GetBackendType() != BackendType::SKIA) {
     // We need a DrawTarget that we can get a CGContextRef from:
     Matrix transform = dt->GetTransform();
 
@@ -40,7 +39,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
     }
 
     mTempDrawTarget =
-      Factory::CreateDrawTarget(dt->GetBackendType(),
+      Factory::CreateDrawTarget(BackendType::SKIA,
                                 IntSize::Truncate(mNativeRect.width, mNativeRect.height),
                                 SurfaceFormat::B8G8R8A8);
 
@@ -51,6 +50,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
     dt = mTempDrawTarget;
   }
   if (dt) {
+    MOZ_ASSERT(dt->GetBackendType() == BackendType::SKIA);
     mCGContext = mBorrowedContext.Init(dt);
     MOZ_ASSERT(mCGContext);
   }

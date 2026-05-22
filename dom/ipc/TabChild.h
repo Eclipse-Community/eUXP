@@ -568,7 +568,6 @@ public:
 
   virtual bool RecvUpdateNativeWindowHandle(const uintptr_t& aNewHandle) override;
 
-#ifdef MOZ_ENABLE_NPAPI
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */
@@ -577,7 +576,6 @@ public:
   bool DeallocPPluginWidgetChild(PPluginWidgetChild* aActor) override;
 
   nsresult CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut);
-#endif
 
   LayoutDeviceIntPoint GetClientOffset() const { return mClientOffset; }
   LayoutDeviceIntPoint GetChromeDisplacement() const { return mChromeDisp; };

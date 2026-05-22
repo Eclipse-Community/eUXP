@@ -1057,7 +1057,7 @@ nsCSPContext::SendReports(
     }
 
     // try to create a new channel for every report-uri
-    nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+    nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
     if (doc) {
       rv = NS_NewChannel(getter_AddRefs(reportChannel),
                          reportURI,

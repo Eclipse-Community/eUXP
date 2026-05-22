@@ -141,6 +141,14 @@ nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"),
                                       mEventListener, false);
 
+  if (XRE_IsContentProcess() &&
+      Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
+    nsContentUtils::AddScriptRunner(
+      new AsyncEventDispatcher(mContent,
+                               NS_LITERAL_STRING("mozhidedropdown"), true,
+                               true));
+  }
+
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsHTMLScrollFrame::DestroyFrom(aDestructRoot);
 }
@@ -1771,6 +1779,20 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 static bool
 FireShowDropDownEvent(nsIContent* aContent, bool aShow, bool aIsSourceTouchEvent)
 {
+  if (XRE_IsContentProcess() &&
+      Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
+    nsString eventName;
+    if (aShow) {
+      eventName = aIsSourceTouchEvent ? NS_LITERAL_STRING("mozshowdropdown-sourcetouch") :
+                                        NS_LITERAL_STRING("mozshowdropdown");
+    } else {
+      eventName = NS_LITERAL_STRING("mozhidedropdown");
+    }
+    nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
+                                        eventName, true, false);
+    return true;
+  }
+
   return false;
 }
 

@@ -127,7 +127,10 @@ WinWLANLibrary::Initialize()
 
   // Get the handle to the WLAN API.
   DWORD negotiated_version;
-  static const int kXpWlanClientVersion = 2;
+  // We could be executing on either Windows XP or Windows Vista, so use the
+  // lower version of the client WLAN API. It seems that the negotiated version
+  // is the Vista version irrespective of what we pass!
+  static const int kXpWlanClientVersion = 1;
   if (ERROR_SUCCESS !=
       (*mWlanOpenHandlePtr)(kXpWlanClientVersion,
                             nullptr,

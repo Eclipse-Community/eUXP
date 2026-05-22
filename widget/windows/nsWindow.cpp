@@ -263,7 +263,8 @@ LONG            nsWindow::sLastMouseDownTime      = 0L;
 LONG            nsWindow::sLastClickCount         = 0L;
 BYTE            nsWindow::sLastMouseButton        = 0;
 
-bool            nsWindow::sHaveInitializedPrefs   = false;
+// Trim heap on minimize. (initialized, but still true.)
+int             nsWindow::sTrimOnMinimize         = 2;
 
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
@@ -629,8 +630,10 @@ nsWindow::nsWindow()
   mCachedHitTestPoint.y = 0;
   mCachedHitTestTime    = TimeStamp::Now();
   mCachedHitTestResult  = 0;
+#ifdef MOZ_XUL
   mTransparencyMode     = eTransparencyOpaque;
   memset(&mGlassMargins, 0, sizeof mGlassMargins);
+#endif
   DWORD background      = ::GetSysColor(COLOR_BTNFACE);
   mBrush                = ::CreateSolidBrush(NSRGB_2_COLOREF(background));
   mSendingSetText       = false;
@@ -784,7 +787,7 @@ nsWindow::Create(nsIWidget* aParent,
       parent = nullptr;
     }
 
-    if (!IsWin8OrLater() &&
+    if (IsVistaOrLater() && !IsWin8OrLater() &&
         HasBogusPopupsDropShadowOnMultiMonitor()) {
       extendedStyle |= WS_EX_COMPOSITED;
     }
@@ -841,9 +844,9 @@ nsWindow::Create(nsIWidget* aParent,
     return NS_ERROR_FAILURE;
   }
 
-  if (mIsRTL) {
+  if (mIsRTL && WinUtils::dwmSetWindowAttributePtr) {
     DWORD dwAttribute = TRUE;    
-    DwmSetWindowAttribute(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
   }
 
   if (!IsPlugin() &&
@@ -898,8 +901,8 @@ nsWindow::Create(nsIWidget* aParent,
 
   SubclassWindow(TRUE);
 
-  // A process always runs within a terminal services session.
-  // In order to play nicely with RDP, fast user switching, and the
+  // Starting with Windows XP, a process always runs within a terminal services
+  // session. In order to play nicely with RDP, fast user switching, and the
   // lock screen, we should be handling WM_WTSSESSION_CHANGE. We must register
   // our HWND in order to receive this message.
   DebugOnly<BOOL> wtsRegistered = ::WTSRegisterSessionNotification(mWnd,
@@ -909,13 +912,20 @@ nsWindow::Create(nsIWidget* aParent,
   mDefaultIMC.Init(this);
   IMEHandler::InitInputContext(this, mInputContext);
 
-  // Do some initialization work, but only if (a) it hasn't already been done,
-  // and (b) this is the hidden window (which is conveniently created before
-  // any visible windows but after the profile has been initialized).
-  if (!sHaveInitializedPrefs && mWindowType == eWindowType_invisible) {
+  // If the internal variable set by the config.trim_on_minimize pref has not
+  // been initialized, and if this is the hidden window (conveniently created
+  // before any visible windows, and after the profile has been initialized),
+  // do some initialization work.
+  if (sTrimOnMinimize == 2 && mWindowType == eWindowType_invisible) {
+    // Our internal trim prevention logic is effective on 2K/XP at maintaining
+    // the working set when windows are minimized, but on Vista and up it has
+    // little to no effect. Since this feature has been the source of numerous
+    // bugs over the years, disable it (sTrimOnMinimize=1) on Vista and up.
+    sTrimOnMinimize =
+      Preferences::GetBool("config.trim_on_minimize",
+        IsVistaOrLater() ? 1 : 0);
     sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
-    sHaveInitializedPrefs = true;
   }
 
   // Query for command button metric data for rendering the titlebar. We
@@ -1617,12 +1627,14 @@ NS_IMETHODIMP nsWindow::Show(bool bState)
     }
   }
   
+#ifdef MOZ_XUL
   if (!wasVisible && bState) {
     Invalidate();
     if (syncInvalidate && !mInDtor && !mOnDestroyCalled) {
       ::UpdateWindow(mWnd);
     }
   }
+#endif
 
   return NS_OK;
 }
@@ -1652,10 +1664,9 @@ bool nsWindow::IsVisible() const
 
 // XP and Vista visual styles sometimes require window clipping regions to be applied for proper
 // transparency. These routines are called on size and move operations.
-// XXX this is apparently still needed in Windows 7 and later
 void nsWindow::ClearThemeRegion()
 {
-  if (!HasGlass() &&
+  if (IsVistaOrLater() && !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, nullptr, false);
@@ -1669,7 +1680,7 @@ void nsWindow::SetThemeRegion()
   // so default constants are used for part and state. At some point we might need part and
   // state values from nsNativeThemeWin's GetThemePartAndState, but currently windows that
   // change shape based on state haven't come up.
-  if (!HasGlass() &&
+  if (IsVistaOrLater() && !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nullptr;
@@ -2086,7 +2097,13 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         break;
 
       case nsSizeMode_Minimized :
-        mode = SW_MINIMIZE;
+        // Using SW_SHOWMINIMIZED prevents the working set from being trimmed but
+        // keeps the window active in the tray. So after the window is minimized,
+        // windows will fire WM_WINDOWPOSCHANGED (OnWindowPosChanged) at which point
+        // we will do some additional processing to get the active window set right.
+        // If sTrimOnMinimize is set, we let windows handle minimization normally
+        // using SW_MINIMIZE.
+        mode = sTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
         break;
 
       default :
@@ -3014,6 +3031,7 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
  *
  **************************************************************/
 
+#ifdef MOZ_XUL
 nsTransparencyMode nsWindow::GetTransparencyMode()
 {
   return GetTopLevelWindow(true)->GetWindowTranslucencyInner();
@@ -3118,10 +3136,11 @@ void nsWindow::UpdateGlass()
 
   // Extends the window frame behind the client area
   if (nsUXThemeData::CheckForCompositor()) {
-    DwmExtendFrameIntoClientArea(mWnd, &margins);
-    DwmSetWindowAttribute(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+    WinUtils::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 }
+#endif
 
 /**************************************************************
  *
@@ -3525,7 +3544,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
       if (pseudoIMEContext) {
         return pseudoIMEContext;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case NS_NATIVE_TSF_THREAD_MGR:
     case NS_NATIVE_TSF_CATEGORY_MGR:
@@ -4367,7 +4386,6 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
          ("Msg Time: %d Click Count: %d\n", curMsgTime, event.mClickCount));
 #endif
 
-#ifdef MOZ_ENABLE_NPAPI
   NPEvent pluginEvent;
 
   switch (aEventMessage) {
@@ -4431,7 +4449,6 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   pluginEvent.lParam = lParam;
 
   event.mPluginEvent.Copy(pluginEvent);
-#endif // MOZ_ENABLE_NPAPI
 
   // call the event callback
   if (mWidgetListener) {
@@ -4964,7 +4981,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       /* We don't do this for win10 glass with a custom titlebar,
        * in order to avoid the caption buttons breaking. */
       !(IsWin10OrLater() && HasGlass()) &&
-      DwmDefWindowProc(mWnd, msg, wParam, lParam, &dwmHitResult)) {
+      WinUtils::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
     *aRetValue = dwmHitResult;
     return true;
   }
@@ -5820,6 +5837,12 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_SYSCOMMAND:
     {
       WPARAM filteredWParam = (wParam &0xFFF0);
+      // prevent Windows from trimming the working set. bug 76831
+      if (!sTrimOnMinimize && filteredWParam == SC_MINIMIZE) {
+        ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
+        result = true;
+      }
+
       if (mSizeMode == nsSizeMode_Fullscreen &&
           filteredWParam == SC_RESTORE &&
           GetCurrentShowCmd(mWnd) != SW_SHOWMINIMIZED) {
@@ -6437,6 +6460,14 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     else
       mSizeMode = nsSizeMode_Normal;
 
+    // If !sTrimOnMinimize, we minimize windows using SW_SHOWMINIMIZED (See
+    // SetSizeMode for internal calls, and WM_SYSCOMMAND for external). This
+    // prevents the working set from being trimmed but keeps the window active.
+    // After the window is minimized, we need to do some touch up work on the
+    // active window. (bugs 76831 & 499816)
+    if (!sTrimOnMinimize && nsSizeMode_Minimized == mSizeMode)
+      ActivateOtherWindowHelper(mWnd);
+
 #ifdef WINSTATE_DEBUG_OUTPUT
     switch (mSizeMode) {
       case nsSizeMode_Normal:
@@ -6554,6 +6585,31 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     
     // Send a gecko resize event
     OnResize(rect);
+  }
+}
+
+// static
+void nsWindow::ActivateOtherWindowHelper(HWND aWnd)
+{
+  // Find the next window that is enabled, visible, and not minimized.
+  HWND hwndBelow = ::GetNextWindow(aWnd, GW_HWNDNEXT);
+  while (hwndBelow && (!::IsWindowEnabled(hwndBelow) || !::IsWindowVisible(hwndBelow) ||
+                       ::IsIconic(hwndBelow))) {
+    hwndBelow = ::GetNextWindow(hwndBelow, GW_HWNDNEXT);
+  }
+
+  // Push ourselves to the bottom of the stack, then activate the
+  // next window.
+  ::SetWindowPos(aWnd, HWND_BOTTOM, 0, 0, 0, 0,
+                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  if (hwndBelow)
+    ::SetForegroundWindow(hwndBelow);
+
+  // Play the minimize sound while we're here, since that is also
+  // forgotten when we use SW_SHOWMINIMIZED.
+  nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+  if (sound) {
+    sound->PlaySystemSound(NS_LITERAL_STRING("Minimize"));
   }
 }
 
@@ -7247,6 +7303,8 @@ nsWindow::GetAccessible()
  **************************************************************
  **************************************************************/
 
+#ifdef MOZ_XUL
+
 void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
 {
   if (aMode == mTransparencyMode)
@@ -7303,6 +7361,8 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   }
   UpdateGlass();
 }
+
+#endif //MOZ_XUL
 
 /**************************************************************
  **************************************************************
@@ -7662,7 +7722,7 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
         // compatibility mouse events will do it instead.
         return false;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:

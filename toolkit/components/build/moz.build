@@ -24,7 +24,8 @@ LOCAL_INCLUDES += [
     '../protobuf',
     '../startup',
     '../statusfilter',
-    '../typeaheadfind'
+    '../typeaheadfind',
+    '../url-classifier',
 ]
 
 if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:

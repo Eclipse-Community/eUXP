@@ -39,22 +39,16 @@
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 
 #ifdef XP_WIN
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginSurfaceParent.h"
-#endif // MOZ_ENABLE_NPAPI
 #include "mozilla/widget/AudioSession.h"
 #include "PluginHangUIParent.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "PluginUtilsWin.h"
-#endif // MOZ_ENABLE_NPAPI
-#endif // XP_WIN
+#endif
 
 #ifdef MOZ_WIDGET_GTK
 #include <glib.h>
 #elif XP_MACOSX
-#ifdef MOZ_ENABLE_NPAPI
 #include "PluginInterposeOSX.h"
-#endif
 #include "PluginUtilsOSX.h"
 #endif
 
@@ -624,7 +618,7 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
         NS_RUNTIMEABORT("unsafe destruction");
     }
 
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_WIN
     // If we registered for audio notifications, stop.
     mozilla::plugins::PluginUtilsWin::RegisterForAudioDeviceChanges(this,
                                                                     false);
@@ -862,7 +856,7 @@ PluginModuleChromeParent::GetManagingInstance(mozilla::ipc::IProtocol* aProtocol
                 static_cast<PStreamNotifyParent*>(aProtocol);
             return static_cast<PluginInstanceParent*>(actor->Manager());
         }
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_WIN
         case PPluginSurfaceMsgStart: {
             PPluginSurfaceParent* actor =
                 static_cast<PPluginSurfaceParent*>(aProtocol);
@@ -1414,7 +1408,6 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
     RESOLVE_AND_CALL(instance, NPP_SetValue(variable, value));
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 bool
 PluginModuleChromeParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
     const bool& shouldRegister, NPError* result)
@@ -1434,7 +1427,6 @@ PluginModuleChromeParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChange
     return true;
 #endif
 }
-#endif // MOZ_ENABLE_NPAPI
 
 bool
 PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
@@ -2218,10 +2210,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         if (supportsAsyncRender) {
           // Prefs indicates we want async plugin rendering, make sure
           // the flash module has support.
-          if (!CallModuleSupportsAsyncRender(&supportsAsyncRender)) {
-            // The actual support call failed. Should not happen; abort.
-            return NS_ERROR_FAILURE;
-          }
+          CallModuleSupportsAsyncRender(&supportsAsyncRender);
         }
 #ifdef _WIN64
         // For 64-bit builds force windowless if the flash library doesn't support
@@ -2424,7 +2413,7 @@ PluginModuleParent::RecvPluginShowWindow(const uint32_t& aWindowId, const bool& 
                                          const size_t& aWidth, const size_t& aHeight)
 {
     PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_MACOSX)
     CGRect windowBound = ::CGRectMake(aX, aY, aWidth, aHeight);
     mac_plugin_interposing::parent::OnPluginShowWindow(aWindowId, windowBound, aModal);
     return true;
@@ -2439,7 +2428,7 @@ bool
 PluginModuleParent::RecvPluginHideWindow(const uint32_t& aWindowId)
 {
     PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_MACOSX)
     mac_plugin_interposing::parent::OnPluginHideWindow(aWindowId, OtherPid());
     return true;
 #else
@@ -2449,7 +2438,6 @@ PluginModuleParent::RecvPluginHideWindow(const uint32_t& aWindowId)
 #endif
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 bool
 PluginModuleParent::RecvSetCursor(const NSCursorInfo& aCursorInfo)
 {
@@ -2505,7 +2493,6 @@ PluginModuleParent::RecvPopCursor()
     return false;
 #endif
 }
-#endif // MOZ_ENABLE_NPAPI
 
 bool
 PluginModuleParent::RecvNPN_SetException(const nsCString& aMessage)
@@ -2597,7 +2584,7 @@ PluginModuleParent::EnsureTextureAllocatorForDXGISurface()
     return mTextureAllocatorForDXGISurface;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
+
 bool
 PluginModuleParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
                                         const bool& shouldRegister,
@@ -2607,7 +2594,6 @@ PluginModuleParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
     *result = NPERR_GENERIC_ERROR;
     return true;
 }
-#endif
 
 bool
 PluginModuleParent::AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet)

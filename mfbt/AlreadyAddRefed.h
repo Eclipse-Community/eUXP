@@ -28,7 +28,7 @@ struct unused_t;
  * because of the sheer number of usages of already_AddRefed.
  */
 template<class T>
-struct MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
+struct [[nodiscard]]_TYPE MOZ_NON_AUTOABLE already_AddRefed
 {
   /*
    * We want to allow returning nullptr from functions returning

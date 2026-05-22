@@ -66,15 +66,15 @@ public:
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   [[nodiscard]] nsresult Init(nsIURI* aURI,
-                              nsIURI* aCurrentURI,
-                              bool aHadInsecureRedirect,
-                              nsIRequest* aRequest,
-                              nsIChannel* aChannel,
-                              imgCacheEntry* aCacheEntry,
-                              nsISupports* aCX,
+                             nsIURI* aCurrentURI,
+                             bool aHadInsecureRedirect,
+                             nsIRequest* aRequest,
+                             nsIChannel* aChannel,
+                             imgCacheEntry* aCacheEntry,
+                             nsISupports* aCX,
                               nsIPrincipal* aTriggeringPrincipal,
-                              int32_t aCORSMode,
-                              ReferrerPolicy aReferrerPolicy);
+                             int32_t aCORSMode,
+                             ReferrerPolicy aReferrerPolicy);
 
   void ClearLoader();
 

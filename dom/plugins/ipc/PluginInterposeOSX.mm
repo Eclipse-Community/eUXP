@@ -583,7 +583,7 @@ void OnPluginShowWindow(uint32_t window_id,
        plugin_fullscreen_windows_set_.end())) {
     plugin_fullscreen_windows_set_.insert(window_id);
 
-    nsCocoaUtils::HideOSChromeOnScreen(true, nil);
+    nsCocoaUtils::HideOSChromeOnScreen(true);
   }
 }
 
@@ -606,7 +606,7 @@ static void ReleasePluginFullScreen(pid_t plugin_pid) {
   // focus, but give it back to the plugin process if requested.
   ActivateProcess(base::GetCurrentProcId());
 
-  nsCocoaUtils::HideOSChromeOnScreen(false, nil);
+  nsCocoaUtils::HideOSChromeOnScreen(false);
 
   if (plugin_pid != -1) {
     ActivateProcess(plugin_pid);

@@ -37,10 +37,6 @@
 #define kCFCoreFoundationVersionNumber10_7 635.00
 #endif
 
-#if !defined(DISPATCH_QUEUE_SERIAL)
-#define DISPATCH_QUEUE_SERIAL NULL
-#endif
-
 #if !TARGET_OS_IPHONE && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #define AudioComponent Component
 #define AudioComponentDescription ComponentDescription
@@ -89,10 +85,8 @@ struct cubeb {
   cubeb_device_type collection_changed_devtype;
   uint32_t devtype_device_count;
   AudioObjectID * devtype_device_array;
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   // The queue is asynchronously deallocated once all references to it are released
   dispatch_queue_t serial_queue = dispatch_queue_create(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL);
-#endif
 };
 
 class auto_array_wrapper
@@ -706,17 +700,13 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
 
   // Use a new thread, through the queue, to avoid deadlock when calling
   // Get/SetProperties method from inside notify callback
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   dispatch_async(stm->context->serial_queue, ^() {
-#endif
     if (audiounit_reinit_stream(stm) != CUBEB_OK) {
       stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
       LOG("(%p) Could not reopen the stream after switching.", stm);
     }
     stm->switching_device = false;
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   });
-#endif
 
   return noErr;
 }
@@ -1938,16 +1928,10 @@ audiounit_stream_destroy(cubeb_stream * stm)
 
   // Execute close in serial queue to avoid collision
   // with reinit when un/plug devices
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
-  dispatch_sync(stm->context->serial_queue, ^()
-#endif
-  {
+  dispatch_sync(stm->context->serial_queue, ^() {
     auto_lock lock(stm->mutex);
     audiounit_close_stream(stm);
-  }
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
-  );
-#endif
+  });
 
   assert(stm->context->active_streams >= 1);
   stm->context->active_streams -= 1;

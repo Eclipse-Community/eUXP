@@ -1,4 +1,5 @@
 dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
+dnl vi: set tabstop=4 shiftwidth=4 expandtab syntax=m4:
 dnl This Source Code Form is subject to the terms of the Mozilla Public
 dnl License, v. 2.0. If a copy of the MPL was not distributed with this
 dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -47,7 +48,7 @@ dnl ========================================================
 MOZJPEG=62
 MOZPNG=10625
 NSPR_VERSION=4
-NSPR_MINVER=4.35
+NSPR_MINVER=4.20
 NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
@@ -92,6 +93,8 @@ case "$target" in
     ;;
 esac
 
+AC_SUBST(ANDROID_SOURCE)
+AC_SUBST(ANDROID_PACKAGE_NAME)
 AC_SUBST(OBJCOPY)
 
 dnl ========================================================
@@ -111,11 +114,6 @@ else
     *-mingw*)
       # Work around the conftest.exe access problem on Windows
       sleep 2
-
-      # Python 3 ported this problem to Windows somehow.
-      if test -z "$NSDISTMODE"; then
-         NSDISTMODE=copy
-      fi
     esac
     AC_PROG_CXX
     AC_PROG_RANLIB
@@ -146,7 +144,7 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-WINVER=601
+WINVER=502
 
 case "$target" in
 *-mingw*)
@@ -184,8 +182,8 @@ case "$target" in
         19*)
             _CC_SUITE=14
             MSVS_VERSION=2015
-            MSVC_C_RUNTIME_DLL=vcruntime140*.dll
-            MSVC_CXX_RUNTIME_DLL=msvcp140*.dll
+            MSVC_C_RUNTIME_DLL=vcruntime140.dll
+            MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
             MOZ_CHECK_HEADER(dia2.h, MSVC_HAS_DIA_SDK=1)
             if test -n "$MSVC_HAS_DIA_SDK"; then
@@ -201,11 +199,15 @@ case "$target" in
             # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
             CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
 
+            # Disable C++11 thread-safe statics due to crashes on XP (bug 1204752)
+            # See https://connect.microsoft.com/VisualStudio/feedback/details/1789709/visual-c-2015-runtime-broken-on-windows-server-2003-c-11-magic-statics
+            CXXFLAGS="$CXXFLAGS -Zc:threadSafeInit-"
+
             # C4752: We explicitly use AVX instructions in only some libs, not global
             # This is a pointless "helpful warning" to use /arch:AVX which we don't want.
             CFLAGS="$CFLAGS -wd4752"
             CXXFLAGS="$CXXFLAGS -wd4752"
-
+            
             # https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
             # for dbghelp.h, imagehlp.h, and shobj.h
             # C4091: 'typedef ': ignored on left of '' when no variable is declared
@@ -216,7 +218,7 @@ case "$target" in
             # 'noexcept' used with no exception handling mode specified;
             # termination on exception is not guaranteed. Specify /EHsc
             CXXFLAGS="$CXXFLAGS -wd4577"
-
+            
             # Silence unhelpful -Qspectre warnings
             CXXFLAGS="$CXXFLAGS -wd5045"
 
@@ -472,6 +474,11 @@ dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ARCH_OPTS
+else
+    if test "$OS_TARGET" = "Android"; then
+        dnl Default Android builds to ARMv7.
+        MOZ_ARCH=armv7-a
+    fi
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
@@ -706,7 +713,7 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
-
+ 
 *)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
@@ -762,9 +769,7 @@ case "$target" in
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3"
-    if test -n "$CLANG_CC" ; then
-        CXXFLAGS="$CXXFLAGS -stdlib=libc++"
-    fi
+    CXXFLAGS="$CXXFLAGS -stdlib=libc++"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP_FLAGS="$STRIP_FLAGS -x -S"
@@ -885,7 +890,12 @@ case "$target" in
         IMPORT_LIB_SUFFIX=lib
         MKSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(LINK_PDBFILE) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ -PDB:$(LINK_PDBFILE) $(DSO_LDOPTS)'
-        WIN32_SUBSYSTEM_VERSION=6.01
+        dnl Set subsystem version 5 for Windows XP.
+        if test "$CPU_ARCH" = "x86"; then
+            WIN32_SUBSYSTEM_VERSION=5.01
+        else
+            WIN32_SUBSYSTEM_VERSION=6.01
+        fi
         WIN32_CONSOLE_EXE_LDFLAGS=-SUBSYSTEM:CONSOLE,$WIN32_SUBSYSTEM_VERSION
         WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
@@ -899,10 +909,16 @@ case "$target" in
             CXXFLAGS="$CXXFLAGS -utf-8"
         fi
         if test "$CPU_ARCH" = "x86"; then
-            changequote(,)
             dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
-            dnl more recent, so no need to set it explicitly in the default
-            dnl case.
+            dnl more recent, so set that explicitly here unless another
+            dnl target arch has already been set.
+            changequote(,)
+            if test -z `echo $CFLAGS | grep -i [-/]arch:`; then
+              CFLAGS="$CFLAGS -arch:SSE2"
+            fi
+            if test -z `echo $CXXFLAGS | grep -i [-/]arch:`; then
+              CXXFLAGS="$CXXFLAGS -arch:SSE2"
+            fi
             changequote([,])
             SSE_FLAGS="-arch:SSE"
             SSE2_FLAGS="-arch:SSE2"
@@ -1018,18 +1034,15 @@ case "$target" in
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         MOZ_FIX_LINK_PATHS=
-        AC_MSG_CHECKING(for optimal linker configuration)
-        num_cores=$($PYTHON -c 'import multiprocessing; print(multiprocessing.cpu_count())')
-        icf_iters=$($PYTHON -c 'import multiprocessing; print(min(16,multiprocessing.cpu_count()))')
-        cgthreads=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
-        AC_MSG_RESULT("CG:${cgthreads}/ICF:${icf_iters}/${num_cores}c")
-        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT -DYNAMICBASE -OPT:REF -OPT:ICF=${icf_iters} -CGTHREADS:${cgthreads}"
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+        num_cores=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
+        cgthreads="-CGTHREADS:${num_cores}"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT -PogoSafeMode $cgthreads"
         dnl XXX: PGO builds can fail with warnings treated as errors,
         dnl specifically "no profile data available" appears to be
         dnl treated as an error sometimes. This might be a consequence
@@ -1040,11 +1053,19 @@ case "$target" in
         PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
         dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
         dnl Probably also a compiler bug, but what can you do?
-        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE $cgthreads"
+        LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
-        dnl Minimum required VS version supports SSSE3, SSE4.1 and AVX2.
+        if test "$CC_VERSION" = "18.00.31101"; then
+            dnl Use MaxILKSize as a workaround for LNK1248 in VS2013update4
+            dnl See https://connect.microsoft.com/VisualStudio/feedback/details/1044914/fatal-error-lnk1248
+            LDFLAGS="$LDFLAGS -MaxILKSize:0x7FF00000"
+        fi
+        dnl Minimum reqiurement of Gecko is VS2010 or later which supports
+        dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
+        dnl allow AVX2 code from VS2012
         HAVE_X86_AVX2=1
     fi
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -1124,28 +1145,12 @@ case "$target" in
     fi
     ;;
 
-*-solaris*)
-dnl Set NSDISTMODE to copy mode on SunOS automatically. The dynamic linker
-dnl uses the real path of a symlink after resolving it, which breaks the
-dnl default mode that relies on relative symlinks being handled a certain way.
-
-    if test -z "$NSDISTMODE"; then
-       NSDISTMODE=copy
-    fi
-
-    if test "$CPU_ARCH" = "x86"; then
-       MOZ_FIX_LINK_PATHS="-L${DIST}/bin -R'\$\$ORIGIN':/usr/gcc/10/lib"
-    elif test "$CPU_ARCH" = "x86_64"; then
-       MOZ_FIX_LINK_PATHS="-L${DIST}/bin -R'\$\$ORIGIN':/usr/gcc/10/lib/amd64"
-    fi
+i*86-*-solaris*)
+    MOZ_FIX_LINK_PATHS="-L${DIST}/bin -R'\$\$ORIGIN':/usr/gcc/7/lib"
     ;;
 
-*-freebsd*)
-    if test -z "$NSDISTMODE"; then
-       NSDISTMODE=copy
-    fi
-
-    MOZ_FIX_LINK_PATHS="-Wl,-rpath,'\$\$ORIGIN' -Wl,-z,origin"
+x86_64-*-solaris*)
+    MOZ_FIX_LINK_PATHS="-L${DIST}/bin -R'\$\$ORIGIN':/usr/gcc/7/lib/amd64"
     ;;
 
 esac
@@ -1830,6 +1835,43 @@ dnl gnu style tables anyways.
   LDFLAGS="$LDFLAGS -Wl,--hash-style=sysv"
 fi
 
+dnl The custom linker doesn't support text relocations, but NDK >= r6b
+dnl creates some (http://code.google.com/p/android/issues/detail?id=23203)
+dnl We however want to avoid these text relocations, and this can be done
+dnl by making gcc not link crtbegin and crtend. In the broken NDKs, crtend
+dnl doesn't contain anything at all, beside placeholders for some sections,
+dnl and crtbegin only contains a finalizer function that calls
+dnl __cxa_finalize. The custom linker actually takes care of calling
+dnl __cxa_finalize when the library doesn't call it itself, which makes it
+dnl safe not to link crtbegin. Besides, previous versions of the NDK didn't
+dnl link crtbegin and crtend at all.
+if test -n "$MOZ_LINKER" -a "$OS_TARGET" = "Android"; then
+  AC_CACHE_CHECK([whether the CRT objects have text relocations],
+    ac_cv_crt_has_text_relocations,
+    [echo 'int foo() { return 0; }' > conftest.cpp
+     if AC_TRY_COMMAND(${CXX-g++} -o conftest${DLL_SUFFIX} $CXXFLAGS $DSO_LDOPTS $LDFLAGS conftest.cpp $LIBS 1>&5) &&
+        test -s conftest${DLL_SUFFIX}; then
+       if ${TOOLCHAIN_PREFIX}readelf -d conftest${DLL_SUFFIX} | grep TEXTREL > /dev/null; then
+         ac_cv_crt_has_text_relocations=yes
+       else
+         ac_cv_crt_has_text_relocations=no
+       fi
+     else
+       AC_ERROR([couldn't compile a simple C file])
+     fi
+     rm -rf conftest*])
+  if test "$ac_cv_crt_has_text_relocations" = yes; then
+    dnl While we want libraries to skip the CRT files, we don't want
+    dnl executables to be treated the same way. We thus set the flag
+    dnl in DSO_LDOPTS and not LDFLAGS. However, to pass it to nspr,
+    dnl we need to use LDFLAGS because nspr doesn't inherit DSO_LDOPTS.
+    dnl Using LDFLAGS in nspr is safe, since we only really build
+    dnl libraries there.
+    DSO_LDOPTS="$DSO_LDOPTS -nostartfiles"
+    NSPR_LDFLAGS="$NSPR_LDFLAGS -nostartfiles"
+  fi
+fi
+
 dnl See if compiler supports some gcc-style attributes
 
 AC_CACHE_CHECK(for __attribute__((always_inline)),
@@ -2014,6 +2056,7 @@ MOZ_FEEDS=1
 MOZ_AUTH_EXTENSION=1
 MOZ_RAW=
 MOZ_AV1=
+MOZ_JXL=
 MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_SAMPLE_TYPE_FLOAT32=
@@ -2037,16 +2080,20 @@ LIBJPEG_TURBO_ASFLAGS=
 MOZ_GAMEPAD=
 MOZ_PREF_EXTENSIONS=1
 MOZ_REFLOW_PERF=
+MOZ_SAFE_BROWSING=
 MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
+MOZ_URL_CLASSIFIER=
+MOZ_XUL=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
 MOZ_NECKO_WIFI=1
 NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
+MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_AUDIO_CHANNEL_MANAGER=
@@ -2054,12 +2101,12 @@ MOZ_JETPACK=1
 MOZ_DEVTOOLS_SERVER=1
 MOZ_DEVTOOLS=
 MOZ_PLACES=1
+MOZ_SECURITY_SQLSTORE=
 MOZ_SERVICES_SYNC=1
 MOZ_USERINFO=1
-NSS_DISABLE_DBM=1
+NSS_DISABLE_DBM=
 MOZ_MAILNEWS=
 MOZ_MAILNEWS_OAUTH2=
-MOZ_CLASSIC_ACCOUNT_WIZARD=
 MOZ_LDAP_XPCOM=
 MOZ_MORK=
 MOZ_MAPI_SUPPORT=
@@ -2122,33 +2169,10 @@ if test -n "$WITH_APP_BASENAME" ; then
     MOZ_APP_BASENAME="$WITH_APP_BASENAME"
 fi
 
-# Allow someone to change the xulrunner-stub name in mozconfig
-MOZ_ARG_WITH_STRING(xulrunner-stub-name,
-[  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
-  XULRUNNER_STUB_NAME=$withval)
-
-if test -z "$XULRUNNER_STUB_NAME"; then
-  XULRUNNER_STUB_NAME=xulrunner-stub
+# Graphene is a desktop runtime for running applications with a HTML UI.
+if test -n "$MOZ_GRAPHENE"; then
+    AC_DEFINE(MOZ_GRAPHENE)
 fi
-AC_SUBST(XULRUNNER_STUB_NAME)
-
-dnl ========================================================
-dnl = NPAPI support
-dnl ========================================================
-
-MOZ_ENABLE_NPAPI=1
-
-MOZ_ARG_DISABLE_BOOL(npapi,
-[  --disable-npapi          Disable NPAPI support ],
-    MOZ_ENABLE_NPAPI=,
-    MOZ_ENABLE_NPAPI=1)
-
-if test "$MOZ_ENABLE_NPAPI"
-then
-    AC_DEFINE(MOZ_ENABLE_NPAPI)
-fi
-
-AC_SUBST(MOZ_ENABLE_NPAPI)
 
 dnl ========================================================
 dnl =
@@ -2167,12 +2191,18 @@ cocoa)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     # Use -Wl as a trick to avoid -framework and framework names from
     # being separated by AC_SUBST_LIST.
-    TK_LIBS='-Wl,-framework,QuartzCore -Wl,-framework,Carbon -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,AddressBook -Wl,-framework,OpenGL -Wl,-framework,Security'
-    if test -n "$MACOSX_DEPLOYMENT_TARGET" -a "$MACOSX_DEPLOYMENT_TARGET" \> "10.5"
-    then
-        TK_LIBS="-Wl,-framework,CoreLocation $TK_LIBS -Wl,-framework,ServiceManagement"
-    fi
+    TK_LIBS='-Wl,-framework,CoreLocation -Wl,-framework,QuartzCore -Wl,-framework,Carbon -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,AddressBook -Wl,-framework,OpenGL -Wl,-framework,Security -Wl,-framework,ServiceManagement'
     TK_CFLAGS=""
+    CFLAGS="$CFLAGS $TK_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+    MOZ_USER_DIR="Mozilla"
+    MOZ_FS_LAYOUT=bundle
+    ;;
+
+uikit)
+    LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
+    TK_CFLAGS=""
+    TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
@@ -2199,15 +2229,9 @@ if test "$COMPILE_ENVIRONMENT"; then
     dnl are suppressed by widget/gtk/compat-gtk3/gdk/gdkversionmacros.h.
     AC_DEFINE_UNQUOTED(GDK_VERSION_MAX_ALLOWED,$GDK_VERSION_MAX_ALLOWED)
     GLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_32
-    dnl We want to check GTK2 packages if NPAPI is enabled, even if building with GTK3.
-    if test "$MOZ_ENABLE_NPAPI"; then
-      MOZ_CHECK_GTK2=1
-    fi
   fi
   if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
     GLIB_VERSION_MAX_ALLOWED=$GLIB_VERSION_MIN_REQUIRED
-    dnl Check GTK2 packages if we're building against GTK2, whether NPAPI is disabled or not.
-    MOZ_CHECK_GTK2=1
   fi
   if test "$MOZ_ENABLE_GTK"; then
     if test "$MOZ_X11"; then
@@ -2216,11 +2240,8 @@ if test "$COMPILE_ENVIRONMENT"; then
     AC_DEFINE_UNQUOTED(GLIB_VERSION_MIN_REQUIRED,$GLIB_VERSION_MIN_REQUIRED)
     AC_DEFINE_UNQUOTED(GLIB_VERSION_MAX_ALLOWED,$GLIB_VERSION_MAX_ALLOWED)
 
-    if test "$MOZ_CHECK_GTK2"; then
-      PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES, ,
-                               [AC_MSG_ERROR([ * * * Could not find gtk+-2.0. Required for NPAPI plugins. To build without NPAPI, add --disable-npapi to your .mozconfig and clobber.])])
+    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES)
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
-    fi
   fi
   if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
     TK_CFLAGS=$MOZ_GTK2_CFLAGS
@@ -2402,6 +2423,15 @@ if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
 fi
 
 dnl ========================================================
+dnl = Include install tracking on Android
+dnl ========================================================
+if test -n "$MOZ_INSTALL_TRACKING"; then
+    if test -z "$MOZ_ADJUST_SDK_KEY"; then
+        AC_MSG_ERROR([Must specify --with-adjust-sdk-keyfile when MOZ_INSTALL_TRACKING is defined!])
+    fi
+fi
+
+dnl ========================================================
 dnl accessibility support on by default on all platforms
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(accessibility,
@@ -2451,8 +2481,9 @@ AC_TRY_COMPILE([#include <linux/ethtool.h>],
 
 AC_SUBST(MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI)
 
+# target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
-x86_64 | arm | aarch64 | x86 | ppc* | loongarch64)
+x86_64 | arm | aarch64 | x86 | ppc* | ia64)
     :
     ;;
 *)
@@ -2463,14 +2494,38 @@ x86_64 | arm | aarch64 | x86 | ppc* | loongarch64)
 esac
 
 dnl =========================================================
-dnl = NSS db storage format
+dnl = NSS DBM (BerkeleyDB) Support
+dnl = NOTE: Because we don't expressly control the name of
+dnl = this var --disable-dbm means NSS_DISABLE_DBM=1
 dnl =========================================================
+MOZ_ARG_DISABLE_BOOL(dbm,
+[  --disable-dbm         Disable DBM support in nss],
+    NSS_DISABLE_DBM=1,
+    NSS_DISABLE_DBM=)
 
 if test -n "$NSS_DISABLE_DBM"; then
   AC_DEFINE(NSS_DISABLE_DBM)
 fi
 
 AC_SUBST(NSS_DISABLE_DBM)
+
+dnl =========================================================
+dnl = NSS SQL storage format
+dnl =========================================================
+MOZ_ARG_ENABLE_BOOL(security-sqlstore,
+[  --enable-security-sqlstore Enable the use of SQL storage for NSS],
+    MOZ_SECURITY_SQLSTORE=1,
+    MOZ_SECURITY_SQLSTORE=)
+
+if test -n "$NSS_DISABLE_DBM" -a -z "$MOZ_SECURITY_SQLSTORE"; then
+  AC_MSG_ERROR([DBM storage support is required if not using NSS SQL storage])
+fi
+
+if test -n "$MOZ_SECURITY_SQLSTORE"; then
+  AC_DEFINE(MOZ_SECURITY_SQLSTORE)
+fi
+
+AC_SUBST(MOZ_SECURITY_SQLSTORE)
 
 dnl =========================================================
 dnl = Don't fold mailnews related comps into libXUL
@@ -2523,20 +2578,6 @@ if test -n "$MOZ_MAILNEWS_OAUTH2"; then
 fi
 
 AC_SUBST(MOZ_MAILNEWS_OAUTH2)
-
-dnl =========================================================
-dnl = Mailnews Classic Account Wizard
-dnl =========================================================
-MOZ_ARG_ENABLE_BOOL(classic-account-wizard,
-[  --enable-classic-account-wizard   Enable the classic account wizard in mailnews],
-    MOZ_CLASSIC_ACCOUNT_WIZARD=1,
-    MOZ_CLASSIC_ACCOUNT_WIZARD= )
-
-if test -n "$MOZ_CLASSIC_ACCOUNT_WIZARD"; then
-   AC_DEFINE(MOZ_CLASSIC_ACCOUNT_WIZARD)
-fi
-
-AC_SUBST(MOZ_CLASSIC_ACCOUNT_WIZARD)
 
 dnl =========================================================
 dnl = LDAP
@@ -2596,9 +2637,6 @@ if test -n "$MOZ_WEBRTC"; then
     AC_DEFINE(MOZ_WEBRTC_ASSERT_ALWAYS)
     MOZ_RAW=1
     MOZ_VPX_ERROR_CONCEALMENT=1
-    if test -z "$MOZ_ENABLE_NPAPI"; then
-        AC_MSG_ERROR([--enable-webrtc requires NPAPI to be enabled. You must either build with --disable-webrtc, or remove --disable-npapi from your .mozconfig.])
-    fi
 
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
@@ -2638,9 +2676,11 @@ AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
 AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
 
-dnl Use integers over floats for audio on ARM
-dnl because it's more efficient.
-if test "$CPU_ARCH" = "arm"; then
+dnl Use integers over floats for audio on Android
+dnl (regarless of the CPU architecture, because audio
+dnl backends for those platforms don't support floats. We also
+dnl use integers on ARM with other OS, because it's more efficient.
+if test "$OS_TARGET" = "Android" -o "$CPU_ARCH" = "arm"; then
     MOZ_SAMPLE_TYPE_S16=1
     AC_DEFINE(MOZ_SAMPLE_TYPE_S16)
     AC_SUBST(MOZ_SAMPLE_TYPE_S16)
@@ -2653,6 +2693,10 @@ fi
 dnl ========================================================
 dnl = Enable Gecko Media Plugins
 dnl ========================================================
+
+if test -n "$MOZ_EME"; then
+    MOZ_GMP=1
+fi
 
 if test -n "$MOZ_WEBRTC"; then
     MOZ_GMP=1
@@ -2693,6 +2737,20 @@ fi
 AC_SUBST(MOZ_AV1)
 
 dnl ========================================================
+dnl = Enable JPEG-XL Codec
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(jxl,
+[  --enable-jxl           Enable libjxl and highway for jxl image support],
+    MOZ_JXL=1,
+    MOZ_JXL=)
+
+if test -n "$MOZ_JXL"; then
+    AC_DEFINE(MOZ_JXL)
+fi
+
+AC_SUBST(MOZ_JXL)
+
+dnl ========================================================
 dnl = Apple platform decoder support
 dnl ========================================================
 if test "$COMPILE_ENVIRONMENT"; then
@@ -2705,6 +2763,25 @@ if test -n "$MOZ_APPLEMEDIA"; then
     [AC_MSG_ERROR([MacOS X 10.7 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
+
+dnl ========================================================
+dnl = EME support
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(eme,
+[  --enable-eme           Enable support for Encrypted Media Extensions  ],
+    MOZ_EME=1,
+    MOZ_EME=)
+
+
+if test -n "$MOZ_EME"; then
+    if test -z "$MOZ_FMP4"; then
+        AC_MSG_ERROR([Encrypted Media Extension support requires Fragmented MP4 support])
+    fi
+    AC_DEFINE(MOZ_EME)
+fi
+
+AC_SUBST(MOZ_EME)
 
 MOZ_LIBVPX_CFLAGS=
 MOZ_LIBVPX_LIBS=
@@ -2954,6 +3031,9 @@ MOZ_D3D_CPU_SUFFIX=
 MOZ_HAS_WINSDK_WITH_D3D=
 MOZ_D3DCOMPILER_VISTA_DLL=
 MOZ_D3DCOMPILER_VISTA_DLL_PATH=
+MOZ_DIRECTX_SDK_PATH=
+MOZ_D3DCOMPILER_XP_DLL=
+MOZ_D3DCOMPILER_XP_CAB=
 
 if test "$COMPILE_ENVIRONMENT" ; then
 case "$target_os" in
@@ -2971,6 +3051,11 @@ x86_64)
   MOZ_D3D_CPU_SUFFIX=x64
   ;;
 esac
+
+MOZ_ARG_ENABLE_BOOL(require-all-d3dc-versions,
+[  --enable-require-all-d3dc-versions Require all versions of the D3D compiler needed for supported Windows systems.],
+    MOZ_REQUIRE_ALL_D3DCS=1,
+    MOZ_REQUIRE_ALL_D3DCS=)
 
 # This is potentially set in external mozconfig files; if it's set,
 # then the build exposes the "webgl" context name, which is reserved
@@ -3030,17 +3115,87 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   fi
 
   ######################################
+  # Find _43 for use by XP.
+
+  if test "$HAVE_64BIT_BUILD"; then
+    AC_MSG_RESULT([We are building a 64-bit binary, skip checking d3dcompiler_43.])
+  else
+    # Get the SDK path from the registry.
+    # First try to get the June 2010 SDK
+    MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
+    if test -z "$MOZ_DIRECTX_SDK_REG_KEY" ; then
+      # Otherwise just take whatever comes first
+      MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
+    fi
+    MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/' | sed 's,\\\\,/,g'`
+
+    if test -n "$MOZ_DIRECTX_SDK_PATH" &&
+       test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_D3D_CPU_SUFFIX/dxguid.lib ; then
+      AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
+    else
+      AC_MSG_RESULT([DirectX SDK not found.])
+      MOZ_DIRECTX_SDK_PATH=
+    fi
+
+    # Check that our DirectX SDK is acceptable.
+    if test -n "$MOZ_DIRECTX_SDK_PATH"; then
+      if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
+        AC_MSG_RESULT([Found the February 2010 DirectX SDK, which is unacceptable to ANGLE.])
+        MOZ_DIRECTX_SDK_PATH=
+      fi
+    fi
+
+    if test -n "$MOZ_DIRECTX_SDK_PATH"; then
+      # Find a D3D compiler DLL in the DirectX SDK, if we didn't find one already.
+      # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
+      MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_D3D_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+
+      if test -n "$MOZ_D3DX9_VERSION" ; then
+        MOZ_D3DCOMPILER_XP_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_D3D_CPU_SUFFIX}.cab | head -n1`
+
+        if test -n "$MOZ_D3DCOMPILER_XP_CAB"; then
+          MOZ_D3DCOMPILER_XP_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
+        else
+          AC_MSG_RESULT([Couldn't find a CAB containing the D3D compiler DLL.])
+          AC_MSG_ERROR([DirectX SDK at "$MOZ_DIRECTX_SDK_PATH" appears broken.])
+          MOZ_DIRECTX_SDK_PATH=
+        fi
+      else
+        AC_MSG_RESULT([Couldn't determine the D3DX9 version for the DirectX SDK.])
+        MOZ_DIRECTX_SDK_PATH=
+      fi
+    else
+      AC_MSG_RESULT([Couldn't find an acceptable DirectX SDK for ANGLE, needed for d3dcompiler_43.])
+    fi
+  fi
+
+  ######################################
   # Check that we found what we needed.
   MOZ_FOUND_A_D3D_COMPILER=
+  MOZ_FOUND_BOTH_D3D_COMPILERS=1
 
   if test -n "$MOZ_D3DCOMPILER_VISTA_DLL"; then
     MOZ_FOUND_A_D3D_COMPILER=1
     AC_MSG_RESULT([Found d3dcompiler DLL for Vista+: $MOZ_D3DCOMPILER_VISTA_DLL])
+  else
+    MOZ_FOUND_BOTH_D3D_COMPILERS=
+  fi
+
+  if test -n "$MOZ_D3DCOMPILER_XP_DLL"; then
+    MOZ_FOUND_A_D3D_COMPILER=1
+    AC_MSG_RESULT([Found d3dcompiler DLL for XP: $MOZ_D3DCOMPILER_XP_DLL])
+  else
+    MOZ_FOUND_BOTH_D3D_COMPILERS=
   fi
 
   if test -z "$CROSS_COMPILE"; then
     if test -z "MOZ_FOUND_A_D3D_COMPILER"; then
       AC_MSG_ERROR([Couldn't find an acceptable D3D compiler DLL.])
+    fi
+
+    if test -n "$MOZ_REQUIRE_ALL_D3DCS" -a -z "$MOZ_FOUND_BOTH_D3D_COMPILERS"; then
+      AC_MSG_ERROR([Both D3D compilers _43 and _46+ are required by --enable-require-d3d-compilers.])
+      AC_MSG_ERROR([  Install Windows SDK 8.0+, as well as DirectX SDK (June 2010 version or newer), or reconfigure without this flag.])
     fi
   fi
 fi # MOZ_ANGLE_RENDERER
@@ -3072,6 +3227,9 @@ if test "$MOZ_GAMEPAD"; then
           AC_MSG_ERROR([Can't find header linux/joystick.h, needed for gamepad support. Please install Linux kernel headers or reconfigure with --disable-gamepad to disable gamepad support.])
         fi
         MOZ_GAMEPAD_BACKEND=linux
+        ;;
+    Android)
+        MOZ_GAMEPAD_BACKEND=android
         ;;
     *)
         ;;
@@ -3171,69 +3329,96 @@ dnl it doesn't exist or we have too old of a version.
 fi
 
 dnl ========================================================
-dnl = FFmpeg's ffvpx configuration
+dnl = libav-fft configuration
 dnl ========================================================
 
-MOZ_FFVPX=1
+MOZ_LIBAV_FFT=
 
-dnl Build ffvpx on 32-bit Windows, 32-bit ARM, and all supported 64-bit platforms.
-dnl 32-bit x86 *nix has performance issues due to not supporting assembly decoder.
+dnl Turn on libav-fft for 32-bit windows, and all 64-bit supported platforms.
+dnl 32-bit linux/os x have text relocation issues.
 
-dnl Detect if we can use yasm to enable FFmpeg's ffvpx assembly decoder.
+case "$OS_ARCH:$CPU_ARCH" in
+  WINNT:x86)
+      MOZ_LIBAV_FFT=1
+  ;;
+  *:x86_64)
+      MOZ_LIBAV_FFT=1
+  ;;
+esac
 
-if test -n "$MOZ_FFVPX" -a -n "$COMPILE_ENVIRONMENT"; then
-  AC_DEFINE(MOZ_FFVPX)
+dnl Detect if we can use yasm to compile libav's assembly
+
+if test -n "$MOZ_LIBAV_FFT" -a -n "$COMPILE_ENVIRONMENT"; then
+  AC_DEFINE(MOZ_LIBAV_FFT)
+  dnl Do we support libav-fft on this platform?
   case "$OS_ARCH:$CPU_ARCH" in
-  Darwin:x86)
-    FFVPX_ASFLAGS="-DPIC -DMACHO"
-  ;;
   Darwin:x86_64)
-    FFVPX_ASFLAGS="-D__x86_64__ -DPIC -DMACHO"
-  ;;
-  Darwin:aarch64)
-    FFVPX_ASFLAGS="-D__aarch64__ -DPIC -DMACHO"
+    LIBAV_FFT_ASFLAGS="-D__x86_64__ -DPIC -DMACHO"
   ;;
   WINNT:x86)
-    FFVPX_ASFLAGS="-DPIC -DWIN32"
+    LIBAV_FFT_ASFLAGS="-DPIC -DWIN32"
   ;;
   WINNT:x86_64)
-    FFVPX_ASFLAGS="-D__x86_64__ -DPIC -DWIN64 -DMSVC"
+    LIBAV_FFT_ASFLAGS="-D__x86_64__ -DPIC -DWIN64 -DMSVC"
   ;;
   *:x86_64)
     if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      FFVPX_ASFLAGS="-D__x86_64__ -DPIC -DELF"
-    fi
-  ;;
-  *:aarch64)
-    if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      FFVPX_ASFLAGS="-D__aarch64__ -DPIC -DELF"
-    fi
-  ;;
-  *:arm*)
-    if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      FFVPX_ASFLAGS="-D__arm__ -DPIC -DELF -march=armv7-a -mfpu=neon"
+      LIBAV_FFT_ASFLAGS="-D__x86_64__ -DPIC -DELF"
     fi
   ;;
   *)
-    AC_MSG_WARN([ffvpx's assembly routines are only available for 32-bit Windows, 32-bit ARM, and 64-bit platforms.])
+    AC_MSG_ERROR([libav's FFT routines are only available for 32-bit windows or 64-bit x86 based platforms.])
   ;;
   esac
 fi
 
-if test -n "$FFVPX_ASFLAGS"; then
-  if test "${CPU_ARCH}" = "x86" -o "${CPU_ARCH}" = "x86_64"; then
-    dnl If we're on a platform that supports ffvpx's asm routines and uses Yasm, check for it.
-    if test -z "$YASM" ; then
-      AC_MSG_ERROR([Yasm is required to build with ffvpx's optimized assembly routines, but you do not appear to have Yasm installed.])
+if test -n "$LIBAV_FFT_ASFLAGS"; then
+  dnl If we're on an x86 or x64 system which supports libav-fft's asm routines
+  dnl check for Yasm, and error out if it doesn't exist or we have too old of a
+  dnl version.
+  if test -z "$YASM" ; then
+    AC_MSG_ERROR([Yasm is required to build with libav's optimized FFT routines, but you do not appear to have Yasm installed. See https://developer.mozilla.org/en/YASM for more details.])
+  fi
+  dnl Check that we have the right yasm version.  We require 1.0.1 or newer
+  dnl on Linux and 1.1 or newer everywhere else.
+  if test "$OS_ARCH" = "Linux" ; then
+    if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -eq "0" -a "$_YASM_RELEASE" -lt "1" \) ; then
+      AC_MSG_ERROR([Yasm 1.0.1 or greater is required to build with libav's optimized FFT routines, but you do not appear to have Yasm installed.  See https://developer.mozilla.org/en/YASM for more details.])
     fi
-    dnl Check that we have the right yasm version. We require 1.2.0 or newer.
-    if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "2" \) ; then
-      AC_MSG_ERROR([Yasm 1.2.0 or greater is required to build with ffvpx's optimized assembly routines, but you do not appear to have the correct version of Yasm installed.])
+  else
+    if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
+      AC_MSG_ERROR([Yasm 1.1 or greater is required to build with libav's optimized FFT routines, but you do not appear to have Yasm installed.  See https://developer.mozilla.org/en/YASM for more details.])
     fi
   fi
-elif test -n "$MOZ_FFVPX"; then
-  dnl Warn if we're not building ffpvx optimized routines.
-  AC_MSG_WARN([No assembler or assembly support for ffvpx on your platform. Using unoptimized C routines.])
+elif test -n "$MOZ_LIBAV_FFT" -a "${CPU_ARCH}" != "arm"; then
+  dnl Warn if we're not building either libav or opendl-max optimized routines.
+  AC_MSG_WARN([No assembler or assembly support for libav-fft.  Using unoptimized C routines.])
+fi
+
+dnl ========================================================
+dnl = FFmpeg's ffvpx configuration
+dnl ========================================================
+
+MOZ_FFVPX=
+
+dnl Build ffvpx on 32-bit Windows and all supported 64-bit platforms.
+dnl 32-bit *nix has performance issues due to not supporting assembly decoder.
+
+case "$OS_ARCH:$CPU_ARCH" in
+  WINNT:x86)
+      MOZ_FFVPX=1
+  ;;
+  *:x86_64)
+      MOZ_FFVPX=1
+  ;;
+esac
+
+dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
+if test -n "$MOZ_LIBAV_FFT"; then
+  FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
+fi
+if test -n "$MOZ_FFVPX"; then
+  AC_DEFINE(MOZ_FFVPX)
 fi
 
 dnl ========================================================
@@ -3359,6 +3544,14 @@ if test -n "$ENABLE_TESTS"; then
     if test -n "$_WIN32_MSVC"; then
           AC_DEFINE_UNQUOTED(_VARIADIC_MAX, 10)
     fi
+    if test "${OS_TARGET}" = "Android"; then
+        AC_DEFINE(GTEST_OS_LINUX_ANDROID)
+        AC_DEFINE(GTEST_USE_OWN_TR1_TUPLE)
+        AC_DEFINE_UNQUOTED(GTEST_HAS_CLONE, 0)
+        AC_SUBST(GTEST_OS_LINUX_ANDROID)
+        AC_SUBST(GTEST_USE_OWN_TR1_TUPLE)
+        AC_SUBST(GTEST_HAS_CLONE)
+    fi
 fi
 
 dnl ========================================================
@@ -3404,6 +3597,34 @@ else
         AC_MSG_ERROR([Cannot build Firefox with --disable-feeds.])
     fi
 fi
+
+dnl ========================================================
+dnl = Enable Google safe browsing (anti-phishing)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(safe-browsing,
+[  --enable-safe-browsing  Enable safe browsing (anti-phishing) implementation],
+    MOZ_SAFE_BROWSING=1,
+    MOZ_SAFE_BROWSING= )
+if test -n "$MOZ_SAFE_BROWSING"; then
+    AC_DEFINE(MOZ_SAFE_BROWSING)
+fi
+AC_SUBST(MOZ_SAFE_BROWSING)
+
+dnl ========================================================
+dnl = Enable url-classifier
+dnl ========================================================
+dnl Implicitly enabled by default if building with safe-browsing
+if test -n "$MOZ_SAFE_BROWSING"; then
+    MOZ_URL_CLASSIFIER=1
+fi
+MOZ_ARG_ENABLE_BOOL(url-classifier,
+[  --enable-url-classifier Enable url classifier module],
+    MOZ_URL_CLASSIFIER=1,
+    MOZ_URL_CLASSIFIER= )
+if test -n "$MOZ_URL_CLASSIFIER"; then
+    AC_DEFINE(MOZ_URL_CLASSIFIER)
+fi
+AC_SUBST(MOZ_URL_CLASSIFIER)
 
 dnl ========================================================
 dnl = Disable zipwriter
@@ -3628,7 +3849,7 @@ if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
     _subconfigure_subdir="$1"
     _subconfigure_config_args="$ac_configure_args"
   }
-  tmpscript=`$PYTHON -c "import os, tempfile; print(tempfile.mktemp().replace(os.sep, '/'))"` || exit 1
+  tmpscript=`$PYTHON -c 'import os, tempfile; print tempfile.mktemp(prefix="subscript.").replace(os.sep, "/")'` || exit 1
   ${TOOLCHAIN_PREFIX}m4 "${srcdir}/build/autoconf/subconfigure.m4" \
      "${srcdir}/build/autoconf/altoptions.m4" \
      "${srcdir}/${MOZ_BUILD_APP}/configure.in" > $tmpscript
@@ -3730,6 +3951,23 @@ if test -n "$COMPILE_ENVIRONMENT" -a -n "$USE_ELF_HACK"; then
         fi
     fi
 fi # COMPILE_ENVIRONMENT and others.
+
+dnl ========================================================
+dnl = libstdc++ compatibility hacks
+dnl ========================================================
+
+STDCXX_COMPAT=
+MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
+[  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
+    STDCXX_COMPAT=1)
+
+if test -n "$STDCXX_COMPAT"; then
+   eval $(CXX="$CXX" HOST_CXX="$HOST_CXX" $PYTHON -m mozbuild.configure.libstdcxx)
+   AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
+   AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
+   CXXFLAGS="$CXXFLAGS -D_GLIBCXX_USE_CXX11_ABI=0"
+   HOST_CXXFLAGS="$HOST_CXXFLAGS -D_GLIBCXX_USE_CXX11_ABI=0"
+fi
 
 dnl ========================================================
 dnl = frontend JS debug mode
@@ -4137,6 +4375,19 @@ dnl ========================================================
 MOZ_ARG_HEADER(Compiler Options)
 
 dnl ========================================================
+dnl Check for gcc -pipe support
+dnl ========================================================
+AC_MSG_CHECKING([for -pipe support])
+if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
+    dnl Any gcc that supports firefox supports -pipe.
+    CFLAGS="$CFLAGS -pipe"
+    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+dnl ========================================================
 dnl Profile guided optimization (gcc checks)
 dnl ========================================================
 dnl Test for profiling options
@@ -4388,8 +4639,11 @@ if test "$MOZ_TREE_CAIRO"; then
         WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         MOZ_ENABLE_D2D_SURFACE=1
+        MOZ_ENABLE_DWRITE_FONT=1
 
         if test "$COMPILE_ENVIRONMENT"; then
+
+          MOZ_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
 
           dnl D3D10 Layers depend on D2D Surfaces.
           if test -n "$WIN32_D2D_SURFACE_FEATURE"; then
@@ -4402,7 +4656,9 @@ if test "$MOZ_TREE_CAIRO"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)
+    AC_SUBST(MOZ_ENABLE_DWRITE_FONT)
     AC_SUBST(MOZ_ENABLE_D2D_SURFACE)
+    AC_SUBST(MOZ_ENABLE_D3D9_LAYER)
     AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
 
     AC_SUBST(PS_SURFACE_FEATURE)
@@ -4442,11 +4698,33 @@ else
     fi
 fi
 
+case "$MOZ_WIDGET_TOOLKIT" in
+android)
+    TK_CFLAGS="$MOZ_CAIRO_CFLAGS $MOZ_PIXMAN_CFLAGS"
+    TK_LIBS="$MOZ_CAIRO_LIBS $MOZ_PIXMAN_LIBS"
+    ;;
+esac
+
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST_LIST(MOZ_CAIRO_CFLAGS)
 AC_SUBST_LIST(MOZ_CAIRO_LIBS)
 AC_SUBST_LIST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
+
+dnl ========================================================
+dnl disable xul
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(xul,
+[  --disable-xul           Disable XUL],
+    MOZ_XUL= )
+if test "$MOZ_XUL"; then
+  AC_DEFINE(MOZ_XUL)
+else
+  dnl remove extensions that require XUL
+  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/irc//' -e 's/tasks//'`
+fi
+
+AC_SUBST(MOZ_XUL)
 
 dnl ========================================================
 dnl necko configuration options
@@ -4497,6 +4775,17 @@ AC_SUBST(NECKO_COOKIES)
 if test "$NECKO_COOKIES"; then
     AC_DEFINE(NECKO_COOKIES)
     _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_COOKIES"
+fi
+
+dnl
+dnl Always build Marionette if not Android or B2G
+dnl
+if test "$OS_TARGET" != "Android"; then
+    AC_DEFINE(ENABLE_MARIONETTE)
+fi
+AC_SUBST(ENABLE_MARIONETTE)
+if test "$ENABLE_MARIONETTE"; then
+    AC_DEFINE(ENABLE_MARIONETTE)
 fi
 
 dnl ========================================================
@@ -4566,8 +4855,12 @@ AC_SUBST(MOZ_D3D_CPU_SUFFIX)
 AC_SUBST(MOZ_HAS_WINSDK_WITH_D3D)
 AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL_PATH)
+AC_SUBST(MOZ_DIRECTX_SDK_PATH)
+AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
+AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
+AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
@@ -4576,7 +4869,6 @@ AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-AC_SUBST(NSDISTMODE)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
@@ -4650,7 +4942,17 @@ AC_SUBST(MOZ_MACBUNDLE_TYPE)
 dnl ========================================================
 dnl = Child Process Name for IPC
 dnl ========================================================
-MOZ_CHILD_PROCESS_NAME="plugin-container${BIN_SUFFIX}"
+if test "$MOZ_WIDGET_TOOLKIT" != "android"; then
+  MOZ_CHILD_PROCESS_NAME="plugin-container${BIN_SUFFIX}"
+else
+  # We want to let Android unpack the file at install time, but it only does
+  # so if the file is named libsomething.so. The lib/ path is also required
+  # because the unpacked file will be under the lib/ subdirectory and will
+  # need to be executed from that path.
+  MOZ_CHILD_PROCESS_NAME="libplugin-container.so"
+  MOZ_CHILD_PROCESS_NAME_PIE="libplugin-container-pie.so"
+  AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
+fi
 MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
 
 AC_SUBST(MOZ_CHILD_PROCESS_NAME)
@@ -4680,6 +4982,10 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
 # "Profile" field, which controls profile location.
 # - MOZ_APP_ID: When set, used for application.ini's "ID" field, and
 # crash reporter server url.
+# - MOZ_APP_ANDROID_VERSION_CODE: On Android, "android:versionCode" for
+# the main application is set to the value of this variable.  If not
+# set, it falls back to a Mozilla-specific value derived from the
+# build ID.
 # - MOZ_PROFILE_MIGRATOR: When set, enables profile migrator.
 
 if test -z "$MOZ_APP_NAME"; then
@@ -4692,6 +4998,10 @@ fi
 
 if test -z "$MOZ_APP_VERSION_DISPLAY"; then
    MOZ_APP_VERSION_DISPLAY=$MOZ_APP_VERSION
+fi
+
+if test -z "$ANDROID_PACKAGE_NAME" ; then
+   ANDROID_PACKAGE_NAME="org.mozilla.$MOZ_APP_NAME"
 fi
 
 # For extensions and langpacks, we require a max version that is compatible
@@ -4719,6 +5029,7 @@ AC_SUBST(MOZ_APP_BASENAME)
 AC_SUBST(MOZ_APP_VENDOR)
 AC_SUBST(MOZ_APP_PROFILE)
 AC_SUBST(MOZ_APP_ID)
+AC_SUBST(MOZ_APP_ANDROID_VERSION_CODE)
 AC_SUBST(MAR_CHANNEL_ID)
 AC_SUBST(ACCEPTED_MAR_CHANNEL_IDS)
 AC_SUBST(MOZ_PROFILE_MIGRATOR)
@@ -4777,12 +5088,10 @@ MOZ_CONFIG_ICU()
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
     $_WARNINGS_CFLAGS \
-    $_COMPILATION_CFLAGS \
     $CFLAGS`
 
 CXXFLAGS=`echo \
     $_WARNINGS_CXXFLAGS \
-    $_COMPILATION_CXXFLAGS \
     $CXXFLAGS`
 
 COMPILE_CFLAGS=`echo \
@@ -4815,6 +5124,10 @@ HOST_CMFLAGS=-fobjc-exceptions
 HOST_CMMFLAGS=-fobjc-exceptions
 OS_COMPILE_CMFLAGS=-fobjc-exceptions
 OS_COMPILE_CMMFLAGS=-fobjc-exceptions
+if test "$MOZ_WIDGET_TOOLKIT" = uikit; then
+  OS_COMPILE_CMFLAGS="$OS_COMPILE_CMFLAGS -fobjc-abi-version=2 -fobjc-legacy-dispatch"
+  OS_COMPILE_CMMFLAGS="$OS_COMPILE_CMMFLAGS -fobjc-abi-version=2 -fobjc-legacy-dispatch"
+fi
 AC_SUBST(HOST_CMFLAGS)
 AC_SUBST(HOST_CMMFLAGS)
 AC_SUBST(OS_COMPILE_CMFLAGS)
@@ -4885,8 +5198,11 @@ AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
+AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
+AC_SUBST(MOZ_LIBAV_FFT)
+AC_SUBST_LIST(LIBAV_FFT_ASFLAGS)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
 AC_SUBST(MOZ_FOLD_LIBS)
@@ -4970,6 +5286,37 @@ if test -n "$A11Y_LOG"; then
 fi
 
 AC_SUBST(MOZILLA_VERSION)
+
+dnl ========================================================
+dnl Directive 4
+dnl ========================================================
+
+DIRECTIVE4_LIST="
+MOZ_OFFICIAL_BRANDING=$MOZ_OFFICIAL_BRANDING
+MOZ_BRANDING_DIRECTORY=$MOZ_BRANDING_DIRECTORY
+MC_BASILISK=$MC_BASILISK
+MC_PALEMOON=$MC_PALEMOON
+MOZ_EME=$MOZ_EME
+MOZ_WEBRTC=$MOZ_WEBRTC
+MOZ_SYSTEM_JPEG=$MOZ_SYSTEM_JPEG
+MOZ_SYSTEM_ZLIB=$MOZ_SYSTEM_ZLIB
+MOZ_SYSTEM_BZ2=$MOZ_SYSTEM_BZ2
+MOZ_SYSTEM_PNG=$MOZ_SYSTEM_PNG
+MOZ_SYSTEM_LIBVPX=$MOZ_SYSTEM_LIBVPX
+MOZ_SYSTEM_SQLITE=$MOZ_SYSTEM_SQLITE
+MOZ_SYSTEM_JEMALLOC=$MOZ_SYSTEM_JEMALLOC"
+
+DIRECTIVE4=`$PYTHON $_topsrcdir/build/directive4.py $DIRECTIVE4_LIST`
+
+if test -n "$DIRECTIVE4"; then
+    if test -n "$MC_PRIVATE_BUILD"; then
+        AC_MSG_WARN([Private Build - The configuration you have chosen to use with official branding deviates from official build configuration. Your build is thus for personal and private use only and must not be (re)distributed - Please see: http://www.palemoon.org/redist.shtml])
+    else
+        AC_MSG_ERROR([Branding Violation - Please see: http://www.palemoon.org/redist.shtml])
+    fi
+fi
+
+AC_SUBST(DIRECTIVE4)
 
 dnl Spit out some output
 dnl ========================================================
@@ -5101,6 +5448,17 @@ RC=
 # Run the SpiderMonkey 'configure' script.
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+
+# --with-system-nspr will have been converted into the relevant $NSPR_CFLAGS
+# and $NSPR_LIBS.
+case "${OS_TARGET}" in
+  Darwin|DragonFly|FreeBSD|NetBSD|OpenBSD)
+    ac_configure_args="`echo $ac_configure_args | sed -e 's/--with-system-nspr[^[:space:]]* *//'`"
+    ;;
+  *)
+    ac_configure_args="`echo $ac_configure_args | ${TOOLCHAIN_PREFIX}sed -e 's/--with-system-nspr\S* *//'`"
+    ;;
+esac
 
 if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"

@@ -8,7 +8,6 @@
 
 #include "Units.h"
 #include "nsTArray.h"
-#include <functional>
 
 @class NSView;
 
@@ -36,7 +35,7 @@ public:
   bool UpdateRegion(const mozilla::LayoutDeviceIntRegion& aRegion,
                     const nsChildView& aCoordinateConverter,
                     NSView* aContainerView,
-                    std::function<NSView*()> aViewCreationCallback);
+                    NSView* (^aViewCreationCallback)());
 
   /**
    * Return an NSView from the region, if there is any.

@@ -7,6 +7,7 @@ DIRS += [
     'components',
     'content',
     'forgetaboutsite',
+    'identity',
     'locales',
     'modules',
     'mozapps/downloads',
@@ -23,7 +24,10 @@ if CONFIG['MOZ_BUNDLED_FONTS']:
 if CONFIG['MOZ_JETPACK']:
     DIRS += ['jetpack']
 
-DIRS += ['mozapps/extensions']
+if CONFIG['MOZ_WEBEXTENSIONS']:
+    DIRS += ['mozapps/webextensions']
+else:
+    DIRS += ['mozapps/extensions']
 
 if CONFIG['MOZ_UPDATER']:
     DIRS += ['mozapps/update']

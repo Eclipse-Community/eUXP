@@ -1609,6 +1609,8 @@ gfxFontGroup::~gfxFontGroup()
 void
 gfxFontGroup::BuildFontList()
 {
+    bool enumerateFonts = true;
+
     // initialize fonts in the font family list
     AutoTArray<gfxFontFamily*,10> fonts;
     gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
@@ -1637,9 +1639,7 @@ gfxFontGroup::BuildFontList()
 
     // build the fontlist from the specified families
     for (gfxFontFamily* fontFamily : fonts) {
-        if(fontFamily) {
-            AddFamilyToFontList(fontFamily);
-        }
+        AddFamilyToFontList(fontFamily);
     }
 }
 
@@ -1758,7 +1758,7 @@ gfxFontGroup::FamilyFace::CheckState(bool& aSkipDrawing)
             case gfxUserFontEntry::STATUS_FAILED:
                 SetInvalid();
                 // fall-thru to the default case
-                [[fallthrough]];
+                MOZ_FALLTHROUGH;
             default:
                 SetLoading(false);
         }

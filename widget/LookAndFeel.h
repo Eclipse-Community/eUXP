@@ -438,6 +438,11 @@ public:
     eWindowsTheme_Generic = 0, // unrecognized theme
     eWindowsTheme_Classic,
     eWindowsTheme_Aero,
+    eWindowsTheme_LunaBlue,
+    eWindowsTheme_LunaOlive,
+    eWindowsTheme_LunaSilver,
+    eWindowsTheme_Royale,
+    eWindowsTheme_Zune,
     eWindowsTheme_AeroLite
   };
 
@@ -445,7 +450,9 @@ public:
    * Operating system versions.
    */
   enum OperatingSystemVersion {
-    eOperatingSystemVersion_Windows7 = 2,
+    eOperatingSystemVersion_WindowsXP = 0,
+    eOperatingSystemVersion_WindowsVista,
+    eOperatingSystemVersion_Windows7,
     eOperatingSystemVersion_Windows8,
     eOperatingSystemVersion_Windows10,
     eOperatingSystemVersion_Windows11,

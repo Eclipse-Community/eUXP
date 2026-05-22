@@ -13,9 +13,21 @@ this.EXPORTED_SYMBOLS = ["AppConstants"];
 
 // Immutable for export.
 this.AppConstants = Object.freeze({
-  // These defines are no longer used but kept for compatibility
-  NIGHTLY_BUILD: false,
-  RELEASE_OR_BETA: true,
+  // See this wiki page for more details about channel specific build
+  // defines: https://wiki.mozilla.org/Platform/Channel-specific_build_defines
+  NIGHTLY_BUILD:
+#ifdef NIGHTLY_BUILD
+  true,
+#else
+  false,
+#endif
+
+  RELEASE_OR_BETA:
+#ifdef RELEASE_OR_BETA
+  true,
+#else
+  false,
+#endif
 
   ACCESSIBILITY:
 #ifdef ACCESSIBILITY
@@ -43,6 +55,13 @@ this.AppConstants = Object.freeze({
 
   MOZ_OFFICIAL_BRANDING:
 #ifdef MOZ_OFFICIAL_BRANDING
+  true,
+#else
+  false,
+#endif
+
+MOZ_SAFE_BROWSING:
+#ifdef MOZ_SAFE_BROWSING
   true,
 #else
   false,
@@ -134,6 +153,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_GRAPHENE:
+#ifdef MOZ_GRAPHENE
+  true,
+#else
+  false,
+#endif
+
   MOZ_PLACES:
 #ifdef MOZ_PLACES
   true,
@@ -180,6 +206,7 @@ this.AppConstants = Object.freeze({
   MOZ_UPDATE_CHANNEL: "@MOZ_UPDATE_CHANNEL@",
   INSTALL_LOCALE: "@AB_CD@",
   MOZ_WIDGET_TOOLKIT: "@MOZ_WIDGET_TOOLKIT@",
+  ANDROID_PACKAGE_NAME: "@ANDROID_PACKAGE_NAME@",
 
   DEBUG_JS_MODULES: "@DEBUG_JS_MODULES@",
 

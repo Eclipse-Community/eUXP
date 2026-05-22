@@ -15,7 +15,6 @@
 #include "nsIURL.h"
 #include "nsArrayEnumerator.h"
 #include "nsIStringBundle.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/Preferences.h"
 
@@ -317,17 +316,13 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
       theDir = @"";
   }
 
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
-  if(nsCocoaFeatures::OnSnowLeopardOrLater()) {
-    if (theDir) {
-      [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
-    }
+  if (theDir) {
+    [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
   }
-#endif
 
   int result;
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  if (mFilters.Length() > 1 && nsCocoaFeatures::OnSnowLeopardOrLater()) {
+  if (mFilters.Length() > 1) {
     // [NSURL initWithString:] (below) throws an exception if URLString is nil.
 
     NSPopUpButtonObserver* observer = [[NSPopUpButtonObserver alloc] init];
@@ -354,12 +349,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
     if (!filters) {
       [thePanel setTreatsFilePackagesAsDirectories:YES];
     }
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
     [thePanel setAllowedFileTypes:filters];
     result = [thePanel runModal];
-#else
-    result = [thePanel runModalForDirectory:theDir file:nil types:filters];
-#endif
   }
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   
@@ -371,8 +362,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
   // it creates a new array each time.
   // We are using Fast Enumeration, thus the NSURL array is created once then
   // iterated.
-  for (NSUInteger i = 0; i < [[thePanel URLs] count]; i++) {
-    NSURL *url = [[thePanel URLs] objectAtIndex:i];
+  for (NSURL* url in [thePanel URLs]) {
     if (!url) {
       continue;
     }
@@ -419,17 +409,11 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile)
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   if (theDir) {
     [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
   }
   nsCocoaUtils::PrepareForNativeAppModalDialog();
   int result = [thePanel runModal];
-#else
-  nsCocoaUtils::PrepareForNativeAppModalDialog();
-  if (!theDir) theDir = @"/Users/";
-  int result = [thePanel runModalForDirectory:theDir file:nil types:nil];
-#endif
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
   if (result == NSFileHandlingPanelCancelButton)
@@ -476,7 +460,6 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   // set up allowed types; this prevents the extension from being selected
   // use the UTI for the file type to allow alternate extensions (e.g., jpg vs. jpeg)
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   NSString* extension = defaultFilename.pathExtension;
   if (extension.length != 0) {
     CFStringRef type = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (CFStringRef)extension, NULL);
@@ -491,21 +474,9 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   }
   // Allow users to change the extension.
   thePanel.allowsOtherFileTypes = YES;
-#else
-  // 10.4 doesn't seem to understand using the UTI with setAllowedFileTypes,
-  // so we'll use a different method to solve bug 426680.
-  NSString *extension = [defaultFilename pathExtension];
-  if ([extension length]) {
-    [thePanel setAllowedFileTypes:[NSArray arrayWithObject:extension]];
-    [thePanel setAllowsOtherFileTypes:YES];
-    [thePanel setCanSelectHiddenExtension:YES];
-    [thePanel setExtensionHidden:NO];
-  }
-#endif
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   if (theDir) {
     [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
   }
@@ -514,11 +485,6 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   nsCocoaUtils::PrepareForNativeAppModalDialog();
   [thePanel setNameFieldStringValue:defaultFilename];
   int result = [thePanel runModal];
-#else
-  if (!theDir) theDir = @"/Users/";
-  nsCocoaUtils::PrepareForNativeAppModalDialog();
-  int result = [thePanel runModalForDirectory:theDir file:defaultFilename];
-#endif
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;

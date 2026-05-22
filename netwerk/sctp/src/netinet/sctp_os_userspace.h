@@ -1,6 +1,4 @@
 /*-
- * SPDX-License-Identifier: BSD-3-Clause
- *
  * Copyright (c) 2006-2007, by Cisco Systems, Inc. All rights reserved.
  * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
  * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
@@ -51,8 +49,8 @@
 #include <windows.h>
 #include "user_environment.h"
 typedef CRITICAL_SECTION userland_mutex_t;
-#if WINVER < 0x0600
 typedef CRITICAL_SECTION userland_rwlock_t;
+#if WINVER < 0x0600
 enum {
 	C_SIGNAL = 0,
 	C_BROADCAST = 1,
@@ -73,7 +71,6 @@ void WakeAllXPConditionVariable(userland_cond_t *);
 #define SleepConditionVariableCS(cond, mtx, time) SleepXPConditionVariable(cond, mtx)
 #define WakeAllConditionVariable(cond) WakeAllXPConditionVariable(cond)
 #else
-typedef SRWLOCK userland_rwlock_t;
 #define DeleteConditionVariable(cond)
 typedef CONDITION_VARIABLE userland_cond_t;
 #endif
@@ -92,6 +89,9 @@ typedef unsigned __int16 uint16_t;
 typedef __int16          int16_t;
 typedef unsigned __int8  uint8_t;
 typedef __int8           int8_t;
+#endif
+#ifndef _SIZE_T_DEFINED
+#define size_t     __int32
 #endif
 #ifndef _SIZE_T_DEFINED
 #typedef __int32         size_t;
@@ -291,13 +291,9 @@ typedef char* caddr_t;
 
 #else /* !defined(Userspace_os_Windows) */
 #include <sys/socket.h>
-
-#if defined(__EMSCRIPTEN__) && !defined(__EMSCRIPTEN_PTHREADS__)
-#error "Unsupported build configuration."
-#endif
-
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__native_client__) || defined(__Fuchsia__) || defined(__EMSCRIPTEN_PTHREADS__)
 #include <pthread.h>
-
+#endif
 typedef pthread_mutex_t userland_mutex_t;
 typedef pthread_rwlock_t userland_rwlock_t;
 typedef pthread_cond_t userland_cond_t;

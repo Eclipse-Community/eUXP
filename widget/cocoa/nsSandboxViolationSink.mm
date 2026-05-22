@@ -8,23 +8,14 @@
 #include <unistd.h>
 #include <time.h>
 #include <asl.h>
+#include <dispatch/dispatch.h>
+#include <notify.h>
 #include "nsCocoaDebugUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
-#include <dispatch/dispatch.h>
-#include <notify.h>
-#endif
 
 int nsSandboxViolationSink::mNotifyToken = 0;
 uint64_t nsSandboxViolationSink::mLastMsgReceived = 0;
-
-#ifndef ASL_KEY_REF_PID
-#define ASL_KEY_REF_PID ASL_KEY_PID
-#endif
-#ifndef ASL_KEY_MSG_ID
-#define ASL_KEY_MSG_ID "ASLMessageID"
-#endif
 
 void
 nsSandboxViolationSink::Start()
@@ -32,15 +23,11 @@ nsSandboxViolationSink::Start()
   if (mNotifyToken) {
     return;
   }
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   notify_register_dispatch(SANDBOX_VIOLATION_NOTIFICATION_NAME,
                            &mNotifyToken,
                            dispatch_queue_create(SANDBOX_VIOLATION_QUEUE_NAME,
                                                  DISPATCH_QUEUE_SERIAL),
                            ^(int token) { ViolationHandler(); });
-#else
-  ViolationHandler();
-#endif
 }
 
 void
@@ -49,9 +36,7 @@ nsSandboxViolationSink::Stop()
   if (!mNotifyToken) {
     return;
   }
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
   notify_cancel(mNotifyToken);
-#endif
   mNotifyToken = 0;
 }
 

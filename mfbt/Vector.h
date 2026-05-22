@@ -129,7 +129,7 @@ struct VectorImpl
    * aNewCap has not overflowed, and (2) multiplying aNewCap by sizeof(T) will
    * not overflow.
    */
-  [[nodiscard]] static inline bool
+  static [[nodiscard]] inline bool
   growTo(Vector<T, N, AP>& aV, size_t aNewCap)
   {
     MOZ_ASSERT(!aV.usingInlineStorage());
@@ -221,7 +221,7 @@ struct VectorImpl<T, N, AP, true>
     }
   }
 
-  [[nodiscard]] static inline bool
+  static [[nodiscard]] inline bool
   growTo(Vector<T, N, AP>& aV, size_t aNewCap)
   {
     MOZ_ASSERT(!aV.usingInlineStorage());

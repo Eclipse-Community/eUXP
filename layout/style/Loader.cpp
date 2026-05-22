@@ -1,9 +1,17 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are Copyright (c)
+ * International Business Machines Corporation, 2000.  Modifications
+ * to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /* loading of CSS style sheets using the network APIs */
@@ -50,7 +58,9 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ConsoleReportCollector.h"
 
+#ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
+#endif
 
 #include "nsIMediaList.h"
 #include "nsIDOMStyleSheet.h"
@@ -791,6 +801,22 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
 
   if (NS_FAILED(aStatus)) {
     LOG_WARN(("  Load failed: status 0x%x", aStatus));
+    // Handle sheet not loading error because source was a tracking URL.
+    // We make a note of this sheet node by including it in a dedicated
+    // array of blocked tracking nodes under its parent document.
+    //
+    // Multiple sheet load instances might be tied to this request,
+    // we annotate each one linked to a valid owning element (node).
+    if (aStatus == NS_ERROR_TRACKING_URI) {
+      nsIDocument* doc = mLoader->GetDocument();
+      if (doc) {
+        for (SheetLoadData* data = this; data; data = data->mNext) {
+          // mOwningElement may be null but AddBlockTrackingNode can cope
+          nsCOMPtr<nsIContent> content = do_QueryInterface(data->mOwningElement);
+          doc->AddBlockedTrackingNode(content);
+        }
+      }
+    }
     mLoader->SheetComplete(this, aStatus);
     return NS_OK;
   }
@@ -1078,6 +1104,7 @@ Loader::CreateSheet(nsIURI* aURI,
     RefPtr<StyleSheet> sheet;
 
     // First, the XUL cache
+#ifdef MOZ_XUL
     if (IsChromeURI(aURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache) {
@@ -1087,6 +1114,7 @@ Loader::CreateSheet(nsIURI* aURI,
         }
       }
     }
+#endif
 
     bool fromCompleteSheets = false;
     if (!sheet) {
@@ -1591,7 +1619,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                                               contentPolicyType,
                                               loadGroup,
                                               nullptr,   // aCallbacks
-                                              nsIChannel::LOAD_NORMAL);
+                                              nsIChannel::LOAD_NORMAL |
+                                              nsIChannel::LOAD_CLASSIFY_URI);
   }
   else {
     // either we are loading something inside a document, in which case
@@ -1605,7 +1634,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                        contentPolicyType,
                        loadGroup,
                        nullptr,   // aCallbacks
-                       nsIChannel::LOAD_NORMAL);
+                       nsIChannel::LOAD_NORMAL |
+                       nsIChannel::LOAD_CLASSIFY_URI);
   }
 
   if (NS_FAILED(rv)) {
@@ -1879,6 +1909,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       }
       data = data->mNext;
     }
+#ifdef MOZ_XUL
     if (IsChromeURI(aLoadData->mURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
@@ -1890,6 +1921,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
         }
       }
     } else {
+#endif
       URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData->mURI,
                                          aLoadData->mLoaderPrincipal,
                                          aLoadData->mSheet->GetCORSMode(),
@@ -1897,7 +1929,9 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       NS_ASSERTION(sheet->IsComplete(),
                    "Should only be caching complete sheets");
       mSheets->mCompleteSheets.Put(&key, sheet);
+#ifdef MOZ_XUL
     }
+#endif
   }
 
   NS_RELEASE(aLoadData);  // this will release parents and siblings and all that

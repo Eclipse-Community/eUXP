@@ -421,10 +421,26 @@ const char FaviconHelper::kShortcutCacheDir[] = "shortcutCache";
 
 // apis available on vista and up.
 WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = nullptr;
+WinUtils::SHGetKnownFolderPathPtr WinUtils::sGetKnownFolderPath = nullptr;
+
 // We just leak these DLL HMODULEs. There's no point in calling FreeLibrary
 // on them during shutdown anyway.
 static const wchar_t kShellLibraryName[] =  L"shell32.dll";
 static HMODULE sShellDll = nullptr;
+static const wchar_t kDwmLibraryName[] = L"dwmapi.dll";
+static HMODULE sDwmDll = nullptr;
+
+WinUtils::DwmExtendFrameIntoClientAreaProc WinUtils::dwmExtendFrameIntoClientAreaPtr = nullptr;
+WinUtils::DwmIsCompositionEnabledProc WinUtils::dwmIsCompositionEnabledPtr = nullptr;
+WinUtils::DwmSetIconicThumbnailProc WinUtils::dwmSetIconicThumbnailPtr = nullptr;
+WinUtils::DwmSetIconicLivePreviewBitmapProc WinUtils::dwmSetIconicLivePreviewBitmapPtr = nullptr;
+WinUtils::DwmGetWindowAttributeProc WinUtils::dwmGetWindowAttributePtr = nullptr;
+WinUtils::DwmSetWindowAttributeProc WinUtils::dwmSetWindowAttributePtr = nullptr;
+WinUtils::DwmInvalidateIconicBitmapsProc WinUtils::dwmInvalidateIconicBitmapsPtr = nullptr;
+WinUtils::DwmDefWindowProcProc WinUtils::dwmDwmDefWindowProcPtr = nullptr;
+WinUtils::DwmGetCompositionTimingInfoProc WinUtils::dwmGetCompositionTimingInfoPtr = nullptr;
+WinUtils::DwmFlushProc WinUtils::dwmFlushProcPtr = nullptr;
+
 // Prefix for path used by NT calls.
 const wchar_t kNTPrefix[] = L"\\??\\";
 const size_t kNTPrefixLen = ArrayLength(kNTPrefix) - 1;
@@ -448,6 +464,23 @@ static NtTestAlertPtr sNtTestAlert = nullptr;
 void
 WinUtils::Initialize()
 {
+  if (!sDwmDll && IsVistaOrLater()) {
+    sDwmDll = ::LoadLibraryW(kDwmLibraryName);
+
+    if (sDwmDll) {
+      dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDll, "DwmExtendFrameIntoClientArea");
+      dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDll, "DwmIsCompositionEnabled");
+      dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDll, "DwmSetIconicThumbnail");
+      dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDll, "DwmSetIconicLivePreviewBitmap");
+      dwmGetWindowAttributePtr = (DwmGetWindowAttributeProc)::GetProcAddress(sDwmDll, "DwmGetWindowAttribute");
+      dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDll, "DwmSetWindowAttribute");
+      dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDll, "DwmInvalidateIconicBitmaps");
+      dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDll, "DwmDefWindowProc");
+      dwmGetCompositionTimingInfoPtr = (DwmGetCompositionTimingInfoProc)::GetProcAddress(sDwmDll, "DwmGetCompositionTimingInfo");
+      dwmFlushProcPtr = (DwmFlushProc)::GetProcAddress(sDwmDll, "DwmFlush");
+    }
+  }
+
   if (IsWin10OrLater()) {
     HMODULE user32Dll = ::GetModuleHandleW(L"user32");
     if (user32Dll) {
@@ -580,7 +613,7 @@ WinUtils::SystemScaleFactor()
   return systemScale;
 }
 
-#if WINVER < 0x603
+#ifndef WM_DPICHANGED
 typedef enum {
   MDT_EFFECTIVE_DPI = 0,
   MDT_ANGULAR_DPI = 1,
@@ -607,14 +640,16 @@ GETPROCESSDPIAWARENESSPROC sGetProcessDpiAwareness;
 static bool
 SlowIsPerMonitorDPIAware()
 {
-  // Intentionally leak the handle.
-  HMODULE shcore =
-    LoadLibraryEx(L"shcore", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-  if (shcore) {
-    sGetDpiForMonitor =
-      (GETDPIFORMONITORPROC) GetProcAddress(shcore, "GetDpiForMonitor");
-    sGetProcessDpiAwareness =
-      (GETPROCESSDPIAWARENESSPROC) GetProcAddress(shcore, "GetProcessDpiAwareness");
+  if (IsVistaOrLater()) {
+    // Intentionally leak the handle.
+    HMODULE shcore =
+      LoadLibraryEx(L"shcore", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (shcore) {
+      sGetDpiForMonitor =
+        (GETDPIFORMONITORPROC) GetProcAddress(shcore, "GetDpiForMonitor");
+      sGetProcessDpiAwareness =
+        (GETPROCESSDPIAWARENESSPROC) GetProcAddress(shcore, "GetProcessDpiAwareness");
+    }
   }
   PROCESS_DPI_AWARENESS dpiAwareness;
   return sGetDpiForMonitor && sGetProcessDpiAwareness &&
@@ -737,7 +772,7 @@ static DWORD
 GetWaitFlags()
 {
   DWORD result = MWMO_INPUTAVAILABLE;
-  if (XRE_IsContentProcess()) {
+  if (IsVistaOrLater() && XRE_IsContentProcess()) {
     result |= MWMO_ALERTABLE;
   }
   return result;
@@ -1156,6 +1191,32 @@ WinUtils::SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
     return E_FAIL;
 
   return sCreateItemFromParsingName(pszPath, pbc, riid, ppv);
+}
+
+/* static */
+HRESULT 
+WinUtils::SHGetKnownFolderPath(REFKNOWNFOLDERID rfid,
+                               DWORD dwFlags,
+                               HANDLE hToken,
+                               PWSTR *ppszPath)
+{
+  if (sGetKnownFolderPath) {
+    return sGetKnownFolderPath(rfid, dwFlags, hToken, ppszPath);
+  }
+
+  if (!sShellDll) {
+    sShellDll = ::LoadLibraryW(kShellLibraryName);
+    if (!sShellDll) {
+      return false;
+    }
+  }
+
+  sGetKnownFolderPath = (SHGetKnownFolderPathPtr)
+    GetProcAddress(sShellDll, "SHGetKnownFolderPath");
+  if (!sGetKnownFolderPath)
+    return E_FAIL;
+
+  return sGetKnownFolderPath(rfid, dwFlags, hToken, ppszPath);
 }
 
 static BOOL
@@ -1968,7 +2029,7 @@ WinUtils::GetPointerCapabilities(PointerCapabilities& aCaps)
 uint32_t
 WinUtils::GetMaxTouchPoints()
 {
-  if (IsTouchDeviceSupportPresent()) {
+  if (IsWin7OrLater() && IsTouchDeviceSupportPresent()) {
     return GetSystemMetrics(SM_MAXIMUMTOUCHES);
   }
   return 0;
@@ -1983,6 +2044,11 @@ typedef DWORD (WINAPI * GetFinalPathNameByHandlePtr)(HANDLE hFile,
 bool
 WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath)
 {
+  // Users folder was introduced with Vista.
+  if (!IsVistaOrLater()) {
+    return true;
+  }
+
   wchar_t path[MAX_PATH] = { 0 };
 
   nsAutoHandle handle(
@@ -2109,19 +2175,21 @@ WinUtils::GetAppInitDLLs(nsAString& aOutput)
   }
   nsAutoRegKey key(hkey);
   LONG status;
-  const wchar_t kLoadAppInitDLLs[] = L"LoadAppInit_DLLs";
-  DWORD loadAppInitDLLs = 0;
-  DWORD loadAppInitDLLsLen = sizeof(loadAppInitDLLs);
-  status = RegQueryValueExW(hkey, kLoadAppInitDLLs, nullptr,
-                            nullptr, (LPBYTE)&loadAppInitDLLs,
-                            &loadAppInitDLLsLen);
-  if (status != ERROR_SUCCESS) {
-    return false;
-  }
-  if (!loadAppInitDLLs) {
-    // If loadAppInitDLLs is zero then AppInit_DLLs is disabled.
-    // In this case we'll return true along with an empty output string.
-    return true;
+  if (IsVistaOrLater()) {
+    const wchar_t kLoadAppInitDLLs[] = L"LoadAppInit_DLLs";
+    DWORD loadAppInitDLLs = 0;
+    DWORD loadAppInitDLLsLen = sizeof(loadAppInitDLLs);
+    status = RegQueryValueExW(hkey, kLoadAppInitDLLs, nullptr,
+                              nullptr, (LPBYTE)&loadAppInitDLLs,
+                              &loadAppInitDLLsLen);
+    if (status != ERROR_SUCCESS) {
+      return false;
+    }
+    if (!loadAppInitDLLs) {
+      // If loadAppInitDLLs is zero then AppInit_DLLs is disabled.
+      // In this case we'll return true along with an empty output string.
+      return true;
+    }
   }
   DWORD numBytes = 0;
   const wchar_t kAppInitDLLs[] = L"AppInit_DLLs";

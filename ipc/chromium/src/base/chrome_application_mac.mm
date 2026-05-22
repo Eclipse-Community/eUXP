@@ -37,9 +37,7 @@
 
 - (void)sendEvent:(NSEvent*)event {
   chrome_application_mac::ScopedSendingEvent sendingEventScoper;
-  NSArray *array = eventHooks_.get();
-  for (NSUInteger i = 0; i < [array count]; i++) {
-	id handler = [array objectAtIndex:i];
+  for (id<CrApplicationEventHookProtocol> handler in eventHooks_.get()) {
     [handler hookForEvent:event];
   }
   [super sendEvent:event];

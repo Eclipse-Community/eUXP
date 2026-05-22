@@ -39,7 +39,8 @@ const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.bro
 const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
-const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema";
+const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema"
+
 const PREF_METADATA_LASTUPDATE           = "extensions.getAddons.cache.lastUpdate";
 const PREF_METADATA_UPDATETHRESHOLD_SEC  = "extensions.getAddons.cache.updateThreshold";
 const DEFAULT_METADATA_UPDATETHRESHOLD_SEC = 172800;  // two days
@@ -63,8 +64,8 @@ const BLANK_DB = function() {
 }
 
 const TOOLKIT_ID     = "toolkit@mozilla.org";
-#ifdef UXP_APPCOMPAT_GUID
-const APPCOMPATID    = Services.prefs.getCharPref("extensions.guid.appCompatId");
+#ifdef MOZ_PHOENIX_EXTENSIONS
+const FIREFOX_ID        = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 #endif
 Cu.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.repository";
@@ -1253,9 +1254,9 @@ this.AddonRepository = {
     let results = [];
 
     function isSameApplication(aAppNode) {
-#ifdef UXP_APPCOMPAT_GUID
+#ifdef MOZ_PHOENIX_EXTENSIONS
       if (self._getTextContent(aAppNode) == Services.appinfo.ID ||
-          self._getTextContent(aAppNode) == APPCOMPATID) {
+          self._getTextContent(aAppNode) == FIREFOX_ID) {
 #else
       if (self._getTextContent(aAppNode) == Services.appinfo.ID) {
 #endif

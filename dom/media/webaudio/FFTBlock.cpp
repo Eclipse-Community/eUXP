@@ -28,26 +28,28 @@
  */
 
 #include "FFTBlock.h"
-#include "FFVPXRuntimeLinker.h"
 
 #include <complex>
 
 namespace mozilla {
 
-FFmpegFFTFuncs FFTBlock::sFFTFuncs = {};
+typedef std::complex<double> Complex;
 
-using Complex = std::complex<double>;
+#ifdef MOZ_LIBAV_FFT
+FFmpegRDFTFuncs FFTBlock::sRDFTFuncs;
+#endif
 
 FFTBlock* FFTBlock::CreateInterpolatedBlock(const FFTBlock& block0, const FFTBlock& block1, double interp)
 {
-    uint32_t fftSize = block0.FFTSize();
-    FFTBlock* newBlock = new FFTBlock(fftSize, 1.0f / AssertedCast<float>(fftSize));
+    FFTBlock* newBlock = new FFTBlock(block0.FFTSize());
 
     newBlock->InterpolateFrequencyComponents(block0, block1, interp);
 
     // In the time-domain, the 2nd half of the response must be zero, to avoid circular convolution aliasing...
+    int fftSize = newBlock->FFTSize();
     AlignedTArray<float> buffer(fftSize);
-    newBlock->GetInverse(buffer.Elements());
+    newBlock->GetInverseWithoutScaling(buffer.Elements());
+    AudioBufferInPlaceScale(buffer.Elements(), 1.0f / fftSize, fftSize / 2);
     PodZero(buffer.Elements() + fftSize / 2, fftSize / 2);
 
     // Put back into frequency domain.

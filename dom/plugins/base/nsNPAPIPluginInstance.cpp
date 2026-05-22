@@ -11,16 +11,12 @@
 #include "prenv.h"
 
 #include "nsNPAPIPluginInstance.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
-#endif
 #include "nsPluginHost.h"
 #include "nsPluginLogging.h"
 #include "nsContentUtils.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginInstanceOwner.h"
-#endif
 
 #include "nsThreadUtils.h"
 #include "nsIDOMElement.h"
@@ -29,10 +25,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDirectoryServiceDefs.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsJSNPRuntime.h"
 #include "nsPluginStreamListenerPeer.h"
-#endif
 #include "nsSize.h"
 #include "nsNetCID.h"
 #include "nsIContent.h"
@@ -48,14 +42,10 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 using namespace mozilla;
-#ifdef MOZ_ENABLE_NPAPI
 using namespace mozilla::plugins::parent;
-#endif
 using namespace mozilla::layers;
 
-#ifdef MOZ_ENABLE_NPAPI
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
-#endif
 
 NS_IMPL_ISUPPORTS(nsNPAPIPluginInstance, nsIAudioChannelAgentCallback)
 
@@ -67,13 +57,9 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   , mCached(false)
   , mUsesDOMForCursor(false)
   , mInPluginInitCall(false)
-#ifdef MOZ_ENABLE_NPAPI
   , mPlugin(nullptr)
-#endif
   , mMIMEType(nullptr)
-#ifdef MOZ_ENABLE_NPAPI
   , mOwner(nullptr)
-#endif
 #ifdef XP_MACOSX
   , mCurrentPluginEvent(nullptr)
 #endif
@@ -127,9 +113,7 @@ void
 nsNPAPIPluginInstance::Destroy()
 {
   Stop();
-#ifdef MOZ_ENABLE_NPAPI
   mPlugin = nullptr;
-#endif
   mAudioChannelAgent = nullptr;
 }
 
@@ -139,7 +123,6 @@ nsNPAPIPluginInstance::StopTime()
   return mStopTime;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 nsresult nsNPAPIPluginInstance::Initialize(nsNPAPIPlugin *aPlugin, nsPluginInstanceOwner* aOwner, const nsACString& aMIMEType)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
@@ -157,11 +140,9 @@ nsresult nsNPAPIPluginInstance::Initialize(nsNPAPIPlugin *aPlugin, nsPluginInsta
 
   return Start();
 }
-#endif
 
 nsresult nsNPAPIPluginInstance::Stop()
 {
-#ifdef MOZ_ENABLE_NPAPI
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Stop this=%p\n",this));
 
   // Make sure the plugin didn't leave popups enabled.
@@ -205,9 +186,7 @@ nsresult nsNPAPIPluginInstance::Stop()
   }
 
   if (!mPlugin || !mPlugin->GetLibrary())
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
 
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
@@ -229,13 +208,11 @@ nsresult nsNPAPIPluginInstance::Stop()
     return NS_ERROR_FAILURE;
   else
     return NS_OK;
-#endif
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
 nsNPAPIPluginInstance::GetDOMWindow()
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (!mOwner)
     return nullptr;
 
@@ -244,17 +221,13 @@ nsNPAPIPluginInstance::GetDOMWindow()
   nsCOMPtr<nsIDocument> doc;
   kungFuDeathGrip->GetDocument(getter_AddRefs(doc));
   if (!doc)
-#endif
     return nullptr;
-#ifdef MOZ_ENABLE_NPAPI
 
   RefPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
 
   return window.forget();
-#endif
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 nsresult
 nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
 {
@@ -265,7 +238,6 @@ nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
   return mOwner->GetTagType(result);
 }
 
-
 nsresult
 nsNPAPIPluginInstance::GetMode(int32_t *result)
 {
@@ -274,9 +246,7 @@ nsNPAPIPluginInstance::GetMode(int32_t *result)
   else
     return NS_ERROR_FAILURE;
 }
-#endif
 
-#ifdef MOZ_ENABLE_NPAPI
 nsTArray<nsNPAPIPluginStreamListener*>*
 nsNPAPIPluginInstance::StreamListeners()
 {
@@ -288,21 +258,17 @@ nsNPAPIPluginInstance::FileCachedStreamListeners()
 {
   return &mFileCachedStreamListeners;
 }
-#endif
 
 nsresult
 nsNPAPIPluginInstance::Start()
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (mRunning == RUNNING) {
     return NS_OK;
   }
 
   if (!mOwner) {
     MOZ_ASSERT(false, "Should not be calling Start() on unowned plugin.");
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
   }
 
   PluginDestructionGuard guard(this);
@@ -388,12 +354,10 @@ nsNPAPIPluginInstance::Start()
   }
 
   return newResult;
-#endif // MOZ_ENABLE_NPAPI
 }
 
 nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 {
-#ifdef MOZ_ENABLE_NPAPI
   // NPAPI plugins don't want a SetWindow(nullptr).
   if (!window || RUNNING != mRunning)
     return NS_OK;
@@ -444,24 +408,16 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
     window->clipRect.top, window->clipRect.bottom, window->clipRect.left, window->clipRect.right, error));
   }
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif // MOZ_ENABLE_NPAPI
 }
 
 nsresult
 nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
                                            nsIOutputStream* *result)
 {
-#ifdef MOZ_ENABLE_NPAPI
   nsPluginStreamToFile* stream = new nsPluginStreamToFile(target, mOwner);
   return stream->QueryInterface(kIOutputStreamIID, (void**)result);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 nsresult
 nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
                                          nsNPAPIPluginStreamListener** listener)
@@ -474,11 +430,9 @@ nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
 
   return NS_OK;
 }
-#endif
 
 nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
 {
-#ifdef MOZ_ENABLE_NPAPI
   NS_ENSURE_TRUE(platformPrint, NS_ERROR_NULL_POINTER);
 
   PluginDestructionGuard guard(this);
@@ -526,15 +480,11 @@ nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   platformPrint->print.embedPrint.window.clipRect.right));
 
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result,
                                             NSPluginCallReentry aSafeToReenterGecko)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
@@ -575,18 +525,13 @@ nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result,
   }
 
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif // MOZ_ENABLE_NPAPI
 }
 
 nsresult nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* value)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (!mPlugin || !mPlugin->GetLibrary())
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -607,15 +552,12 @@ nsresult nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* v
   }
 
   return rv;
-#endif
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 nsNPAPIPlugin* nsNPAPIPluginInstance::GetPlugin()
 {
   return mPlugin;
 }
-#endif
 
 nsresult nsNPAPIPluginInstance::GetNPP(NPP* aNPP)
 {
@@ -672,15 +614,12 @@ void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
 
 void nsNPAPIPluginInstance::RedrawPlugin()
 {
-#ifdef MOZ_ENABLE_NPAPI
   mOwner->RedrawPlugin();
-#endif
 }
 
 #if defined(XP_MACOSX)
 void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 {
-#ifdef MOZ_ENABLE_NPAPI
   // the event model needs to be set for the object frame immediately
   if (!mOwner) {
     NS_WARNING("Trying to set event model without a plugin instance owner!");
@@ -688,9 +627,8 @@ void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
   }
 
   mOwner->SetEventModel(aModel);
-#endif // MOZ_ENABLE_NPAPI
 }
-#endif // XP_MACOSX
+#endif
 
 nsresult nsNPAPIPluginInstance::GetDrawingModel(int32_t* aModel)
 {
@@ -700,7 +638,7 @@ nsresult nsNPAPIPluginInstance::GetDrawingModel(int32_t* aModel)
 
 nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 {
-#if defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_MACOSX
   if (!mPlugin)
       return NS_ERROR_FAILURE;
 
@@ -717,7 +655,7 @@ nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 nsresult
 nsNPAPIPluginInstance::ContentsScaleFactorChanged(double aContentsScaleFactor)
 {
-#if (defined(XP_MACOSX) || defined(XP_WIN)) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_MACOSX) || defined(XP_WIN)
   if (!mPlugin)
       return NS_ERROR_FAILURE;
 
@@ -738,16 +676,14 @@ nsNPAPIPluginInstance::ContentsScaleFactorChanged(double aContentsScaleFactor)
 nsresult
 nsNPAPIPluginInstance::CSSZoomFactorChanged(float aCSSZoomFactor)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance informing plugin of CSS Zoom Factor change this=%p\n",this));
 
   if (!mPlugin || !mPlugin->GetLibrary())
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
   if (!pluginFunctions->setvalue)
@@ -760,17 +696,13 @@ nsNPAPIPluginInstance::CSSZoomFactorChanged(float aCSSZoomFactor)
   NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVCSSZoomFactor, &value), this,
                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
   return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (mHaveJavaC2PJSObjectQuirk) {
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
   }
 
   NPObject *npobj = nullptr;
@@ -783,7 +715,6 @@ nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
   _releaseobject(npobj);
 
   return NS_OK;
-#endif
 }
 
 void
@@ -810,7 +741,6 @@ nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
   return NS_OK;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 class MOZ_STACK_CLASS AutoPluginLibraryCall
 {
 public:
@@ -829,28 +759,23 @@ private:
   PluginDestructionGuard mGuard;
   PluginLibrary* mLibrary;
 };
-#endif
 
 nsresult
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   AutoPluginLibraryCall library(this);
   if (!library)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   return library->AsyncSetWindow(&mNPP, window);
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::GetImageContainer(ImageContainer**aContainer)
 {
-#ifdef MOZ_ENABLE_NPAPI
   *aContainer = nullptr;
 
   if (RUNNING != mRunning)
@@ -858,15 +783,11 @@ nsNPAPIPluginInstance::GetImageContainer(ImageContainer**aContainer)
 
   AutoPluginLibraryCall library(this);
   return !library ? NS_ERROR_FAILURE : library->GetImageContainer(&mNPP, aContainer);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::GetImageSize(nsIntSize* aSize)
 {
-#ifdef MOZ_ENABLE_NPAPI
   *aSize = nsIntSize(0, 0);
 
   if (RUNNING != mRunning)
@@ -874,16 +795,12 @@ nsNPAPIPluginInstance::GetImageSize(nsIntSize* aSize)
 
   AutoPluginLibraryCall library(this);
   return !library ? NS_ERROR_FAILURE : library->GetImageSize(&mNPP, aSize);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 #if defined(XP_WIN)
 nsresult
 nsNPAPIPluginInstance::GetScrollCaptureContainer(ImageContainer**aContainer)
 {
-#ifdef MOZ_ENABLE_NPAPI
   *aContainer = nullptr;
 
   if (RUNNING != mRunning)
@@ -891,9 +808,6 @@ nsNPAPIPluginInstance::GetScrollCaptureContainer(ImageContainer**aContainer)
 
   AutoPluginLibraryCall library(this);
   return !library ? NS_ERROR_FAILURE : library->GetScrollCaptureContainer(&mNPP, aContainer);
-#else
-  return NS_ERROR_FAILURE;
-#endif // MOZ_ENABLE_NPAPI
 }
 #endif
 
@@ -902,7 +816,6 @@ nsNPAPIPluginInstance::HandledWindowedPluginKeyEvent(
                          const NativeEventData& aKeyEventData,
                          bool aIsConsumed)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (NS_WARN_IF(!mPlugin)) {
     return NS_ERROR_FAILURE;
   }
@@ -913,21 +826,16 @@ nsNPAPIPluginInstance::HandledWindowedPluginKeyEvent(
   }
   return library->HandledWindowedPluginKeyEvent(&mNPP, aKeyEventData,
                                                 aIsConsumed);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 void
 nsNPAPIPluginInstance::DidComposite()
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return;
 
   AutoPluginLibraryCall library(this);
   library->DidComposite(&mNPP);
-#endif
 }
 
 nsresult
@@ -940,64 +848,52 @@ nsNPAPIPluginInstance::NotifyPainted(void)
 nsresult
 nsNPAPIPluginInstance::GetIsOOP(bool* aIsAsync)
 {
-#ifdef MOZ_ENABLE_NPAPI
   AutoPluginLibraryCall library(this);
   if (!library)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   *aIsAsync = library->IsOOP();
   return NS_OK;
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::SetBackgroundUnknown()
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   AutoPluginLibraryCall library(this);
   if (!library)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   return library->SetBackgroundUnknown(&mNPP);
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::BeginUpdateBackground(nsIntRect* aRect,
                                              DrawTarget** aDrawTarget)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   AutoPluginLibraryCall library(this);
   if (!library)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   return library->BeginUpdateBackground(&mNPP, *aRect, aDrawTarget);
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::EndUpdateBackground(nsIntRect* aRect)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   AutoPluginLibraryCall library(this);
   if (!library)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   return library->EndUpdateBackground(&mNPP, *aRect);
-#endif
 }
 
 nsresult
@@ -1072,13 +968,11 @@ nsNPAPIPluginInstance::PopPopupsEnabledState()
 nsresult
 nsNPAPIPluginInstance::GetPluginAPIVersion(uint16_t* version)
 {
-#ifdef MOZ_ENABLE_NPAPI
   NS_ENSURE_ARG_POINTER(version);
 
   if (!mPlugin)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   if (!mPlugin->GetLibrary())
     return NS_ERROR_FAILURE;
 
@@ -1087,22 +981,19 @@ nsNPAPIPluginInstance::GetPluginAPIVersion(uint16_t* version)
   *version = pluginFunctions->version;
 
   return NS_OK;
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::PrivateModeStateChanged(bool enabled)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance informing plugin of private mode state change this=%p\n",this));
 
   if (!mPlugin || !mPlugin->GetLibrary())
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
   if (!pluginFunctions->setvalue)
@@ -1115,17 +1006,13 @@ nsNPAPIPluginInstance::PrivateModeStateChanged(bool enabled)
   NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVprivateModeBool, &value), this,
                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
   return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::IsPrivateBrowsing(bool* aEnabled)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (!mOwner)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
 
   nsCOMPtr<nsIDocument> doc;
   mOwner->GetDocument(getter_AddRefs(doc));
@@ -1138,7 +1025,6 @@ nsNPAPIPluginInstance::IsPrivateBrowsing(bool* aEnabled)
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
   *aEnabled = (loadContext && loadContext->UsePrivateBrowsing());
   return NS_OK;
-#endif
 }
 
 static void
@@ -1151,7 +1037,8 @@ PluginTimerCallback(nsITimer *aTimer, void *aClosure)
   PLUGIN_LOG(PLUGIN_LOG_NOISY, ("nsNPAPIPluginInstance running plugin timer callback this=%p\n", npp->ndata));
 
   MAIN_THREAD_JNI_REF_GUARD;
-  // Some plugins call unscheduletimer from this callback. Use a guard.
+  // Some plugins (Flash on Android) calls unscheduletimer
+  // from this callback.
   t->inCallback = true;
   (*(t->callback))(npp, id);
   t->inCallback = false;
@@ -1248,11 +1135,9 @@ NPBool
 nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                                     double *destX, double *destY, NPCoordinateSpace destSpace)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (mOwner) {
     return mOwner->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
   }
-#endif
 
   return false;
 }
@@ -1260,47 +1145,36 @@ nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinate
 nsresult
 nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (!mOwner) {
     *result = nullptr;
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
   }
 
   return mOwner->GetDOMElement(result);
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   if (!mOwner)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
+
   return mOwner->InvalidateRect(invalidRect);
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
   if (!mOwner)
-#endif
     return NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_NPAPI
 
   return mOwner->InvalidateRegion(invalidRegion);
-#endif
 }
 
 nsresult
@@ -1314,7 +1188,6 @@ nsNPAPIPluginInstance::GetMIMEType(const char* *result)
   return NS_OK;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 nsPluginInstanceOwner*
 nsNPAPIPluginInstance::GetOwner()
 {
@@ -1326,7 +1199,6 @@ nsNPAPIPluginInstance::SetOwner(nsPluginInstanceOwner *aOwner)
 {
   mOwner = aOwner;
 }
-#endif
 
 nsresult
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow& window)
@@ -1337,7 +1209,6 @@ nsNPAPIPluginInstance::AsyncSetWindow(NPWindow& window)
 void
 nsNPAPIPluginInstance::URLRedirectResponse(void* notifyData, NPBool allow)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (!notifyData) {
     return;
   }
@@ -1349,18 +1220,15 @@ nsNPAPIPluginInstance::URLRedirectResponse(void* notifyData, NPBool allow)
       currentListener->URLRedirectResponse(allow);
     }
   }
-#endif
 }
 
 NPError
 nsNPAPIPluginInstance::InitAsyncSurface(NPSize *size, NPImageFormat format,
                                         void *initData, NPAsyncSurface *surface)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (mOwner) {
     return mOwner->InitAsyncSurface(size, format, initData, surface);
   }
-#endif
 
   return NPERR_GENERIC_ERROR;
 }
@@ -1368,11 +1236,9 @@ nsNPAPIPluginInstance::InitAsyncSurface(NPSize *size, NPImageFormat format,
 NPError
 nsNPAPIPluginInstance::FinalizeAsyncSurface(NPAsyncSurface *surface)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (mOwner) {
     return mOwner->FinalizeAsyncSurface(surface);
   }
-#endif
 
   return NPERR_GENERIC_ERROR;
 }
@@ -1380,11 +1246,9 @@ nsNPAPIPluginInstance::FinalizeAsyncSurface(NPAsyncSurface *surface)
 void
 nsNPAPIPluginInstance::SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (mOwner) {
     mOwner->SetCurrentAsyncSurface(surface, changed);
   }
-#endif
 }
 
 class CarbonEventModelFailureEvent : public Runnable {
@@ -1455,7 +1319,6 @@ GetJavaVersionFromMimetype(nsPluginTag* pluginTag, nsCString& version)
   return false;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 void
 nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
                                                  const char* const* paramNames,
@@ -1520,40 +1383,30 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
 
   mHaveJavaC2PJSObjectQuirk = true;
 }
-#endif
 
 double
 nsNPAPIPluginInstance::GetContentsScaleFactor()
 {
-#ifdef MOZ_ENABLE_NPAPI
   double scaleFactor = 1.0;
   if (mOwner) {
     mOwner->GetContentsScaleFactor(&scaleFactor);
   }
   return scaleFactor;
-#else
-  return -1.0;
-#endif
 }
 
 float
 nsNPAPIPluginInstance::GetCSSZoomFactor()
 {
-#ifdef MOZ_ENABLE_NPAPI
   float zoomFactor = 1.0;
   if (mOwner) {
     mOwner->GetCSSZoomFactor(&zoomFactor);
   }
   return zoomFactor;
-#else
-  return -1.0f;
-#endif
 }
 
 nsresult
 nsNPAPIPluginInstance::GetRunID(uint32_t* aRunID)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (NS_WARN_IF(!aRunID)) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1568,9 +1421,6 @@ nsNPAPIPluginInstance::GetRunID(uint32_t* aRunID)
   }
 
   return library->GetRunID(aRunID);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 nsresult
@@ -1636,7 +1486,6 @@ nsNPAPIPluginInstance::WindowAudioCaptureChanged(bool aCapture)
 nsresult
 nsNPAPIPluginInstance::SetMuted(bool aIsMuted)
 {
-#ifdef MOZ_ENABLE_NPAPI
   if (RUNNING != mRunning)
     return NS_OK;
 
@@ -1657,7 +1506,4 @@ nsNPAPIPluginInstance::SetMuted(bool aIsMuted)
   NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVmuteAudioBool, &value), this,
                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
   return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }

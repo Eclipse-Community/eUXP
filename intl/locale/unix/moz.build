@@ -9,15 +9,20 @@ SOURCES += [
     'nsPosixLocale.cpp',
 ]
 
-SOURCES += [
-    'nsUNIXCharset.cpp',
-]
-GENERATED_FILES = [
-    'unixcharset.properties.h',
-]
-unixcharset = GENERATED_FILES['unixcharset.properties.h']
-unixcharset.script = '../props2arrays.py'
-unixcharset.inputs = ['unixcharset.properties']
+if CONFIG['OS_TARGET'] == 'Android':
+    SOURCES += [
+        'nsAndroidCharset.cpp',
+    ]
+else:
+    SOURCES += [
+        'nsUNIXCharset.cpp',
+    ]
+    GENERATED_FILES = [
+        'unixcharset.properties.h',
+    ]
+    unixcharset = GENERATED_FILES['unixcharset.properties.h']
+    unixcharset.script = '../props2arrays.py'
+    unixcharset.inputs = ['unixcharset.properties']
 
 FINAL_LIBRARY = 'xul'
 
@@ -26,7 +31,6 @@ LOCAL_INCLUDES += [
 ]
 
 # CODESET is not automatically defined on some older versions of Redhat.
-# XXXMC: Which ones? Do we still support those older versions?
 # Define _XOPEN_SOURCE so CODESET will get defined and thus allow
 # nl_langinfo(CODESET) to compile on these systems.
 if CONFIG['OS_ARCH'] == 'Linux':

@@ -11,7 +11,9 @@ DIRS += [
     'find',
     'webbrowserpersist',
     'commandhandler',
-    'printingui',
 ]
+
+if CONFIG['MOZ_XUL']:
+    DIRS += ['printingui']
 
 DIRS += ['build']

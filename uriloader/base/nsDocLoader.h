@@ -58,7 +58,7 @@ public:
 
     nsDocLoader();
 
-    [[nodiscard]] virtual nsresult Init();
+    virtual [[nodiscard]] nsresult Init();
 
     static already_AddRefed<nsDocLoader> GetAsDocLoader(nsISupports* aSupports);
     // Needed to deal with ambiguous inheritance from nsISupports...
@@ -67,7 +67,7 @@ public:
     }
 
     // Add aDocLoader as a child to the docloader service.
-    [[nodiscard]] static nsresult AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader);
+    static [[nodiscard]] nsresult AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTLOADER
@@ -114,7 +114,7 @@ public:
 protected:
     virtual ~nsDocLoader();
 
-    [[nodiscard]] virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
+    virtual [[nodiscard]] nsresult SetDocLoaderParent(nsDocLoader * aLoader);
 
     bool IsBusy();
 

@@ -110,6 +110,7 @@ ALLOW_COMPILER_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
 
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 # Suppress warnings in third-party code.
@@ -141,7 +142,3 @@ if CONFIG['MOZ_USE_PTHREADS']:
 DEFINES['HAVE_ZLIB'] = True
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
-
-# protobuf wants RTTI on gcc
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-frtti']

@@ -14,10 +14,14 @@
 #include "nsIServiceManager.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
+#ifdef MOZ_XUL
 #include "nsITreeView.h"
+#endif
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
+#ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
+#endif
 #include "nsIRootBox.h"
 #include "nsIBoxObject.h"
 #include "mozilla/Preferences.h"
@@ -38,9 +42,11 @@ nsXULTooltipListener::nsXULTooltipListener()
   : mMouseScreenX(0)
   , mMouseScreenY(0)
   , mTooltipShownOnce(false)
+#ifdef MOZ_XUL
   , mIsSourceTree(false)
   , mNeedTitletip(false)
   , mLastTreeRow(-1)
+#endif
 {
   if (sTooltipListenerCount++ == 0) {
     // register the callback so we get notified of updates
@@ -89,6 +95,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
     return;
 #endif
 
+#ifdef MOZ_XUL
   // check to see if the mouse left the targetNode, and if so,
   // hide the tooltip
   if (currentTooltip) {
@@ -112,6 +119,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
       }
     }
   }
+#endif
 }
 
 void
@@ -149,9 +157,11 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIContent> sourceContent = do_QueryInterface(
     aEvent->InternalDOMEvent()->GetCurrentTarget());
   mSourceNode = do_GetWeakReference(sourceContent);
+#ifdef MOZ_XUL
   mIsSourceTree = sourceContent->IsXULElement(nsGkAtoms::treechildren);
   if (mIsSourceTree)
     CheckTreeBodyMove(mouseEvent);
+#endif
 
   // as the mouse moves, we want to make sure we reset the timer to show it, 
   // so that the delay is from when the mouse stops moving, not when it enters
@@ -200,8 +210,10 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
     return;
   }
 
+#ifdef MOZ_XUL
   if (mIsSourceTree)
     return;
+#endif
 
   HideTooltip();
   // set a flag so that the tooltip is only displayed once until the mouse
@@ -307,6 +319,7 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
 void
 nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
 {
@@ -363,6 +376,7 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     mLastTreeCol = col;
   }
 }
+#endif
 
 nsresult
 nsXULTooltipListener::ShowTooltip()
@@ -383,13 +397,15 @@ nsXULTooltipListener::ShowTooltip()
     return NS_OK;
   }
 
-  // Make sure the target node is still attached to some document.
+  // Make sure the target node is still attached to some document. 
   // It might have been deleted.
   if (sourceNode->IsInComposedDoc()) {
+#ifdef MOZ_XUL
     if (!mIsSourceTree) {
       mLastTreeRow = -1;
       mLastTreeCol = nullptr;
     }
+#endif
 
     mCurrentTooltip = do_GetWeakReference(tooltipNode);
     LaunchTooltip();
@@ -401,11 +417,11 @@ nsXULTooltipListener::ShowTooltip()
 
     // listen for popuphidden on the tooltip node, so that we can
     // be sure DestroyPopup is called even if someone else closes the tooltip
-    currentTooltip->AddSystemEventListener(NS_LITERAL_STRING("popuphiding"),
+    currentTooltip->AddSystemEventListener(NS_LITERAL_STRING("popuphiding"), 
                                            this, false, false);
 
     // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at document level
-    doc = sourceNode->GetComposedDoc();
+    nsIDocument* doc = sourceNode->GetComposedDoc();
     if (doc) {
       // Probably, we should listen to untrusted events for hiding tooltips
       // on content since tooltips might disturb something of web
@@ -427,6 +443,7 @@ nsXULTooltipListener::ShowTooltip()
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
 // XXX: "This stuff inside DEBUG_crap could be used to make tree tooltips work
 //       in the future."
 #ifdef DEBUG_crap
@@ -463,6 +480,7 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
     aTooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::label, label, true);
   }
 }
+#endif
 
 void
 nsXULTooltipListener::LaunchTooltip()
@@ -471,6 +489,7 @@ nsXULTooltipListener::LaunchTooltip()
   if (!currentTooltip)
     return;
 
+#ifdef MOZ_XUL
   if (mIsSourceTree && mNeedTitletip) {
     nsCOMPtr<nsITreeBoxObject> obx;
     GetSourceTreeBoxObject(getter_AddRefs(obx));
@@ -498,17 +517,21 @@ nsXULTooltipListener::LaunchTooltip()
     if (!pm->IsPopupOpen(currentTooltip))
       mCurrentTooltip = nullptr;
   }
+#endif
+
 }
 
 nsresult
 nsXULTooltipListener::HideTooltip()
 {
+#ifdef MOZ_XUL
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
   if (currentTooltip) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm)
       pm->HidePopup(currentTooltip, false, false, false, false);
   }
+#endif
 
   DestroyTooltip();
   return NS_OK;
@@ -583,18 +606,22 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     nsCOMPtr<nsIContent> tooltipEl = document->GetElementById(tooltipId);
 
     if (tooltipEl) {
+#ifdef MOZ_XUL
       mNeedTitletip = false;
+#endif
       tooltipEl.forget(aTooltip);
       return NS_OK;
     }
   }
 
+#ifdef MOZ_XUL
   // titletips should just use the default tooltip
   if (mIsSourceTree && mNeedTitletip) {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShell());
     NS_ENSURE_STATE(rootBox);
     NS_IF_ADDREF(*aTooltip = rootBox->GetDefaultTooltip());
   }
+#endif
 
   return NS_OK;
 }
@@ -610,6 +637,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
     return rv;
   }
 
+#ifdef MOZ_XUL
   // Submenus can't be used as tooltips, see bug 288763.
   nsIContent* parent = tooltip->GetParent();
   if (parent) {
@@ -619,6 +647,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
       return NS_ERROR_FAILURE;
     }
   }
+#endif
 
   tooltip.swap(*aTooltip);
   return rv;
@@ -653,7 +682,9 @@ nsXULTooltipListener::DestroyTooltip()
   // kill any ongoing timers
   KillTooltipTimer();
   mSourceNode = nullptr;
+#ifdef MOZ_XUL
   mLastTreeCol = nullptr;
+#endif
 
   return NS_OK;
 }
@@ -676,6 +707,7 @@ nsXULTooltipListener::sTooltipCallback(nsITimer *aTimer, void *aListener)
     instance->ShowTooltip();
 }
 
+#ifdef MOZ_XUL
 nsresult
 nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
 {
@@ -697,3 +729,4 @@ nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
   }
   return NS_ERROR_FAILURE;
 }
+#endif

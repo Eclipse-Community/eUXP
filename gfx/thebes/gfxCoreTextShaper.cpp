@@ -23,8 +23,6 @@ CTFontDescriptorRef gfxCoreTextShaper::sDisableLigaturesDescriptor = nullptr;
 CTFontDescriptorRef gfxCoreTextShaper::sIndicFeaturesDescriptor = nullptr;
 CTFontDescriptorRef gfxCoreTextShaper::sIndicDisableLigaturesDescriptor = nullptr;
 
-// CoreText shaper is unsupported on 10.4
-#if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
 static CFStringRef sCTWritingDirectionAttributeName = nullptr;
 
 // See CTStringAttributes.h
@@ -780,7 +778,6 @@ gfxCoreTextShaper::CreateCTFontWithFeatures(CGFloat aSize,
     return ::CTFontCreateWithGraphicsFont(f->GetCGFontRef(), aSize, nullptr,
                                           aDescriptor);
 }
-#endif
 
 void
 gfxCoreTextShaper::Shutdown() // [static]

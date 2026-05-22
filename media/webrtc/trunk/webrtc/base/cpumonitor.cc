@@ -107,6 +107,7 @@ bool CpuSampler::Init() {
     return false;
   }
 #if defined(WEBRTC_WIN)
+  // Note that GetSystemTimes is available in Windows XP SP1 or later.
   // http://msdn.microsoft.com/en-us/library/ms724400.aspx
   // NtQuerySystemInformation is used as a fallback.
   if (!force_fallback_) {

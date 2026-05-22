@@ -25,6 +25,10 @@
 #include "nsIFile.h"
 #include "nsIWidget.h"
 
+#if defined(XP_WIN)
+#include "mozilla/WindowsVersion.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -1112,7 +1116,12 @@ nsSocketTransportService::UpdateSendBufferPref(nsIPrefBranch *pref)
     }
 
 #if defined(XP_WIN)
-    mSendBufferSize = 131072 * 4;
+    // If the pref is not set but this is windows set it depending on windows version
+    if (!IsWin2003OrLater()) { // windows xp
+        mSendBufferSize = 131072;
+    } else { // vista or later
+        mSendBufferSize = 131072 * 4;
+    }
 #endif
 }
 
@@ -1305,7 +1314,7 @@ nsSocketTransportService::GetSendBufferSize(int32_t *value)
 
 #if defined(XP_WIN)
 #include <windows.h>
-#elif defined(XP_UNIX) && !defined(NEXTSTEP) && !defined(QNX)
+#elif defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP) && !defined(QNX)
 #include <sys/resource.h>
 #endif
 
@@ -1379,7 +1388,7 @@ nsSocketTransportService::DiscoverMaxCount()
 {
     gMaxCount = SOCKET_LIMIT_MIN;
 
-#if defined(XP_UNIX) && !defined(NEXTSTEP) && !defined(QNX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP) && !defined(QNX)
     // On unix and os x network sockets and file
     // descriptors are the same. OS X comes defaulted at 256,
     // most linux at 1000. We can reliably use [sg]rlimit to

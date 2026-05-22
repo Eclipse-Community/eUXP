@@ -119,19 +119,24 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PrintTargetWindows.h',
     ]
     UNIFIED_SOURCES += [
-        'gfxDWriteFontList.cpp',
-    ]    
-    SOURCES += [
-        'gfxDWriteCommon.cpp',
-        'gfxDWriteFonts.cpp',
-        'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
+    ]
+    SOURCES += [
+        'gfxGDIFont.cpp',
         'gfxWindowsNativeDrawing.cpp',
         'gfxWindowsPlatform.cpp',
         'gfxWindowsSurface.cpp',
         'PrintTargetPDF.cpp',
         'PrintTargetWindows.cpp',
     ]
+    if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
+        UNIFIED_SOURCES += [
+            'gfxDWriteFontList.cpp',
+        ]
+        SOURCES += [
+            'gfxDWriteCommon.cpp',
+            'gfxDWriteFonts.cpp',
+        ]
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
 if CONFIG['INTEL_ARCHITECTURE']:
@@ -223,7 +228,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    for var in ('MOZ_ENABLE_D3D10_LAYER'):
+    for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):
         if CONFIG[var]:
             DEFINES[var] = True
 

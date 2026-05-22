@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'src/base/file_path.cc',
     'src/base/file_util.cc',
     'src/base/histogram.cc',
+    'src/base/lock.cc',
     'src/base/logging.cc',
     'src/base/message_loop.cc',
     'src/base/message_pump_default.cc',
@@ -108,7 +109,7 @@ if os_bsd:
         'src/base/atomicops_internals_x86_gcc.cc',
         'src/base/time_posix.cc',
     ]
-    if CONFIG['OS_ARCH'] == 'kFreeBSD':
+    if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
         SOURCES += [
             'src/base/process_util_linux.cc'
         ]
@@ -123,6 +124,12 @@ if os_linux:
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
     ]
+    if CONFIG['OS_TARGET'] == 'Android':
+        UNIFIED_SOURCES += [
+            'src/base/message_pump_android.cc',
+        ]
+        DEFINES['ANDROID'] = True
+        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
 
 if os_bsd or os_linux or os_solaris:
     if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:

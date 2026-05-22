@@ -33,6 +33,7 @@ XPIDL_SOURCES += [
     'nsIChildChannel.idl',
     'nsIClassOfService.idl',
     'nsIContentSniffer.idl',
+    'nsICryptoFIPSInfo.idl',
     'nsICryptoHash.idl',
     'nsICryptoHMAC.idl',
     'nsIDashboard.idl',
@@ -127,6 +128,7 @@ XPIDL_SOURCES += [
     'nsIUploadChannel.idl',
     'nsIUploadChannel2.idl',
     'nsIURI.idl',
+    'nsIURIClassifier.idl',
     'nsIURIWithBlobImpl.idl',
     'nsIURIWithPrincipal.idl',
     'nsIURL.idl',
@@ -198,6 +200,7 @@ UNIFIED_SOURCES += [
     'nsBaseChannel.cpp',
     'nsBaseContentStream.cpp',
     'nsBufferedStreams.cpp',
+    'nsChannelClassifier.cpp',
     'nsDirectoryIndexStream.cpp',
     'nsDNSPrefetch.cpp',
     'nsDownloader.cpp',
@@ -293,6 +296,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/protocol/http',
     '/netwerk/socket',
+    '/security/pkix/include'
 ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:

@@ -36,6 +36,10 @@
 
 #include "base/histogram.h"
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"
 #include <windows.h>
@@ -305,6 +309,9 @@ Dump(JSContext* cx, unsigned argc, Value* vp)
     if (!utf8str.encodeUtf8(cx, str))
         return false;
 
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.ptr());
+#endif
 #ifdef XP_WIN
     if (IsDebuggerPresent()) {
         nsAutoJSString wstr;
@@ -935,7 +942,7 @@ ProcessArgsForCompartment(JSContext* cx, char** argv, int argc)
             break;
         case 'S':
             ContextOptionsRef(cx).toggleWerror();
-            [[fallthrough]]; // because -S implies -s
+            MOZ_FALLTHROUGH; // because -S implies -s
         case 's':
             ContextOptionsRef(cx).toggleExtraWarnings();
             break;
@@ -1450,6 +1457,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
 
         // Initialize graphics prefs on the main thread, if not already done
         gfxPrefs::GetSingleton();
+        // Initialize e10s check on the main thread, if not already done
+        BrowserTabsRemoteAutostart();
 #ifdef XP_WIN
         // Plugin may require audio session if installed plugin can initialize
         // asynchronized.

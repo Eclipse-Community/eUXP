@@ -105,10 +105,8 @@ partial interface Navigator {
 partial interface Navigator {
   [Throws]
   readonly attribute MimeTypeArray mimeTypes;
-#ifdef MOZ_ENABLE_NPAPI
   [Throws]
   readonly attribute PluginArray plugins;
-#endif
 };
 
 // https://globalprivacycontrol.github.io/gpc-spec/
@@ -305,6 +303,22 @@ partial interface Navigator {
   [NewObject, Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist"]
   readonly attribute LegacyMozTCPSocket mozTCPSocket;
 };
+
+#ifdef MOZ_EME
+partial interface Navigator {
+  [Pref="media.eme.apiVisible", NewObject]
+  Promise<MediaKeySystemAccess>
+  requestMediaKeySystemAccess(DOMString keySystem,
+                              sequence<MediaKeySystemConfiguration> supportedConfigurations);
+};
+#endif
+
+#ifdef NIGHTLY_BUILD
+partial interface Navigator {
+  [Func="Navigator::IsE10sEnabled"]
+  readonly attribute boolean mozE10sEnabled;
+};
+#endif
 
 interface mixin NavigatorConcurrentHardware {
   readonly attribute unsigned long long hardwareConcurrency;

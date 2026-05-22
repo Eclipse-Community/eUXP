@@ -65,7 +65,6 @@ enum class OperatingSystem {
   OSX11_0,
   OSX12_0,
   OSX13_0,
-  OSX14_0,
   Ios
 };
 
@@ -97,7 +96,6 @@ enum DeviceFamily {
   NvidiaBlockD3D9Layers,
   RadeonX1000,
   Geforce7300GT,
-  GeforceFX,
   Nvidia310M,
   Nvidia8800GTS,
   Bug1137716,

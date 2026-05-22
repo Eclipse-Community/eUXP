@@ -15,9 +15,6 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const TIMEOUT                         = 60 * 1000;
 const PREFIX_NS_RDF                   = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
@@ -27,13 +24,14 @@ const PREFIX_THEME                    = "urn:mozilla:theme:";
 const XMLURI_PARSE_ERROR              = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
-const APPCOMPATID                     = Services.prefs.getCharPref("extensions.guid.appCompatId");
-const APPCOMPATVERSION                = Services.prefs.getCharPref("extensions.guid.appCompatVersion");
+const FIREFOX_ID                      = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const FIREFOX_APPCOMPATVERSION        = "56.9"
 
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 const PREF_EM_MIN_COMPAT_APP_VERSION  = "extensions.minCompatibleAppVersion";
 
-
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
@@ -525,13 +523,13 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
         maxVersion: getRequiredProperty(app, "max_version", "string"),
       }
     }
-#ifdef UXP_APPCOMPAT_GUID
-    else if (APPCOMPATID in applications) {
+#ifdef MOZ_PHOENIX_EXTENSIONS
+    else if (FIREFOX_ID in applications) {
       logger.debug("update.json: Dual-GUID targetApplication");
-      app = getProperty(applications, APPCOMPATID, "object");
+      app = getProperty(applications, FIREFOX_ID, "object");
 
       appEntry = {
-        id: APPCOMPATID,
+        id: FIREFOX_ID,
         minVersion: getRequiredProperty(app, "min_version", "string"),
         maxVersion: getRequiredProperty(app, "max_version", "string"),
       }
@@ -553,15 +551,15 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
 
       appEntry = {
 #ifdef MOZ_PHOENIX
-        id: APPCOMPATID,
+        id: FIREFOX_ID,
         minVersion: getProperty(app, "strict_min_version", "string",
                                 Services.prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION)),
 #else
         id: TOOLKIT_ID,
         minVersion: platformVersion,
 #endif
-#if defined(MOZ_PHOENIX) && defined(UXP_APPCOMPAT_GUID)
-        maxVersion: APPCOMPATVERSION,
+#if defined(MOZ_PHOENIX) && defined(MOZ_PHOENIX_EXTENSIONS)
+        maxVersion: FIREFOX_APPCOMPATVERSION,
 #else
         maxVersion: '*',
 #endif
@@ -835,8 +833,8 @@ function matchesVersions(aUpdate, aAppVersion, aPlatformVersion,
       return (Services.vc.compare(aAppVersion, app.minVersion) >= 0) &&
              (aIgnoreMaxVersion || (Services.vc.compare(aAppVersion, app.maxVersion) <= 0));
     }
-#ifdef UXP_APPCOMPAT_GUID
-    if (app.id == APPCOMPATID) {
+#ifdef MOZ_PHOENIX_EXTENSIONS
+    if (app.id == FIREFOX_ID) {
       return (Services.vc.compare(aAppVersion, app.minVersion) >= 0) &&
              (aIgnoreMaxVersion || (Services.vc.compare(aAppVersion, app.maxVersion) <= 0));
     }
@@ -898,8 +896,8 @@ this.AddonUpdateChecker = {
         if (aIgnoreCompatibility) {
           for (let targetApp of update.targetApplications) {
             let id = targetApp.id;
-#ifdef UXP_APPCOMPAT_GUID
-            if (id == Services.appinfo.ID || id == APPCOMPATID ||
+#ifdef MOZ_PHOENIX_EXTENSIONS
+            if (id == Services.appinfo.ID || id == FIREFOX_ID ||
                 id == TOOLKIT_ID)
 #else
             if (id == Services.appinfo.ID || id == TOOLKIT_ID)
@@ -979,7 +977,8 @@ this.AddonUpdateChecker = {
     // Define an array of internally used IDs to NOT send to AUS.
     let internalIDS = [
       '{972ce4c6-7e08-4474-a285-3208198ce6fd}', // Global Default Theme
-      'modern@themes.mozilla.org', // Modern Theme for Suite-based Applications
+      'modern@themes.mozilla.org', // Modern Theme for Borealis/Suite-based Applications
+      'xplatform@interlink.projects.binaryoutcast.com', // Pref-set default theme for Interlink
       '{e2fda1a4-762b-4020-b5ad-a41df1933103}', // Lightning/Calendar Extension
       '{a62ef8ec-5fdc-40c2-873c-223b8a6925cc}' // Provider for Google Calendar (gdata) Extension
     ];

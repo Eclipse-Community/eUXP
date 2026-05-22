@@ -370,6 +370,12 @@ this.Download.prototype = {
                                 message: "Cannot start after finalization."}));
     }
 
+    if (this.error && this.error.becauseBlockedByReputationCheck) {
+      return Promise.reject(new DownloadError({
+                                message: "Cannot start after being blocked " +
+                                         "by a reputation check."}));
+    }
+
     // Initialize all the status properties for a new or restarted download.
     this.stopped = false;
     this.canceled = false;
@@ -1527,6 +1533,7 @@ this.DownloadError = function (aProperties)
     this.message = aProperties.message;
   } else if (aProperties.becauseBlocked ||
              aProperties.becauseBlockedByParentalControls ||
+             aProperties.becauseBlockedByReputationCheck ||
              aProperties.becauseBlockedByRuntimePermissions) {
     this.message = "Download blocked.";
   } else {
@@ -1551,6 +1558,10 @@ this.DownloadError = function (aProperties)
   if (aProperties.becauseBlockedByParentalControls) {
     this.becauseBlocked = true;
     this.becauseBlockedByParentalControls = true;
+  } else if (aProperties.becauseBlockedByReputationCheck) {
+    this.becauseBlocked = true;
+    this.becauseBlockedByReputationCheck = true;
+    this.reputationCheckVerdict = aProperties.reputationCheckVerdict || "";
   } else if (aProperties.becauseBlockedByRuntimePermissions) {
     this.becauseBlocked = true;
     this.becauseBlockedByRuntimePermissions = true;
@@ -1564,6 +1575,16 @@ this.DownloadError = function (aProperties)
 
   this.stack = new Error().stack;
 }
+
+/**
+ * These constants are used by the reputationCheckVerdict property and indicate
+ * the detailed reason why a download is blocked.
+ *
+ * @note These values should not be changed because they can be serialized.
+ */
+this.DownloadError.BLOCK_VERDICT_MALWARE = "Malware";
+this.DownloadError.BLOCK_VERDICT_POTENTIALLY_UNWANTED = "PotentiallyUnwanted";
+this.DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
 
 this.DownloadError.prototype = {
   __proto__: Error.prototype,
@@ -1596,12 +1617,28 @@ this.DownloadError.prototype = {
   becauseBlockedByParentalControls: false,
 
   /**
+   * Indicates the download was blocked because it failed the reputation check
+   * and may be malware.
+   */
+  becauseBlockedByReputationCheck: false,
+
+  /**
    * Indicates the download was blocked because a runtime permission required to
    * download files was not granted.
    *
-   * This does not apply to all systems.
+   * This does not apply to all systems. On Android this flag is set to true if
+   * a needed runtime permission (storage) has not been granted by the user.
    */
   becauseBlockedByRuntimePermissions: false,
+
+  /**
+   * If becauseBlockedByReputationCheck is true, indicates the detailed reason
+   * why the download was blocked, according to the "BLOCK_VERDICT_" constants.
+   *
+   * If the download was not blocked or the reason for the block is unknown,
+   * this will be an empty string.
+   */
+  reputationCheckVerdict: "",
 
   /**
    * If this DownloadError was caused by an exception this property will
@@ -1624,7 +1661,9 @@ this.DownloadError.prototype = {
       becauseTargetFailed: this.becauseTargetFailed,
       becauseBlocked: this.becauseBlocked,
       becauseBlockedByParentalControls: this.becauseBlockedByParentalControls,
+      becauseBlockedByReputationCheck: this.becauseBlockedByReputationCheck,
       becauseBlockedByRuntimePermissions: this.becauseBlockedByRuntimePermissions,
+      reputationCheckVerdict: this.reputationCheckVerdict,
     };
 
     serializeUnknownProperties(this, serializable);
@@ -1649,7 +1688,9 @@ this.DownloadError.fromSerializable = function (aSerializable) {
     property != "becauseTargetFailed" &&
     property != "becauseBlocked" &&
     property != "becauseBlockedByParentalControls" &&
-    property != "becauseBlockedByRuntimePermissions");
+    property != "becauseBlockedByReputationCheck" &&
+    property != "becauseBlockedByRuntimePermissions" &&
+    property != "reputationCheckVerdict");
 
   return e;
 };
@@ -2127,7 +2168,7 @@ this.DownloadCopySaver.prototype = {
         // up the chain of objects for the download.
         yield deferSaveComplete.promise;
 
-        yield this._move();
+        yield this._checkReputationAndMove(aSetPropertiesFn);
       } catch (ex) {
         // Ensure we always remove the placeholder for the final target file on
         // failure, independently of which code path failed.  In some cases, the
@@ -2150,16 +2191,49 @@ this.DownloadCopySaver.prototype = {
   },
 
   /**
-   * Move the downloaded data if required.
-   * If the download is using a part file we will move it to the target path
-   * since this is the final step in the saver.
+   * Perform the reputation check and cleanup the downloaded data if required.
+   * If the download passes the reputation check and is using a part file we
+   * will move it to the target path since reputation checking is the final
+   * step in the saver.
+   *
+   * @param aSetPropertiesFn
+   *        Function provided to the "execute" method.
    *
    * @return {Promise}
-   * @resolves When the move is complete.
+   * @resolves When the reputation check and cleanup is complete.
+   * @rejects DownloadError if the download should be blocked.
    */
-  _move: Task.async(function* () {
+  _checkReputationAndMove: Task.async(function* (aSetPropertiesFn) {
+    let download = this.download;
     let targetPath = this.download.target.path;
     let partFilePath = this.download.target.partFilePath;
+
+    let { shouldBlock, verdict } =
+        yield DownloadIntegration.shouldBlockForReputationCheck(download);
+    if (shouldBlock) {
+      let newProperties = { progress: 100, hasPartialData: false };
+
+      // We will remove the potentially dangerous file if instructed by
+      // DownloadIntegration. We will always remove the file when the
+      // download did not use a partial file path, meaning it
+      // currently has its final filename.
+      if (!DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
+        try {
+          yield OS.File.remove(partFilePath || targetPath);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      } else {
+        newProperties.hasBlockedData = true;
+      }
+
+      aSetPropertiesFn(newProperties);
+
+      throw new DownloadError({
+        becauseBlockedByReputationCheck: true,
+        reputationCheckVerdict: verdict,
+      });
+    }
 
     if (partFilePath) {
       yield OS.File.move(partFilePath, targetPath);
@@ -2493,7 +2567,8 @@ this.DownloadLegacySaver.prototype = {
           }
         }
 
-        yield this._move();
+        yield this._checkReputationAndMove(aSetPropertiesFn);
+
       } catch (ex) {
         // Ensure we always remove the final target file on failure,
         // independently of which code path failed.  In some cases, the
@@ -2526,8 +2601,8 @@ this.DownloadLegacySaver.prototype = {
     }.bind(this));
   },
 
-  _move: function () {
-    return DownloadCopySaver.prototype._move
+  _checkReputationAndMove: function () {
+    return DownloadCopySaver.prototype._checkReputationAndMove
                                       .apply(this, arguments);
   },
 

@@ -262,10 +262,9 @@ already_AddRefed<PerformanceMark> Performance::Mark(
   const PerformanceMarkOptions& aMarkOptions,
   ErrorResult& aRv)
 {
-  // Clear the buffer if it is full and throw an error informing the web dev.
+  // Don't add the entry if the buffer is full. XXX should be removed by bug 1159003.
   if (mUserEntries.Length() >= mResourceTimingBufferSize) {
-    aRv.Throw(NS_ERROR_DOM_UT_QUOTA_ERR);
-    mUserEntries.Clear();
+    return nullptr;
   }
 
   nsCOMPtr<nsIGlobalObject> parent = GetParentObject();
@@ -496,10 +495,10 @@ Performance::Measure(JSContext* aCx,
     return nullptr;
   }
 
-  // Clear the buffer if it is full and throw an error informing the web dev.
+  // Don't add the entry if the buffer is full. XXX should be removed by bug
+  // 1159003.
   if (mUserEntries.Length() >= mResourceTimingBufferSize) {
-    aRv.Throw(NS_ERROR_DOM_UT_QUOTA_ERR);
-    mUserEntries.Clear();
+    return nullptr;
   }
 
   // Maybe is more readable than using the union type directly.

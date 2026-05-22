@@ -26,9 +26,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 
 // Defined in dwmapi in a header that needs a higher numbered _WINNT #define
-#ifndef DWM_SIT_DISPLAYFRAME
 #define DWM_SIT_DISPLAYFRAME 0x1
-#endif
 
 namespace mozilla {
 namespace widget {
@@ -137,7 +135,7 @@ TaskbarPreview::Invalidate() {
     return NS_OK;
 
   HWND previewWindow = PreviewWindow();
-  return FAILED(DwmInvalidateIconicBitmaps(previewWindow))
+  return FAILED(WinUtils::dwmInvalidateIconicBitmapsPtr(previewWindow))
        ? NS_ERROR_FAILURE
        : NS_OK;
 }
@@ -282,13 +280,13 @@ TaskbarPreview::GetWindowHook() {
 void
 TaskbarPreview::EnableCustomDrawing(HWND aHWND, bool aEnable) {
   BOOL enabled = aEnable;
-  DwmSetWindowAttribute(
+  WinUtils::dwmSetWindowAttributePtr(
       aHWND,
       DWMWA_FORCE_ICONIC_REPRESENTATION,
       &enabled,
       sizeof(enabled));
 
-  DwmSetWindowAttribute(
+  WinUtils::dwmSetWindowAttributePtr(
       aHWND,
       DWMWA_HAS_ICONIC_BITMAP,
       &enabled,
@@ -389,11 +387,11 @@ TaskbarPreviewCallback::Done(nsISupports *aCanvas, bool aDrawBorder) {
   HRESULT hr;
   if (!mIsThumbnail) {
     POINT pptClient = { 0, 0 };
-    hr = DwmSetIconicLivePreviewBitmap(mPreview->PreviewWindow(),
-                                       hBitmap, &pptClient, flags);
+    hr = WinUtils::dwmSetIconicLivePreviewBitmapPtr(mPreview->PreviewWindow(),
+                                                    hBitmap, &pptClient, flags);
   } else {
-    hr = DwmSetIconicThumbnail(mPreview->PreviewWindow(),
-                               hBitmap, flags);
+    hr = WinUtils::dwmSetIconicThumbnailPtr(mPreview->PreviewWindow(),
+                                            hBitmap, flags);
   }
   MOZ_ASSERT(SUCCEEDED(hr));
   mozilla::Unused << hr;

@@ -39,8 +39,12 @@ if CONFIG['OS_TARGET'] == 'Android':
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-  SOURCES += ['OSXRunLoopSingleton.cpp']
-  EXPORTS += ['OSXRunLoopSingleton.h']
+    EXPORTS += [
+        'OSXRunLoopSingleton.h'
+    ]
+    SOURCES += [
+        'OSXRunLoopSingleton.cpp',
+    ]
 
 if CONFIG['_MSC_VER']:
     DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'

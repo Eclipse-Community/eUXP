@@ -78,8 +78,7 @@
 #include "mozilla/net/HttpChannelChild.h"
 
 
-#define UA_PREF_PREFIX          "useragent."
-#define GENERAL_UA_PREF_PREFIX  "general.useragent."
+#define UA_PREF_PREFIX          "general.useragent."
 #ifdef XP_WIN
 #define UA_SPARE_PLATFORM
 #endif
@@ -88,14 +87,13 @@
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define GPC_HEADER_ENABLED      "privacy.GPCheader.enabled"
-#define H2MANDATORY_SUITE       "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256"
-#define ALLOW_EXPERIMENTS       "network.allow-experiments"
-#define SAFE_HINT_HEADER_VALUE  "safeHint.enabled"
-#define SECURITY_PREFIX         "security."
-#define NEW_TAB_REMOTE_MODE     "browser.newtabpage.remote.mode"
+#define H2MANDATORY_SUITE        "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256"
+#define ALLOW_EXPERIMENTS        "network.allow-experiments"
+#define SAFE_HINT_HEADER_VALUE   "safeHint.enabled"
+#define SECURITY_PREFIX          "security."
+#define NEW_TAB_REMOTE_MODE           "browser.newtabpage.remote.mode"
 
-#define GUA_PREF(_pref) GENERAL_UA_PREF_PREFIX _pref
-#define UA_PREF(_pref) HTTP_PREF_PREFIX UA_PREF_PREFIX _pref
+#define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
 #define BROWSER_PREF(_pref) BROWSER_PREF_PREFIX _pref
 
@@ -277,7 +275,7 @@ nsHttpHandler::Init()
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
         prefBranch->AddObserver(HTTP_PREF_PREFIX, this, true);
-        prefBranch->AddObserver(GENERAL_UA_PREF_PREFIX, this, true);
+        prefBranch->AddObserver(UA_PREF_PREFIX, this, true);
         prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, true);
         prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, true);
         prefBranch->AddObserver(GPC_HEADER_ENABLED, this, true);
@@ -674,7 +672,7 @@ const nsAFlatCString &
 nsHttpHandler::UserAgent()
 {
     if (mUserAgentOverride) {
-        LOG(("Using user-agent override : %s\n", mUserAgentOverride.get()));
+        LOG(("using general.useragent.override : %s\n", mUserAgentOverride.get()));
         return mUserAgentOverride;
     }
 
@@ -853,7 +851,17 @@ nsHttpHandler::InitUserAgentComponents()
             buf += " i686 on x86_64";
         } else {
             buf += ' ';
+
+#ifdef AIX
+            // AIX uname returns machine specific info in the uname.machine
+            // field and does not return the cpu type like other platforms.
+            // We use the AIX version and release numbers instead.
+            buf += (char*)name.version;
+            buf += '.';
+            buf += (char*)name.release;
+#else
             buf += (char*)name.machine;
+#endif
         }
 
         mOscpu.Assign(buf);
@@ -909,8 +917,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     bool cVar = false;
 
-    if (PREF_CHANGED(GUA_PREF("appVersionIsBuildID"))) {
-        rv = prefs->GetBoolPref(GUA_PREF("appVersionIsBuildID"), &cVar);
+    if (PREF_CHANGED(UA_PREF("appVersionIsBuildID"))) {
+        rv = prefs->GetBoolPref(UA_PREF("appVersionIsBuildID"), &cVar);
         mAppVersionIsBuildID = (NS_SUCCEEDED(rv) && cVar);
         
         // Rebuild application version string.
@@ -919,8 +927,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         mUserAgentIsDirty = true;
     }
 
-    if (PREF_CHANGED(GUA_PREF("compatMode.gecko"))) {
-        rv = prefs->GetBoolPref(GUA_PREF("compatMode.gecko"), &cVar);
+    if (PREF_CHANGED(UA_PREF("compatMode.gecko"))) {
+        rv = prefs->GetBoolPref(UA_PREF("compatMode.gecko"), &cVar);
         mCompatGeckoEnabled = (NS_SUCCEEDED(rv) && cVar);
         
         // Rebuild rv: and Goanna slice version
@@ -943,8 +951,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         mUserAgentIsDirty = true;
     }
 
-    if (PREF_CHANGED(GUA_PREF("compatMode.firefox"))) {
-        rv = prefs->GetBoolPref(GUA_PREF("compatMode.firefox"), &cVar);
+    if (PREF_CHANGED(UA_PREF("compatMode.firefox"))) {
+        rv = prefs->GetBoolPref(UA_PREF("compatMode.firefox"), &cVar);
         mCompatFirefoxEnabled = (NS_SUCCEEDED(rv) && cVar);
         mUserAgentIsDirty = true;
     }
@@ -952,8 +960,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // general.useragent.compatMode.version
     // This is the version number used in rv: for Gecko compatibility
     // and in the Firefox/nn.nn slice when compatMode.firefox is enabled.
-    if (PREF_CHANGED(GUA_PREF("compatMode.version"))) {
-        prefs->GetCharPref(GUA_PREF("compatMode.version"),
+    if (PREF_CHANGED(UA_PREF("compatMode.version"))) {
+        prefs->GetCharPref(UA_PREF("compatMode.version"),
                            getter_Copies(mCompatFirefoxVersion));
         
         // rebuild mMisc and compatMode slice
@@ -970,8 +978,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     // general.useragent.override
-    if (PREF_CHANGED(UA_PREF("global_override"))) {
-        prefs->GetCharPref(UA_PREF("global_override"),
+    if (PREF_CHANGED(UA_PREF("override"))) {
+        prefs->GetCharPref(UA_PREF("override"),
                            getter_Copies(mUserAgentOverride));
         mUserAgentIsDirty = true;
     }

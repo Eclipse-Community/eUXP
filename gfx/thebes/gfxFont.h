@@ -1421,7 +1421,6 @@ public:
     bool Valid() const {
         return mIsValid;
     }
-    bool mSpacingKludge;
 
     // options for the kind of bounding box to return from measurement
     typedef enum {

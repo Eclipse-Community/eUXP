@@ -173,9 +173,6 @@
           'sources!': [
             'source/atomic32_posix.cc',
           ],
-          'cflags_cc': [
-            '-fpermissive',
-          ],
         }],
         ['OS=="ios" or OS=="mac"', {
           'defines': [

@@ -36,12 +36,15 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.cairo += [
         'cairo-win32.h',
     ]
+    if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
+        SOURCES += [
+            'cairo-dwrite-font.cpp',
+        ]
     if CONFIG['MOZ_ENABLE_D2D_SURFACE']:
         SOURCES += [
             'cairo-d2d-surface.cpp',
         ]
     SOURCES += [
-        'cairo-dwrite-font.cpp',
         'cairo-win32-font.c',
         'cairo-win32-surface.c',
     ]
@@ -241,7 +244,6 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-conversion',
         '-Wno-unused-but-set-variable',
     ]
-
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
     CFLAGS += [
         '-Wno-incompatible-pointer-types',
@@ -249,7 +251,6 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-tautological-constant-out-of-range-compare',
         '-Wno-error=uninitialized',
     ]
-
 if CONFIG['CLANG_CL']:
     CFLAGS += [
         '-Wno-deprecated-register',

@@ -255,7 +255,7 @@ nsJXLDecoder::ReadJXLData(const char* aData, size_t aLength)
           // that can immediately be processed.
           return Transition::ToAfterYield(State::JXL_DATA);
         }
-        [[fallthrough]];  // We are done.
+        MOZ_FALLTHROUGH;  // We are done.
       }
 
       case JXL_DEC_SUCCESS: {

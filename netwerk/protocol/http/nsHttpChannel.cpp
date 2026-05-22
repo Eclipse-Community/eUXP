@@ -29,6 +29,7 @@
 #include "nsISeekableStream.h"
 #include "nsILoadGroupChild.h"
 #include "nsIProtocolProxyService2.h"
+#include "nsIURIClassifier.h"
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -39,6 +40,7 @@
 #include "nsStreamUtils.h"
 #include "nsIOService.h"
 #include "nsDNSPrefetch.h"
+#include "nsChannelClassifier.h"
 #include "nsIRedirectResultListener.h"
 #include "mozilla/dom/ContentVerifier.h"
 #include "mozilla/TimeStamp.h"
@@ -5837,6 +5839,7 @@ nsHttpChannel::HandleBeginConnectContinue()
 nsresult
 nsHttpChannel::BeginConnectContinue()
 {
+    nsresult rv;
     // Check if request was cancelled during suspend AFTER on-modify-request or
     // on-useragent.
     if (mCanceled) {
@@ -5847,6 +5850,37 @@ nsHttpChannel::BeginConnectContinue()
     // nsIHttpChannel.redirectTo API request
     if (mAPIRedirectToURI) {
         return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+    }
+    // Check to see if this principal exists on local blocklists.
+    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier();
+    if (mLoadFlags & LOAD_CLASSIFY_URI) {
+        nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
+        bool tpEnabled = false;
+        channelClassifier->ShouldEnableTrackingProtection(this, &tpEnabled);
+        if (classifier && tpEnabled) {
+            // We skip speculative connections by setting mLocalBlocklist only
+            // when tracking protection is enabled. Though we could do this for
+            // both phishing and malware, it is not necessary for correctness,
+            // since no network events will be received while the
+            // nsChannelClassifier is in progress. See bug 1122691.
+            nsCOMPtr<nsIURI> uri;
+            rv = GetURI(getter_AddRefs(uri));
+            if (NS_SUCCEEDED(rv) && uri) {
+                nsAutoCString tables;
+                Preferences::GetCString("urlclassifier.trackingTable", &tables);
+                nsAutoCString results;
+                rv = classifier->ClassifyLocalWithTables(uri, tables, results);
+                if (NS_SUCCEEDED(rv) && !results.IsEmpty()) {
+                    LOG(("nsHttpChannel::ClassifyLocalWithTables found "
+                         "uri on local tracking blocklist [this=%p]",
+                         this));
+                    mLocalBlocklist = true;
+                } else {
+                    LOG(("nsHttpChannel::ClassifyLocalWithTables no result "
+                         "found [this=%p]", this));
+                }
+            }
+        }
     }
 
     // If mTimingEnabled flag is not set after OnModifyRequest() then
@@ -5920,7 +5954,36 @@ nsHttpChannel::BeginConnectContinue()
         return mStatus;
     }
 
-    return ContinueBeginConnectWithResult();
+    if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+        return ContinueBeginConnectWithResult();
+    }
+
+    // mLocalBlocklist is true only if tracking protection is enabled and the
+    // URI is a tracking domain, it makes no guarantees about phishing or
+    // malware, so if LOAD_CLASSIFY_URI is true we must call
+    // nsChannelClassifier to catch phishing and malware URIs.
+    bool callContinueBeginConnect = true;
+    if (!mLocalBlocklist) {
+        // Here we call ContinueBeginConnectWithResult and not
+        // ContinueBeginConnect so that in the case of an error we do not start
+        // channelClassifier.
+        rv = ContinueBeginConnectWithResult();
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        callContinueBeginConnect = false;
+    }
+    // nsChannelClassifier calls ContinueBeginConnect if it has not already
+    // been called, after optionally cancelling the channel once we have a
+    // remote verdict. We call a concrete class instead of an nsI* that might
+    // be overridden.
+    LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
+         channelClassifier.get(), this));
+    channelClassifier->Start(this);
+    if (callContinueBeginConnect) {
+        return ContinueBeginConnectWithResult();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6003,8 +6066,8 @@ nsHttpChannel::ContinueBeginConnectWithResult()
         mCallOnResume = &nsHttpChannel::ContinueBeginConnect;
         rv = NS_OK;
     } else if (mCanceled) {
-        // We may have been cancelled already
-        // in that case, we should not send the request to the server.
+        // We may have been cancelled already, by nsChannelClassifier in that
+        // case, we should not send the request to the server
         rv = mStatus;
     } else {
         rv = Connect();

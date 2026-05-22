@@ -25,7 +25,7 @@
 #include "nsNSSShutDown.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 
 using namespace mozilla;
 

@@ -2452,7 +2452,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
 
       // Fall through to check the time, if the time is not present it will
       // still match.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
 
     case QUERYUPDATE_TIME: {
@@ -2479,7 +2479,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       }
       // Now we know that our visit satisfies the time range, fall through to
       // the QUERYUPDATE_SIMPLE case below.
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
 
     case QUERYUPDATE_SIMPLE: {
@@ -2917,7 +2917,7 @@ nsNavHistoryQueryResultNode::OnItemChanged(int64_t aItemId,
         // folders titles.
         if (mOptions->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
           return NS_OK;
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       default:
         (void)Refresh();
     }

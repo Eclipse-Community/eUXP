@@ -94,11 +94,11 @@ XZStream::Decode(void* aOutBuf, size_t aOutSize)
       case XZ_STREAM_END:
         // Stream ended, the next loop iteration should terminate.
         MOZ_ASSERT(mBuffers.in_pos == mBuffers.in_size);
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 #ifdef XZ_DEC_ANY_CHECK
       case XZ_UNSUPPORTED_CHECK:
         // Ignore unsupported check.
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 #endif
       case XZ_OK:
         // Chunk decoded, proceed.
@@ -121,7 +121,7 @@ XZStream::Decode(void* aOutBuf, size_t aOutSize)
         return 0;
 
       case XZ_DATA_ERROR:
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case XZ_BUF_ERROR:
         ERROR("XZ decoding: corrupt input stream");
         return 0;

@@ -24,7 +24,6 @@
 
 #ifdef XP_WIN
 #include <process.h>
-#include <shobjidl.h>
 #include "mozilla/ipc/WindowsMessageLoop.h"
 #endif
 
@@ -58,11 +57,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "ScopedXREEmbed.h"
 
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginProcessChild.h"
-#else
-#include "mozilla/ipc/CrossProcessMutex.h"
-#endif
 #include "mozilla/dom/ContentProcess.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -94,9 +89,7 @@ using mozilla::ipc::IOThreadChild;
 using mozilla::ipc::ProcessChild;
 using mozilla::ipc::ScopedXREEmbed;
 
-#ifdef MOZ_ENABLE_NPAPI
 using mozilla::plugins::PluginProcessChild;
-#endif
 using mozilla::dom::ContentProcess;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
@@ -114,6 +107,10 @@ using mozilla::ipc::XPCShellEnvironment;
 using mozilla::startup::sChildProcessType;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+#ifdef XP_WIN
+static const wchar_t kShellLibraryName[] =  L"shell32.dll";
+#endif
 
 nsresult
 XRE_LockProfileDirectory(nsIFile* aDirectory,
@@ -238,9 +235,26 @@ XRE_SetProcessType(const char* aProcessTypeString)
 void
 SetTaskbarGroupId(const nsString& aId)
 {
-    if (FAILED(SetCurrentProcessExplicitAppUserModelID(aId.get()))) {
+    typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
+
+    SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nullptr;
+
+    HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
+
+    funcAppUserModelID = (SetCurrentProcessExplicitAppUserModelIDPtr)
+                          GetProcAddress(hDLL, "SetCurrentProcessExplicitAppUserModelID");
+
+    if (!funcAppUserModelID) {
+        ::FreeLibrary(hDLL);
+        return;
+    }
+
+    if (FAILED(funcAppUserModelID(aId.get()))) {
         NS_WARNING("SetCurrentProcessExplicitAppUserModelID failed for child process.");
     }
+
+    if (hDLL)
+        ::FreeLibrary(hDLL);
 }
 #endif
 
@@ -484,11 +498,10 @@ XRE_InitChildProcess(int aArgc,
       case GeckoProcessType_Default:
         NS_RUNTIMEABORT("This makes no sense");
         break;
-#ifdef MOZ_ENABLE_NPAPI
+
       case GeckoProcessType_Plugin:
         process = new PluginProcessChild(parentPID);
         break;
-#endif
 
       case GeckoProcessType_Content: {
           process = new ContentProcess(parentPID);

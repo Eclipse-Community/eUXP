@@ -40,7 +40,11 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
   , mMaxRefFrames(mp4_demuxer::H264::ComputeMaxRefFrames(aConfig.mExtraData))
   , mImageContainer(aImageContainer)
   , mIsShutDown(false)
+#ifdef MOZ_WIDGET_UIKIT
+  , mUseSoftwareImages(true)
+#else
   , mUseSoftwareImages(false)
+#endif
   , mIsFlushing(false)
   , mMonitor("AppleVideoDecoder")
   , mFormat(nullptr)
@@ -352,6 +356,7 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
+#ifndef MOZ_WIDGET_UIKIT
     IOSurfacePtr surface = MacIOSurfaceLib::CVPixelBufferGetIOSurface(aImage);
     MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
 
@@ -368,6 +373,9 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
                                  aFrameRef.is_sync_point,
                                  aFrameRef.decode_timestamp.ToMicroseconds(),
                                  visible);
+#else
+    MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
+#endif
   }
 
   if (!data) {

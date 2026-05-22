@@ -10,15 +10,15 @@
  * liability, trademark and document use rules apply.
  */
 
-namespace CSS {
+interface CSS {
   [Throws]
-  boolean supports(DOMString property, DOMString value);
+  static boolean supports(DOMString property, DOMString value);
 
   [Throws]
-  boolean supports(DOMString conditionText);
+  static boolean supports(DOMString conditionText);
 };
 
 // http://dev.w3.org/csswg/cssom/#the-css.escape%28%29-method
-partial namespace CSS {
-  DOMString escape(DOMString ident);
+partial interface CSS {
+  static DOMString escape(DOMString ident);
 };
