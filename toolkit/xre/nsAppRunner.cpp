@@ -4169,6 +4169,7 @@ MultiprocessBlockPolicy() {
 
   if (addonsCanDisable && disabledByAddons) {
     gMultiprocessBlockPolicy = kE10sDisabledForAddons;
+    return gMultiprocessBlockPolicy;
   }
 
 #if defined(XP_WIN)
@@ -4202,13 +4203,16 @@ MultiprocessBlockPolicy() {
 
   if (disabledForA11y) {
     gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
+    return gMultiprocessBlockPolicy;
   }
 #endif
-  
-  // We do not support E10S, block by policy.
-  gMultiprocessBlockPolicy = kE10sForceDisabled;
 
-  return gMultiprocessBlockPolicy;
+  /*
+   * None of the blocking policies matched, so e10s is allowed to run.
+   * Cache the information and return 0, indicating success.
+   */
+  gMultiprocessBlockPolicy = 0;
+  return 0;
 }
 
 bool
