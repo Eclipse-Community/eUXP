@@ -577,10 +577,6 @@ private:
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
   layers::ImageContainer* GetImageContainer();
 
-#ifdef MOZ_GMP
-  RefPtr<GMPCrashHelper> mCrashHelper;
-#endif
-
   void SetBlankDecode(TrackType aTrack, bool aIsBlankDecode);
 
   class DecoderFactory;
