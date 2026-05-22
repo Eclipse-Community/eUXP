@@ -118,9 +118,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PrintTargetPDF.h',
         'PrintTargetWindows.h',
     ]
+    UNIFIED_SOURCES += [
+        'gfxGDIFontList.cpp',
+    ]
     SOURCES += [
         'gfxGDIFont.cpp',
-        'gfxGDIFontList.cpp',
         'gfxWindowsNativeDrawing.cpp',
         'gfxWindowsPlatform.cpp',
         'gfxWindowsSurface.cpp',
@@ -130,7 +132,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
         UNIFIED_SOURCES += [
             'gfxDWriteFontList.cpp',
-        ]  
+        ]
         SOURCES += [
             'gfxDWriteCommon.cpp',
             'gfxDWriteFonts.cpp',
