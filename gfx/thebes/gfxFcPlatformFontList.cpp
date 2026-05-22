@@ -38,7 +38,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 
 #ifndef FC_POSTSCRIPT_NAME
@@ -1105,7 +1104,7 @@ gfxFontconfigFont::~gfxFontconfigFont()
 }
 
 already_AddRefed<ScaledFont>
-gfxFontconfigFont::GetScaledFont(DrawTarget *aTarget)
+gfxFontconfigFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
     if (!mAzureScaledFont) {
         mAzureScaledFont =
