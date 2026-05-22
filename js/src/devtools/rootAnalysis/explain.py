@@ -34,20 +34,20 @@ try:
             m = re.match(r'^Time: (.*)', line)
             mm = re.match(r'^Run on:', line)
             if m or mm:
-                print(line, file=hazards)
-                print(line, file=extra)
-                print(line, file=refs)
+                print >>hazards, line
+                print >>extra, line
+                print >>refs, line
                 continue
 
             m = re.match(r'^Function.*has unnecessary root', line)
             if m:
-                print(line, file=extra)
+                print >>extra, line
                 continue
 
             m = re.match(r'^Function.*takes unsafe address of unrooted', line)
             if m:
                 num_refs += 1
-                print(line, file=refs)
+                print >>refs, line
                 continue
 
             m = re.match(r"^Function.*has unrooted.*of type.*live across GC call ('?)(.*?)('?) at \S+:\d+$", line)
@@ -90,14 +90,14 @@ try:
             gcHazards = hazardousGCFunctions[gcFunction]
 
             if gcFunction in gcExplanations:
-                print((gcHazards[index] + gcExplanations[gcFunction]), file=hazards)
+                print >>hazards, (gcHazards[index] + gcExplanations[gcFunction])
             else:
-                print(gcHazards[index], file=hazards)
+                print >>hazards, gcHazards[index]
 
 except IOError as e:
-    print('Failed: %s' % str(e))
+    print 'Failed: %s' % str(e)
 
-print(("Wrote %s" % args.hazards))
-print(("Wrote %s" % args.extra))
-print(("Wrote %s" % args.refs))
-print(("Found %d hazards and %d unsafe references" % (num_hazards, num_refs)))
+print("Wrote %s" % args.hazards)
+print("Wrote %s" % args.extra)
+print("Wrote %s" % args.refs)
+print("Found %d hazards and %d unsafe references" % (num_hazards, num_refs))

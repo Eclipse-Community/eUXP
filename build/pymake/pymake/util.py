@@ -82,7 +82,7 @@ else:
         return str[:offset], token, str[offset + len(token):]
 
 try:
-    from builtins import any
+    from __builtin__ import any
 except ImportError:
     def any(it):
         for i in it:
@@ -138,7 +138,7 @@ class MostUsedCache(object):
         return item.o
 
     def verify(self):
-        for k, v in self.d.items():
+        for k, v in self.d.iteritems():
             if v.o:
                 assert v in self.active
             else:

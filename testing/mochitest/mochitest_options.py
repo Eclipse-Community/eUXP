@@ -4,8 +4,8 @@
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import ArgumentParser, SUPPRESS
-from mozbuild.util import strtobool
-from urllib.parse import urlparse
+from distutils.util import strtobool
+from urlparse import urlparse
 import json
 import os
 import tempfile
@@ -63,7 +63,9 @@ def get_default_valgrind_suppression_files():
     return rv
 
 
-class ArgumentContainer(metaclass=ABCMeta):
+class ArgumentContainer():
+    __metaclass__ = ABCMeta
+
     @abstractproperty
     def args(self):
         pass
@@ -980,7 +982,7 @@ class MochitestArgumentParser(ArgumentParser):
 
         if self.app not in container_map:
             self.error("Unrecognized app '{}'! Must be one of: {}".format(
-                self.app, ', '.join(list(container_map.keys()))))
+                self.app, ', '.join(container_map.keys())))
 
         defaults = {}
         for container in self.containers:

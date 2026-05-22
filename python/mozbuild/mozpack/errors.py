@@ -97,7 +97,7 @@ class ErrorCollector(object):
             if self._count is None:
                 raise ErrorMessage(msg)
             self._count += 1
-        print(msg, file=self.out)
+        print >>self.out, msg
 
     def fatal(self, msg):
         self._handle(self.FATAL, msg)

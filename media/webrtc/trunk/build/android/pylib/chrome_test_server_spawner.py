@@ -8,7 +8,7 @@ It's used to accept requests from the device to spawn and kill instances of the
 chrome test server on the host.
 """
 
-import http.server
+import BaseHTTPServer
 import json
 import logging
 import os
@@ -17,11 +17,11 @@ import struct
 import subprocess
 import threading
 import time
-import urllib.parse
+import urlparse
 
-from . import constants
-from .forwarder import Forwarder
-from . import ports
+import constants
+from forwarder import Forwarder
+import ports
 
 
 # Path that are needed to import necessary modules when running testserver.py.
@@ -147,7 +147,7 @@ class TestServerThread(threading.Thread):
       return False
     logging.info('Got port json data: %s', port_json)
     port_json = json.loads(port_json)
-    if 'port' in port_json and isinstance(port_json['port'], int):
+    if port_json.has_key('port') and isinstance(port_json['port'], int):
       self.host_port = port_json['port']
       return _CheckPortStatus(self.host_port, True)
     logging.error('Failed to get port information from the server data.')
@@ -177,29 +177,29 @@ class TestServerThread(threading.Thread):
       data_dir = os.path.join(constants.CHROME_DIR, data_dir)
     self.command_line.append('--data-dir=%s' % data_dir)
     # The following arguments are optional depending on the individual test.
-    if 'log-to-console' in self.arguments:
+    if self.arguments.has_key('log-to-console'):
       self.command_line.append('--log-to-console')
-    if 'auth-token' in self.arguments:
+    if self.arguments.has_key('auth-token'):
       self.command_line.append('--auth-token=%s' % self.arguments['auth-token'])
-    if 'https' in self.arguments:
+    if self.arguments.has_key('https'):
       self.command_line.append('--https')
-      if 'cert-and-key-file' in self.arguments:
+      if self.arguments.has_key('cert-and-key-file'):
         self.command_line.append('--cert-and-key-file=%s' % os.path.join(
             constants.CHROME_DIR, self.arguments['cert-and-key-file']))
-      if 'ocsp' in self.arguments:
+      if self.arguments.has_key('ocsp'):
         self.command_line.append('--ocsp=%s' % self.arguments['ocsp'])
-      if 'https-record-resume' in self.arguments:
+      if self.arguments.has_key('https-record-resume'):
         self.command_line.append('--https-record-resume')
-      if 'ssl-client-auth' in self.arguments:
+      if self.arguments.has_key('ssl-client-auth'):
         self.command_line.append('--ssl-client-auth')
-      if 'tls-intolerant' in self.arguments:
+      if self.arguments.has_key('tls-intolerant'):
         self.command_line.append('--tls-intolerant=%s' %
                                  self.arguments['tls-intolerant'])
-      if 'ssl-client-ca' in self.arguments:
+      if self.arguments.has_key('ssl-client-ca'):
         for ca in self.arguments['ssl-client-ca']:
           self.command_line.append('--ssl-client-ca=%s' %
                                    os.path.join(constants.CHROME_DIR, ca))
-      if 'ssl-bulk-cipher' in self.arguments:
+      if self.arguments.has_key('ssl-bulk-cipher'):
         for bulk_cipher in self.arguments['ssl-bulk-cipher']:
           self.command_line.append('--ssl-bulk-cipher=%s' % bulk_cipher)
 
@@ -261,7 +261,7 @@ class TestServerThread(threading.Thread):
     self.wait_event.wait()
 
 
-class SpawningServerRequestHandler(http.server.BaseHTTPRequestHandler):
+class SpawningServerRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   """A handler used to process http GET/POST request."""
 
   def _SendResponse(self, response_code, response_reason, additional_headers,
@@ -344,7 +344,7 @@ class SpawningServerRequestHandler(http.server.BaseHTTPRequestHandler):
     self.server.test_server_instance = None
 
   def do_POST(self):
-    parsed_path = urllib.parse.urlparse(self.path)
+    parsed_path = urlparse.urlparse(self.path)
     action = parsed_path.path
     logging.info('Action for POST method is: %s.', action)
     if action == '/start':
@@ -354,9 +354,9 @@ class SpawningServerRequestHandler(http.server.BaseHTTPRequestHandler):
       logging.info('Encounter unknown request: %s.', action)
 
   def do_GET(self):
-    parsed_path = urllib.parse.urlparse(self.path)
+    parsed_path = urlparse.urlparse(self.path)
     action = parsed_path.path
-    params = urllib.parse.parse_qs(parsed_path.query, keep_blank_values=1)
+    params = urlparse.parse_qs(parsed_path.query, keep_blank_values=1)
     logging.info('Action for GET method is: %s.', action)
     for param in params:
       logging.info('%s=%s', param, params[param][0])
@@ -378,7 +378,7 @@ class SpawningServer(object):
 
   def __init__(self, test_server_spawner_port, adb, tool, build_type):
     logging.info('Creating new spawner on port: %d.', test_server_spawner_port)
-    self.server = http.server.HTTPServer(('', test_server_spawner_port),
+    self.server = BaseHTTPServer.HTTPServer(('', test_server_spawner_port),
                                             SpawningServerRequestHandler)
     self.port = test_server_spawner_port
     self.server.adb = adb

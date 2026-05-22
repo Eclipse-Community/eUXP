@@ -143,7 +143,7 @@ def _source_handler_file(handler_definition):
 
     global_dic = {}
     try:
-        exec(handler_definition, global_dic)
+        exec handler_definition in global_dic
     except Exception:
         raise DispatchException('Error in sourcing handler:' +
                                 util.get_stack_trace())
@@ -254,12 +254,12 @@ class Dispatcher(object):
         do_extra_handshake_ = handler_suite.do_extra_handshake
         try:
             do_extra_handshake_(request)
-        except handshake.AbortedByUserException as e:
+        except handshake.AbortedByUserException, e:
             # Re-raise to tell the caller of this function to finish this
             # connection without sending any error.
             self._logger.debug('%s', util.get_stack_trace())
             raise
-        except Exception as e:
+        except Exception, e:
             util.prepend_message_to_exception(
                     '%s raised exception for %s: ' % (
                             _DO_EXTRA_HANDSHAKE_HANDLER_NAME,
@@ -296,28 +296,28 @@ class Dispatcher(object):
             if not request.server_terminated:
                 request.ws_stream.close_connection()
         # Catch non-critical exceptions the handler didn't handle.
-        except handshake.AbortedByUserException as e:
+        except handshake.AbortedByUserException, e:
             self._logger.debug('%s', util.get_stack_trace())
             raise
-        except msgutil.BadOperationException as e:
+        except msgutil.BadOperationException, e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(
                 common.STATUS_INTERNAL_ENDPOINT_ERROR)
-        except msgutil.InvalidFrameException as e:
+        except msgutil.InvalidFrameException, e:
             # InvalidFrameException must be caught before
             # ConnectionTerminatedException that catches InvalidFrameException.
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_PROTOCOL_ERROR)
-        except msgutil.UnsupportedFrameException as e:
+        except msgutil.UnsupportedFrameException, e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_UNSUPPORTED_DATA)
-        except stream.InvalidUTF8Exception as e:
+        except stream.InvalidUTF8Exception, e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(
                 common.STATUS_INVALID_FRAME_PAYLOAD_DATA)
-        except msgutil.ConnectionTerminatedException as e:
+        except msgutil.ConnectionTerminatedException, e:
             self._logger.debug('%s', e)
-        except Exception as e:
+        except Exception, e:
             # Any other exceptions are forwarded to the caller of this
             # function.
             util.prepend_message_to_exception(
@@ -379,7 +379,7 @@ class Dispatcher(object):
                 continue
             try:
                 handler_suite = _source_handler_file(open(path).read())
-            except DispatchException as e:
+            except DispatchException, e:
                 self._source_warnings.append('%s: %s' % (path, e))
                 continue
             resource = convert(path)

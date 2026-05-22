@@ -40,7 +40,7 @@ def loadEventIDL(parser, includePath, eventname):
 class Configuration:
     def __init__(self, filename):
         config = {}
-        exec(compile(open(filename, "rb").read(), filename, 'exec'), config)
+        execfile(filename, config)
         self.simple_events = config.get('simple_events', [])
 
 def firstCap(str):
@@ -64,7 +64,7 @@ def print_header_file(fd, conf, incdirs):
     for e in conf.simple_events:
         idl, idl_path = loadEventIDL(p, incdirs, e)
         idl_paths.add(idl_path)
-        for iface in [p for p in idl.productions if p.kind == "interface"]:
+        for iface in filter(lambda p: p.kind == "interface", idl.productions):
             classname = ("xpcAcc%s" % e)
             baseinterfaces = interfaces(iface)
 
@@ -73,7 +73,7 @@ def print_header_file(fd, conf, incdirs):
             fd.write("public:\n")
 
             attributes = allAttributes(iface)
-            args = list(map(writeAttributeParams, attributes))
+            args = map(writeAttributeParams, attributes)
             fd.write("  %s(%s) :\n" % (classname, ", ".join(args)))
 
             initializers = []
@@ -83,7 +83,7 @@ def print_header_file(fd, conf, incdirs):
             fd.write("  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n")
             fd.write("  NS_DECL_CYCLE_COLLECTION_CLASS(%s)\n" % (classname))
 
-            for iface in [i for i in baseinterfaces if i.name != "nsISupports"]:
+            for iface in filter(lambda i: i.name != "nsISupports", baseinterfaces):
                 fd.write("  NS_DECL_%s\n" % iface.name.upper())
 
             fd.write("\nprivate:\n")
@@ -97,13 +97,13 @@ def print_header_file(fd, conf, incdirs):
     return idl_paths
 
 def interfaceAttributeTypes(idl):
-    ifaces = [p for p in idl.productions if p.kind == "interface"]
+    ifaces = filter(lambda p: p.kind == "interface", idl.productions)
     attributes = []
     for i in ifaces:
         ifaceAttributes = allAttributes(i)
         attributes.extend(ifaceAttributes)
-    ifaceAttrs = [a for a in attributes if a.realtype.nativeType("in").endswith("*")]
-    return [a.realtype.nativeType("in").strip(" *") for a in ifaceAttrs]
+    ifaceAttrs = filter(lambda a: a.realtype.nativeType("in").endswith("*"), attributes)
+    return map(lambda a: a.realtype.nativeType("in").strip(" *"), ifaceAttrs)
 
 def print_cpp(idl, fd, conf, eventname):
     for p in idl.productions:
@@ -186,7 +186,7 @@ def interfaces(iface):
 def allAttributes(iface):
     attributes = []
     for i in interfaces(iface):
-        attrs = [m for m in i.members if isinstance(m, xpidl.Attribute)]
+        attrs = filter(lambda m: isinstance(m, xpidl.Attribute), i.members)
         attributes.extend(attrs)
 
     return attributes
@@ -194,7 +194,7 @@ def allAttributes(iface):
 def write_cpp(eventname, iface, fd):
     classname = "xpcAcc%s" % eventname
     attributes = allAttributes(iface)
-    ccattributes = [m for m in attributes if m.realtype.nativeType('in').endswith('*')]
+    ccattributes = filter(lambda m: m.realtype.nativeType('in').endswith('*'), attributes)
     fd.write("NS_IMPL_CYCLE_COLLECTION(%s" % classname)
     for c in ccattributes:
         fd.write(", m%s" % firstCap(c.name))

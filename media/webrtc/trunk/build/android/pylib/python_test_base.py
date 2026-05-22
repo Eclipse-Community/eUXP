@@ -23,10 +23,10 @@ import logging
 import os
 import time
 
-from . import android_commands
-from . import apk_info
-from .run_java_tests import TestRunner
-from .test_result import SingleTestResult, TestResults
+import android_commands
+import apk_info
+from run_java_tests import TestRunner
+from test_result import SingleTestResult, TestResults
 
 
 # aka the parent of com.google.android

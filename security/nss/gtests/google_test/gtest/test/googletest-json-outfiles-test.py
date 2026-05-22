@@ -40,89 +40,89 @@ GTEST_OUTPUT_1_TEST = 'gtest_xml_outfile1_test_'
 GTEST_OUTPUT_2_TEST = 'gtest_xml_outfile2_test_'
 
 EXPECTED_1 = {
-    'tests':
+    u'tests':
         1,
-    'failures':
+    u'failures':
         0,
-    'disabled':
+    u'disabled':
         0,
-    'errors':
+    u'errors':
         0,
-    'time':
-        '*',
-    'timestamp':
-        '*',
-    'name':
-        'AllTests',
-    'testsuites': [{
-        'name':
-            'PropertyOne',
-        'tests':
+    u'time':
+        u'*',
+    u'timestamp':
+        u'*',
+    u'name':
+        u'AllTests',
+    u'testsuites': [{
+        u'name':
+            u'PropertyOne',
+        u'tests':
             1,
-        'failures':
+        u'failures':
             0,
-        'disabled':
+        u'disabled':
             0,
-        'errors':
+        u'errors':
             0,
-        'time':
-            '*',
-        'timestamp':
-            '*',
-        'testsuite': [{
-            'name': 'TestSomeProperties',
-            'status': 'RUN',
-            'result': 'COMPLETED',
-            'time': '*',
-            'timestamp': '*',
-            'classname': 'PropertyOne',
-            'SetUpProp': '1',
-            'TestSomeProperty': '1',
-            'TearDownProp': '1',
+        u'time':
+            u'*',
+        u'timestamp':
+            u'*',
+        u'testsuite': [{
+            u'name': u'TestSomeProperties',
+            u'status': u'RUN',
+            u'result': u'COMPLETED',
+            u'time': u'*',
+            u'timestamp': u'*',
+            u'classname': u'PropertyOne',
+            u'SetUpProp': u'1',
+            u'TestSomeProperty': u'1',
+            u'TearDownProp': u'1',
         }],
     }],
 }
 
 EXPECTED_2 = {
-    'tests':
+    u'tests':
         1,
-    'failures':
+    u'failures':
         0,
-    'disabled':
+    u'disabled':
         0,
-    'errors':
+    u'errors':
         0,
-    'time':
-        '*',
-    'timestamp':
-        '*',
-    'name':
-        'AllTests',
-    'testsuites': [{
-        'name':
-            'PropertyTwo',
-        'tests':
+    u'time':
+        u'*',
+    u'timestamp':
+        u'*',
+    u'name':
+        u'AllTests',
+    u'testsuites': [{
+        u'name':
+            u'PropertyTwo',
+        u'tests':
             1,
-        'failures':
+        u'failures':
             0,
-        'disabled':
+        u'disabled':
             0,
-        'errors':
+        u'errors':
             0,
-        'time':
-            '*',
-        'timestamp':
-            '*',
-        'testsuite': [{
-            'name': 'TestSomeProperties',
-            'status': 'RUN',
-            'result': 'COMPLETED',
-            'timestamp': '*',
-            'time': '*',
-            'classname': 'PropertyTwo',
-            'SetUpProp': '2',
-            'TestSomeProperty': '2',
-            'TearDownProp': '2',
+        u'time':
+            u'*',
+        u'timestamp':
+            u'*',
+        u'testsuite': [{
+            u'name': u'TestSomeProperties',
+            u'status': u'RUN',
+            u'result': u'COMPLETED',
+            u'timestamp': u'*',
+            u'time': u'*',
+            u'classname': u'PropertyTwo',
+            u'SetUpProp': u'2',
+            u'TestSomeProperty': u'2',
+            u'TearDownProp': u'2',
         }],
     }],
 }
@@ -167,14 +167,14 @@ class GTestJsonOutFilesTest(gtest_test_utils.TestCase):
     command = [gtest_prog_path, '--gtest_output=json:%s' % self.output_dir_]
     p = gtest_test_utils.Subprocess(command,
                                     working_dir=gtest_test_utils.GetTempDir())
-    self.assertTrue(p.exited)
-    self.assertEqual(0, p.exit_code)
+    self.assert_(p.exited)
+    self.assertEquals(0, p.exit_code)
 
     output_file_name1 = test_name + '.json'
     output_file1 = os.path.join(self.output_dir_, output_file_name1)
     output_file_name2 = 'lt-' + output_file_name1
     output_file2 = os.path.join(self.output_dir_, output_file_name2)
-    self.assertTrue(os.path.isfile(output_file1) or os.path.isfile(output_file2),
+    self.assert_(os.path.isfile(output_file1) or os.path.isfile(output_file2),
                  output_file1)
 
     if os.path.isfile(output_file1):

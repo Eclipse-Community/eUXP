@@ -11,7 +11,7 @@ import shutil
 
 def gen_binary_file(path, size):
     with open(path, 'wb') as f:
-        for i in range(size):
+        for i in xrange(size):
             byte = '%c' % randint(0, 255)
             f.write(byte)
 

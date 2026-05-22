@@ -32,7 +32,7 @@
 import sys
 
 def log(string):
-    print(string, file=sys.stderr)
+    print >> sys.stderr, string
 
 def error(string):
     log("ERROR: " + string)

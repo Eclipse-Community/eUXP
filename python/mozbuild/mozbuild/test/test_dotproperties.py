@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import os
 import unittest
 
-from io import StringIO
+from StringIO import StringIO
 
 import mozpack.path as mozpath
 

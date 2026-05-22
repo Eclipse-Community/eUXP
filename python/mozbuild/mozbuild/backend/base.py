@@ -30,13 +30,15 @@ from .configenvironment import ConfigEnvironment
 from mozbuild.base import ExecutionSummary
 
 
-class BuildBackend(LoggingMixin, metaclass=ABCMeta):
+class BuildBackend(LoggingMixin):
     """Abstract base class for build backends.
 
     A build backend is merely a consumer of the build configuration (the output
     of the frontend processing). It does something with said data. What exactly
     is the discretion of the specific implementation.
     """
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, environment):
         assert isinstance(environment, ConfigEnvironment)
@@ -250,7 +252,7 @@ class BuildBackend(LoggingMixin, metaclass=ABCMeta):
         srcdir = mozpath.dirname(obj.input_path)
         pp.context.update({
             k: ' '.join(v) if isinstance(v, list) else v
-            for k, v in obj.config.substs.items()
+            for k, v in obj.config.substs.iteritems()
         })
         pp.context.update(
             top_srcdir=obj.topsrcdir,

@@ -138,8 +138,8 @@ ALL_FLAVORS = {
 }
 
 SUPPORTED_APPS = ['firefox', 'android']
-SUPPORTED_FLAVORS = list(chain.from_iterable([f['aliases'] for f in list(ALL_FLAVORS.values())]))
-CANONICAL_FLAVORS = sorted([f['aliases'][0] for f in list(ALL_FLAVORS.values())])
+SUPPORTED_FLAVORS = list(chain.from_iterable([f['aliases'] for f in ALL_FLAVORS.values()]))
+CANONICAL_FLAVORS = sorted([f['aliases'][0] for f in ALL_FLAVORS.values()])
 
 parser = None
 
@@ -314,14 +314,14 @@ class MachCommands(MachCommandBase):
 
         flavors = None
         if flavor:
-            for fname, fobj in ALL_FLAVORS.items():
+            for fname, fobj in ALL_FLAVORS.iteritems():
                 if flavor in fobj['aliases']:
                     if buildapp not in fobj['enabled_apps']:
                         continue
                     flavors = [fname]
                     break
         else:
-            flavors = [f for f, v in ALL_FLAVORS.items() if buildapp in v['enabled_apps']]
+            flavors = [f for f, v in ALL_FLAVORS.iteritems() if buildapp in v['enabled_apps']]
 
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
@@ -385,8 +385,8 @@ class MachCommands(MachCommandBase):
         if not suites:
             # Make it very clear why no tests were found
             if not unsupported:
-                print((TESTS_NOT_FOUND.format('\n'.join(
-                    sorted(list(test_paths or test_objects))))))
+                print(TESTS_NOT_FOUND.format('\n'.join(
+                    sorted(list(test_paths or test_objects)))))
                 return 1
 
             msg = []
@@ -402,8 +402,8 @@ class MachCommands(MachCommandBase):
                 else:
                     reason = 'excluded by the command line'
                 msg.append('    mochitest -f {} ({})'.format(name, reason))
-            print((SUPPORTED_TESTS_NOT_FOUND.format(
-                buildapp, '\n'.join(sorted(msg)))))
+            print(SUPPORTED_TESTS_NOT_FOUND.format(
+                buildapp, '\n'.join(sorted(msg))))
             return 1
 
         if buildapp == 'android':
@@ -419,7 +419,7 @@ class MachCommands(MachCommandBase):
             msg = fobj['aliases'][0]
             if subsuite:
                 msg = '{} with subsuite {}'.format(msg, subsuite)
-            print((NOW_RUNNING.format(msg)))
+            print(NOW_RUNNING.format(msg))
 
             harness_args = kwargs.copy()
             harness_args['subsuite'] = subsuite

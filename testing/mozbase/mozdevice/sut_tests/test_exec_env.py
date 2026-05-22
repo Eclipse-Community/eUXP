@@ -4,7 +4,7 @@
 
 import os
 import posixpath
-from io import StringIO
+from StringIO import StringIO
 
 from dmunit import DeviceManagerTestCase
 

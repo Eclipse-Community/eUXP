@@ -331,7 +331,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         if isinstance(url, bytes):
             url = url.decode('utf8')
         else:
-            url = str(url) if is_py2 else str(url)
+            url = unicode(url) if is_py2 else str(url)
 
         # Don't do any URL preparation for non-HTTP schemes like `mailto`,
         # `data` etc to work around exceptions from `url_parse`, which
@@ -402,7 +402,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         """Prepares the given HTTP headers."""
 
         if headers:
-            self.headers = CaseInsensitiveDict((to_native_string(name), value) for name, value in list(headers.items()))
+            self.headers = CaseInsensitiveDict((to_native_string(name), value) for name, value in headers.items())
         else:
             self.headers = CaseInsensitiveDict()
 
@@ -595,7 +595,7 @@ class Response(object):
         )
 
     def __setstate__(self, state):
-        for name, value in list(state.items()):
+        for name, value in state.items():
             setattr(self, name, value)
 
         # pickled objects do not have .raw
@@ -609,7 +609,7 @@ class Response(object):
         """Returns true if :attr:`status_code` is 'OK'."""
         return self.ok
 
-    def __bool__(self):
+    def __nonzero__(self):
         """Returns true if :attr:`status_code` is 'OK'."""
         return self.ok
 

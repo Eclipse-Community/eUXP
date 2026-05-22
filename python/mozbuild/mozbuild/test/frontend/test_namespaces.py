@@ -29,7 +29,7 @@ class Fuga(object):
 
 class Piyo(ContextDerivedValue):
     def __init__(self, context, value):
-        if not isinstance(value, str):
+        if not isinstance(value, unicode):
             raise ValueError
         self.context = context
         self.value = value
@@ -48,9 +48,9 @@ class Piyo(ContextDerivedValue):
 
 
 VARIABLES = {
-    'HOGE': (str, str, None),
-    'FUGA': (Fuga, str, None),
-    'PIYO': (Piyo, str, None),
+    'HOGE': (unicode, unicode, None),
+    'FUGA': (Fuga, unicode, None),
+    'PIYO': (Piyo, unicode, None),
     'HOGERA': (ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList),
         list, None),
     'HOGEHOGE': (ContextDerivedTypedListWithItems(
@@ -104,7 +104,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(e[1], 'set_type')
         self.assertEqual(e[2], 'HOGE')
         self.assertEqual(e[3], True)
-        self.assertEqual(e[4], str)
+        self.assertEqual(e[4], unicode)
 
     def test_key_checking(self):
         # Checking for existence of a key should not populate the key if it
@@ -127,7 +127,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(e[1], 'set_type')
         self.assertEqual(e[2], 'FUGA')
         self.assertEqual(e[3], False)
-        self.assertEqual(e[4], str)
+        self.assertEqual(e[4], unicode)
 
         ns['FUGA'] = 'fuga'
         self.assertIsInstance(ns['FUGA'], Fuga)
@@ -150,7 +150,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(e[1], 'set_type')
         self.assertEqual(e[2], 'PIYO')
         self.assertEqual(e[3], False)
-        self.assertEqual(e[4], str)
+        self.assertEqual(e[4], unicode)
 
         ns['PIYO'] = 'piyo'
         self.assertIsInstance(ns['PIYO'], Piyo)

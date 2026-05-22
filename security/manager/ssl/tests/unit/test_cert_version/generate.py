@@ -58,10 +58,10 @@ basicConstraintsCA = 'extension:basicConstraints:cA,'
 
 writeCertspec('ca', 'ca', [keyUsage, basicConstraintsCA])
 
-for versionStr, versionVal in versions.items():
+for versionStr, versionVal in versions.iteritems():
     # intermediates
     versionText = 'version:%s' % versionVal
-    for basicConstraintsType, basicConstraintsExtension in basicConstraintsTypes.items():
+    for basicConstraintsType, basicConstraintsExtension in basicConstraintsTypes.iteritems():
         intermediateName = 'int-%s-%s' % (versionStr, basicConstraintsType)
         writeCertspec('ca', intermediateName,
                       [keyUsage, versionText, basicConstraintsExtension])
@@ -69,13 +69,13 @@ for versionStr, versionVal in versions.items():
 
     # end-entities
     versionText = 'version:%s' % versionVal
-    for basicConstraintsType, basicConstraintsExtension in basicConstraintsTypes.items():
+    for basicConstraintsType, basicConstraintsExtension in basicConstraintsTypes.iteritems():
         writeCertspec('ca', 'ee-%s-%s' % (versionStr, basicConstraintsType),
                       [versionText, basicConstraintsExtension])
 
     # self-signed certificates
     versionText = 'version:%s' % versionVal
-    for basicConstraintsType, basicConstraintsExtension in basicConstraintsTypes.items():
+    for basicConstraintsType, basicConstraintsExtension in basicConstraintsTypes.iteritems():
         selfSignedName = 'ss-%s-%s' % (versionStr, basicConstraintsType)
         writeCertspec(selfSignedName, selfSignedName,
                       [versionText, basicConstraintsExtension])

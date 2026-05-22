@@ -110,7 +110,7 @@ class TestFileAvoidWrite(unittest.TestCase):
             '''
             def __call__(self, name, mode):
                 if 'w' in mode:
-                    raise Exception('Unexpected open with write mode')
+                    raise Exception, 'Unexpected open with write mode'
                 return MockedOpen.__call__(self, name, mode)
 
         with MyMockedOpen({'file': 'content'}):
@@ -432,7 +432,7 @@ class TestListWithAction(unittest.TestCase):
         self.assertEqual(len(l), 0)
         original = ['a', 'b', 'c']
         l = ListWithAction(['a', 'b', 'c'], action=self.action)
-        expected = list(map(self.action, original))
+        expected = map(self.action, original)
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
@@ -445,7 +445,7 @@ class TestListWithAction(unittest.TestCase):
         l = ListWithAction(action=self.action)
         original = ['a', 'b']
         l.extend(original)
-        expected = list(map(self.action, original))
+        expected = map(self.action, original)
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
@@ -455,7 +455,7 @@ class TestListWithAction(unittest.TestCase):
         l = ListWithAction(action=self.action)
         original = ['a', 'b']
         l[:] = original
-        expected = list(map(self.action, original))
+        expected = map(self.action, original)
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
@@ -465,7 +465,7 @@ class TestListWithAction(unittest.TestCase):
         l = ListWithAction(action=self.action)
         original = ['a', 'b']
         l2 = l + original
-        expected = list(map(self.action, original))
+        expected = map(self.action, original)
         self.assertSameList(expected, l2)
 
         with self.assertRaises(ValueError):
@@ -475,7 +475,7 @@ class TestListWithAction(unittest.TestCase):
         l = ListWithAction(action=self.action)
         original = ['a', 'b']
         l += original
-        expected = list(map(self.action, original))
+        expected = map(self.action, original)
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
@@ -524,7 +524,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 
     def test_strict_ordering_on_append_list_with_flags_factory_extend(self):
         FooList = StrictOrderingOnAppendListWithFlagsFactory({
-            'foo': bool, 'bar': str
+            'foo': bool, 'bar': unicode
         })
         foo = FooList(['a', 'b', 'c'])
         foo['a'].foo = True
@@ -532,7 +532,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 
         # Don't allow extending lists with different flag definitions.
         BarList = StrictOrderingOnAppendListWithFlagsFactory({
-            'foo': str, 'baz': bool
+            'foo': unicode, 'baz': bool
         })
         bar = BarList(['d', 'e', 'f'])
         bar['d'].foo = 'foo'
@@ -752,9 +752,9 @@ class TestTypedList(unittest.TestCase):
 
 class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
     def test_init(self):
-        class Unicode(str):
+        class Unicode(unicode):
             def __init__(self, other):
-                if not isinstance(other, str):
+                if not isinstance(other, unicode):
                     raise ValueError()
                 super(Unicode, self).__init__(other)
 
@@ -776,14 +776,14 @@ class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
 
 class TestTypedNamedTuple(unittest.TestCase):
     def test_simple(self):
-        FooBar = TypedNamedTuple('FooBar', [('foo', str), ('bar', int)])
+        FooBar = TypedNamedTuple('FooBar', [('foo', unicode), ('bar', int)])
 
         t = FooBar(foo='foo', bar=2)
-        self.assertEqual(type(t), FooBar)
-        self.assertEqual(t.foo, 'foo')
-        self.assertEqual(t.bar, 2)
-        self.assertEqual(t[0], 'foo')
-        self.assertEqual(t[1], 2)
+        self.assertEquals(type(t), FooBar)
+        self.assertEquals(t.foo, 'foo')
+        self.assertEquals(t.bar, 2)
+        self.assertEquals(t[0], 'foo')
+        self.assertEquals(t[1], 2)
 
         FooBar('foo', 2)
 
@@ -796,7 +796,7 @@ class TestTypedNamedTuple(unittest.TestCase):
         # arguments.
         t1 = ('foo', 3)
         t2 = FooBar(t1)
-        self.assertEqual(type(t2), FooBar)
+        self.assertEquals(type(t2), FooBar)
         self.assertEqual(FooBar(t1), FooBar('foo', 3))
 
 
@@ -871,18 +871,18 @@ class TestEnumString(unittest.TestCase):
         CompilerType = EnumString.subclass('msvc', 'gcc', 'clang', 'clang-cl')
 
         type = CompilerType('msvc')
-        self.assertEqual(type, 'msvc')
-        self.assertNotEqual(type, 'gcc')
-        self.assertNotEqual(type, 'clang')
-        self.assertNotEqual(type, 'clang-cl')
+        self.assertEquals(type, 'msvc')
+        self.assertNotEquals(type, 'gcc')
+        self.assertNotEquals(type, 'clang')
+        self.assertNotEquals(type, 'clang-cl')
         self.assertIn(type, ('msvc', 'clang-cl'))
         self.assertNotIn(type, ('gcc', 'clang'))
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertEqual(type, 'foo')
+            self.assertEquals(type, 'foo')
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertNotEqual(type, 'foo')
+            self.assertNotEquals(type, 'foo')
 
         with self.assertRaises(EnumStringComparisonError):
             self.assertIn(type, ('foo', 'gcc'))

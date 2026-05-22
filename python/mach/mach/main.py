@@ -6,19 +6,15 @@
 # (mach). It is packaged as a module because everything is a library.
 
 from __future__ import absolute_import, print_function, unicode_literals
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
+from collections import Iterable
+
 import argparse
 import codecs
-import importlib.util
-import importlib.machinery
+import imp
 import logging
 import os
 import sys
 import traceback
-import types
 import uuid
 
 from .base import (
@@ -105,19 +101,6 @@ You are seeing this because there is an error in an external module attempting
 to implement a mach command. Please fix the error, or uninstall the module from
 your system.
 '''.lstrip()
-
-def load_source(module_name, path):
-    loader = importlib.machinery.SourceFileLoader(module_name, path)
-    module = types.ModuleType(module_name)
-    module.__loader__ = loader
-    module.__file__ = path
-    module.__package__ = module_name.rpartition('.')[0]
-
-    sys.modules[module_name] = module
-
-    code = loader.get_code(module_name)
-    exec(code, module.__dict__)
-    return module
 
 class ArgumentParser(argparse.ArgumentParser):
     """Custom implementation argument parser to make things look pretty."""
@@ -273,13 +256,13 @@ To see more help for a specific command, run:
         if module_name is None:
             # Ensure parent module is present otherwise we'll (likely) get
             # an error due to unknown parent.
-            if 'mach.commands' not in sys.modules:
-                mod = types.ModuleType('mach.commands')
-                sys.modules['mach.commands'] = mod
+            if b'mach.commands' not in sys.modules:
+                mod = imp.new_module(b'mach.commands')
+                sys.modules[b'mach.commands'] = mod
 
-            module_name = 'mach.commands.%s' % uuid.uuid1().hex
+            module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
 
-        load_source(module_name, path)
+        imp.load_source(module_name, path)
 
     def load_commands_from_entry_point(self, group='mach.providers'):
         """Scan installed packages for mach command provider entry points. An
@@ -364,7 +347,7 @@ To see more help for a specific command, run:
             # is a TTY. This provides a mechanism to allow said processes to
             # enable emitting code codes, for example.
             if os.isatty(orig_stdout.fileno()):
-                os.environ['MACH_STDOUT_ISATTY'] = '1'
+                os.environ[b'MACH_STDOUT_ISATTY'] = b'1'
 
             return self._run(argv)
         except KeyboardInterrupt:
@@ -545,7 +528,7 @@ To see more help for a specific command, run:
 
             machrc, .machrc
         """
-        if isinstance(paths, str):
+        if isinstance(paths, basestring):
             paths = [paths]
 
         valid_names = ('machrc', '.machrc')
@@ -558,8 +541,8 @@ To see more help for a specific command, run:
                 if os.path.isfile(path):
                     return path
 
-        files = list(map(find_in_dir, paths))
-        files = list(filter(bool, files))
+        files = map(find_in_dir, self.settings_paths)
+        files = filter(bool, files)
 
         self.settings.load_files(files)
 

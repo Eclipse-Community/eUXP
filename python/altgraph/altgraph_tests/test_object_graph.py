@@ -4,7 +4,7 @@ from altgraph.ObjectGraph import ObjectGraph
 from altgraph.Graph import Graph
 
 try:
-    from io import StringIO
+    from StringIO import StringIO
 except ImportError:
     from io import StringIO
 

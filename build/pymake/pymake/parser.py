@@ -34,7 +34,7 @@ coming.
 """
 
 import logging, re, os, sys
-from . import data, functions, util, parserdata
+import data, functions, util, parserdata
 
 _log = logging.getLogger('pymake.parser')
 
@@ -108,7 +108,7 @@ _alltokens = re.compile(r'''\\*\# | # hash mark preceeded by any number of backs
                             :: |
                             (?:\$(?:$|[\(\{](?:%s)\s+|.)) | # dollar sign followed by EOF, a function keyword with whitespace, or any character
                             :(?![\\/]) | # colon followed by anything except a slash (Windows path detection)
-                            [=#{}();,|'"]''' % '|'.join(iter(functions.functionmap.keys())), re.VERBOSE)
+                            [=#{}();,|'"]''' % '|'.join(functions.functionmap.iterkeys()), re.VERBOSE)
 
 def iterdata(d, offset, tokenlist, it):
     """
@@ -336,7 +336,7 @@ _conditionkeywords = {
     'ifndef': ifndef
     }
 
-_conditiontokens = tuple(_conditionkeywords.keys())
+_conditiontokens = tuple(_conditionkeywords.iterkeys())
 _conditionre = re.compile(r'(%s)(?:$|\s+)' % '|'.join(_conditiontokens))
 
 _directivestokenlist = _conditiontokens + \
@@ -691,7 +691,7 @@ def parsemakesyntax(d, offset, stopon, iterfunc):
     while True: # this is not a for loop because `di` changes during the function
         assert stacktop is not None
         try:
-            s, token, tokenoffset, offset = next(di)
+            s, token, tokenoffset, offset = di.next()
         except StopIteration:
             break
 

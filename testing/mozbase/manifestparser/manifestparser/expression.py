@@ -275,7 +275,7 @@ class ExpressionParser(object):
         """
         if not isinstance(self.token, expected):
             raise Exception("Unexpected token!")
-        self.token = next(self.iter)
+        self.token = self.iter.next()
 
     def expression(self, rbp=0):
         """
@@ -283,11 +283,11 @@ class ExpressionParser(object):
         right binding power greater than rbp is encountered.
         """
         t = self.token
-        self.token = next(self.iter)
+        self.token = self.iter.next()
         left = t.nud(self)
         while rbp < self.token.lbp:
             t = self.token
-            self.token = next(self.iter)
+            self.token = self.iter.next()
             left = t.led(self, left)
         return left
 
@@ -299,7 +299,7 @@ class ExpressionParser(object):
         """
         try:
             self.iter = self._tokenize()
-            self.token = next(self.iter)
+            self.token = self.iter.next()
             return self.expression()
         except:
             extype, ex, tb = sys.exc_info()
@@ -307,7 +307,7 @@ class ExpressionParser(object):
             raise ParseError("could not parse: "
                              "%s\nexception: %svariables: %s" % (self.text,
                                                                  formatted,
-                                                                 self.valuemapping)).with_traceback(tb)
+                                                                 self.valuemapping)), None, tb
 
     __call__ = parse
 

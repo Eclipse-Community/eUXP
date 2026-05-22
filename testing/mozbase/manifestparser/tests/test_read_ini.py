@@ -12,8 +12,8 @@ http://docs.python.org/2/library/configparser.html
 
 import unittest
 from manifestparser import read_ini
-from configparser import ConfigParser
-from io import StringIO
+from ConfigParser import ConfigParser
+from StringIO import StringIO
 
 
 class IniParserTest(unittest.TestCase):

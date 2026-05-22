@@ -186,7 +186,7 @@ class BaseDefines(ContextDerived):
         self.defines = defines
 
     def get_defines(self):
-        for define, value in self.defines.items():
+        for define, value in self.defines.iteritems():
             if value is True:
                 yield('-D%s' % define)
             elif value is False:

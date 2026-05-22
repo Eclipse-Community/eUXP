@@ -7,7 +7,7 @@
 import logging
 import os
 
-from . import tests_annotations
+import tests_annotations
 
 
 class TestInfo(object):

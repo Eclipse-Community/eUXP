@@ -875,7 +875,7 @@ if verbose is True, then the LogEntry instances also know which files changed.
         except ExpatError:
             raise ValueError('no such revision')
         result = []
-        for logentry in [_f for _f in tree.firstChild.childNodes if _f]:
+        for logentry in filter(None, tree.firstChild.childNodes):
             if logentry.nodeType == logentry.ELEMENT_NODE:
                 result.append(LogEntry(logentry))
         return result
@@ -913,7 +913,7 @@ class WCStatus:
             if name not in kw or kw[name]:
                 for path in getattr(self, name):
                     d[path] = 1
-        l = list(d.keys())
+        l = d.keys()
         if sort:
             l.sort()
         return l
@@ -1215,7 +1215,7 @@ def importxml(cache=[]):
 class LogEntry:
     def __init__(self, logentry):
         self.rev = int(logentry.getAttribute('revision'))
-        for lpart in [_f for _f in logentry.childNodes if _f]:
+        for lpart in filter(None, logentry.childNodes):
             if lpart.nodeType == lpart.ELEMENT_NODE:
                 if lpart.nodeName == 'author':
                     self.author = lpart.firstChild.nodeValue
@@ -1230,7 +1230,7 @@ class LogEntry:
                     self.date = parse_apr_time(timestr)
                 elif lpart.nodeName == 'paths':
                     self.strpaths = []
-                    for ppart in [_f for _f in lpart.childNodes if _f]:
+                    for ppart in filter(None, lpart.childNodes):
                         if ppart.nodeType == ppart.ELEMENT_NODE:
                             self.strpaths.append(PathEntry(ppart))
     def __repr__(self):

@@ -46,7 +46,7 @@ class TestResolveTaskReferences(unittest.TestCase):
 
     def test_invalid(self):
         "resolve_task_references raises a KeyError on reference to an invalid task"
-        self.assertRaisesRegex(
+        self.assertRaisesRegexp(
             KeyError,
             "task 'subject' has no dependency named 'no-such'",
             lambda: resolve_task_references('subject', {'task-reference': '<no-such>'}, {})
@@ -79,7 +79,7 @@ class TestOptimize(unittest.TestCase):
         def repl(task_id):
             return 'SLUGID' if task_id and len(task_id) == 22 else task_id
         got_annotations = {
-            t.label: (t.optimized, repl(t.task_id)) for t in graph.tasks.values()
+            t.label: (t.optimized, repl(t.task_id)) for t in graph.tasks.itervalues()
         }
         self.assertEqual(got_annotations, annotations)
 

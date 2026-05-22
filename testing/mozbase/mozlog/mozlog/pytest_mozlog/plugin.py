@@ -12,10 +12,10 @@ def pytest_addoption(parser):
     # Pytest's parser doesn't have the add_argument_group method Mozlog expects.
     group = parser.getgroup('mozlog')
 
-    for name, (_class, _help) in mozlog.commandline.log_formatters.items():
+    for name, (_class, _help) in mozlog.commandline.log_formatters.iteritems():
         group.addoption('--log-{0}'.format(name), action='append', help=_help)
 
-    formatter_options = iter(mozlog.commandline.fmt_options.items())
+    formatter_options = mozlog.commandline.fmt_options.iteritems()
     for name, (_class, _help, formatters, action) in formatter_options:
         for formatter in formatters:
             if formatter in mozlog.commandline.log_formatters:

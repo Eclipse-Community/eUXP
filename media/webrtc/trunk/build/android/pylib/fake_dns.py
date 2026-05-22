@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from . import android_commands
-from . import constants
+import android_commands
+import constants
 import logging
 import os
 import subprocess

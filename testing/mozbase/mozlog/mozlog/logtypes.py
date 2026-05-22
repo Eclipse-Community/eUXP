@@ -83,7 +83,7 @@ class log_action(object):
             if name not in values:
                 values[name] = self.args[name].default
 
-        for key, value in values.items():
+        for key, value in values.iteritems():
             if key in self.args:
                 out_value = self.args[key](value)
                 if out_value is not missing:
@@ -94,7 +94,7 @@ class log_action(object):
         return data
 
     def convert_known(self, **kwargs):
-        known_kwargs = {name: value for name, value in kwargs.items()
+        known_kwargs = {name: value for name, value in kwargs.iteritems()
                         if name in self.args}
         return self.convert(**known_kwargs)
 
@@ -126,17 +126,17 @@ class DataType(object):
 class Unicode(DataType):
 
     def convert(self, data):
-        if isinstance(data, str):
+        if isinstance(data, unicode):
             return data
         if isinstance(data, str):
             return data.decode("utf8", "replace")
-        return str(data)
+        return unicode(data)
 
 
 class TestId(DataType):
 
     def convert(self, data):
-        if isinstance(data, str):
+        if isinstance(data, unicode):
             return data
         elif isinstance(data, bytes):
             return data.decode("utf-8", "replace")

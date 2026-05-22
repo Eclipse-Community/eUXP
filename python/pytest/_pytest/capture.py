@@ -12,7 +12,7 @@ import py
 import pytest
 
 from py.io import TextIO
-str = py.builtin.text
+unicode = py.builtin.text
 
 patchsysdict = {0: 'stdin', 1: 'stdout', 2: 'stderr'}
 
@@ -227,7 +227,7 @@ class EncodedFile(object):
         self.encoding = encoding
 
     def write(self, obj):
-        if isinstance(obj, str):
+        if isinstance(obj, unicode):
             obj = obj.encode(self.encoding, "replace")
         self.buffer.write(obj)
 

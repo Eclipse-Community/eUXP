@@ -15,8 +15,9 @@ from . import result
 from .pathutils import filterpaths
 
 
-class BaseType(object, metaclass=ABCMeta):
+class BaseType(object):
     """Abstract base class for all types of linters."""
+    __metaclass__ = ABCMeta
     batch = False
 
     def __call__(self, paths, linter, **lintargs):
@@ -30,7 +31,7 @@ class BaseType(object, metaclass=ABCMeta):
         """
         paths = filterpaths(paths, linter, **lintargs)
         if not paths:
-            print(("{}: no files to lint in specified paths".format(linter['name'])))
+            print("{}: no files to lint in specified paths".format(linter['name']))
             return
 
         if self.batch:
@@ -51,12 +52,13 @@ class BaseType(object, metaclass=ABCMeta):
         pass
 
 
-class LineType(BaseType, metaclass=ABCMeta):
+class LineType(BaseType):
     """Abstract base class for linter types that check each line individually.
 
     Subclasses of this linter type will read each file and check the provided
     payload against each line one by one.
     """
+    __metaclass__ = ABCMeta
 
     @abstractmethod
     def condition(payload, line):

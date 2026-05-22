@@ -109,7 +109,7 @@ class TestGraph(unittest.TestCase):
         for e in seq:
             for l, r, n in self.tree.edges:
                 if l == e:
-                    self.assertTrue(r in seen)
+                    self.failUnless(r in seen)
             seen.add(e)
         self.assertEqual(seen, all_nodes)
 

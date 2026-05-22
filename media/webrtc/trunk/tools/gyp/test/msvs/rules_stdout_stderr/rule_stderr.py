@@ -4,4 +4,4 @@
 # found in the LICENSE file.
 
 import sys
-print("This will go to stderr", file=sys.stderr)
+print >>sys.stderr, "This will go to stderr"

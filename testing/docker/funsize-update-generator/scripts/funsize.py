@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import configparser
+import ConfigParser
 import argparse
 import functools
 import hashlib
@@ -83,7 +83,7 @@ def get_option(directory, filename, section, option):
     log.debug("Exctracting [%s]: %s from %s/**/%s", section, option, directory,
               filename)
     f = find_file(directory, filename)
-    config = configparser.ConfigParser()
+    config = ConfigParser.ConfigParser()
     config.read(f)
     rv = config.get(section, option)
     log.debug("Found %s", rv)

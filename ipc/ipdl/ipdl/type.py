@@ -10,7 +10,6 @@ from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
 import ipdl.builtin as builtin
-from functools import reduce
 
 _DELETE_MSG = '__delete__'
 
@@ -23,7 +22,7 @@ def _otherside(side):
 def unique_pairs(s):
     n = len(s)
     for i, e1 in enumerate(s):
-        for j in range(i+1, n):
+        for j in xrange(i+1, n):
             yield (e1, s[j])
 
 def cartesian_product(s1, s2):
@@ -37,8 +36,8 @@ class TypeVisitor:
         self.visited = set()
 
     def defaultVisit(self, node, *args):
-        raise Exception("INTERNAL ERROR: no visitor for node type `%s'"% (
-            node.__class__.__name__))
+        raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
+            node.__class__.__name__)
 
     def visitVoidType(self, v, *args):
         pass
@@ -126,8 +125,8 @@ class Type:
     def typename(self):
         return self.__class__.__name__
 
-    def name(self): raise Exception('NYI')
-    def fullname(self): raise Exception('NYI')
+    def name(self): raise Exception, 'NYI'
+    def fullname(self): raise Exception, 'NYI'
 
     def accept(self, visitor, *args):
         visit = getattr(visitor, 'visit'+ self.__class__.__name__, None)
@@ -307,7 +306,6 @@ class ProtocolType(IPDLType):
         self.stateless = stateless
         self.hasDelete = False
         self.hasReentrantDelete = False
-
     def isProtocol(self): return True
 
     def name(self):
@@ -508,7 +506,7 @@ def hasactor(type):
 
 def hasshmem(type):
     """Return true iff |type| is shmem or has it buried within."""
-    class found(Exception): pass
+    class found: pass
     class findShmem(TypeVisitor):
         def visitShmemType(self, s):  raise found()
     try:
@@ -649,7 +647,7 @@ With this information, it finally type checks the AST.'''
 
     def reportErrors(self, errout):
         for error in self.errors:
-            print(error, file=errout)
+            print >>errout, error
 
 
 class TcheckVisitor(Visitor):
@@ -715,19 +713,9 @@ class GatherDecls(TcheckVisitor):
                 fullname = None
             else:
                 fullname = str(qname)
-
-            if (
-                isinstance(p.nestedRange, tuple)
-                and len(p.nestedRange) == 2
-                and isinstance(p.nestedRange[1], dict)
-                and "nested" in p.nestedRange[1]
-            ):
-                nr = (p.nestedRange[0], p.nestedRange[1]["nested"])
-            else:
-                nr = p.nestedRange
             p.decl = self.declare(
                 loc=p.loc,
-                type=ProtocolType(qname, nr, p.sendSemantics,
+                type=ProtocolType(qname, p.nestedRange, p.sendSemantics,
                                   stateless=(0 == len(p.transitionStmts))),
                 shortname=p.name,
                 fullname=fullname)
@@ -1593,7 +1581,7 @@ class Process:
         self.spawn.add(spawn)
 
     def iteredges(self):
-        for edgelist in self.edges.values():
+        for edgelist in self.edges.itervalues():
             for edge in edgelist:
                 yield edge
 
@@ -1702,7 +1690,7 @@ class ProcessGraph:
 
     @classmethod
     def iterbridges(cls):
-        for edges in cls.bridges.values():
+        for edges in cls.bridges.itervalues():
             for bridge in edges:
                 yield bridge
 
@@ -1723,7 +1711,7 @@ class ProcessGraph:
 
     @classmethod
     def iteropens(cls):
-        for edges in cls.opens.values():
+        for edges in cls.opens.itervalues():
             for opens in edges:
                 yield opens
 
@@ -1891,19 +1879,19 @@ class CheckProcessGraph(TcheckVisitor):
     # is a dag
     def visitTranslationUnit(self, tu):
         if 0:
-            print('Processes')
+            print 'Processes'
             for process in ProcessGraph.processes:
-                print('  ', process)
+                print '  ', process
                 for edge in process.iteredges():
-                    print('    ', edge)
-            print('Bridges')
-            for bridgeList in ProcessGraph.bridges.values():
+                    print '    ', edge
+            print 'Bridges'
+            for bridgeList in ProcessGraph.bridges.itervalues():
                 for bridge in bridgeList:
-                    print('  ', bridge)
-            print('Opens')
-            for opensList in ProcessGraph.opens.values():
+                    print '  ', bridge
+            print 'Opens'
+            for opensList in ProcessGraph.opens.itervalues():
                 for opens in opensList:
-                    print('  ', opens)
+                    print '  ', opens
 
 ##-----------------------------------------------------------------------------
 
@@ -2100,19 +2088,19 @@ direction as trigger |t|'''
                 errT2 = None
 
                 if 0 == len(U1) or 0 == len(U2):
-                    print("******* case 1")
+                    print "******* case 1"
                     raceError = True
                 elif 1 < len(U1) or 1 < len(U2):
                     raceError = True
                     # there are potentially many unpaired states; just
                     # pick two
-                    print("******* case 2")
+                    print "******* case 2"
                     for u1, u2 in cartesian_product(U1, U2):
                         if u1 != u2:
                             errT1, errT2 = u1, u2
                             break
                 elif U1 != U2:
-                    print("******* case 3")
+                    print "******* case 3"
                     raceError = True
                     for errT1 in U1: pass
                     for errT2 in U2: pass
@@ -2152,7 +2140,7 @@ direction as trigger |t|'''
                     root.loc,
                     "when starting from state `%s', actors of protocol `%s' cannot be deleted", root.state.name, p.name)
 
-        for ts in p.states.values():
+        for ts in p.states.itervalues():
             if ts.state is not State.DEAD and ts.state not in allvisited:
                 self.error(ts.loc,
                            "unreachable state `%s' in protocol `%s'",

@@ -13,7 +13,7 @@ from mozpack.test.test_files import TestWithTmpDir
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 from mozpack.test.test_files import MockDest
-from io import StringIO
+from cStringIO import StringIO
 import os
 import sys
 from mozpack.errors import (

@@ -15,9 +15,9 @@ except ImportError:
     pass
 
 try:
-    str
+    unicode
 except NameError:
-    str = str
+    unicode = str
 
 __all__ = ['MachO']
 
@@ -338,7 +338,7 @@ class MachOHeader(object):
             cmd.to_fileobj(fileobj)
 
             if sys.version_info[0] == 2:
-                if isinstance(data, str):
+                if isinstance(data, unicode):
                     fileobj.write(data.encode(sys.getfilesystemencoding()))
 
                 elif isinstance(data, (bytes, str)):

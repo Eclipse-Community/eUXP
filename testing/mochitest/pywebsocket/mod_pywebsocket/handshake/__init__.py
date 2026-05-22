@@ -90,15 +90,15 @@ def do_handshake(request, dispatcher, allowDraft75=False, strict=False):
             handshaker.do_handshake()
             _LOGGER.info('Established (%s protocol)', name)
             return
-        except HandshakeException as e:
+        except HandshakeException, e:
             _LOGGER.debug(
                 'Failed to complete opening handshake as %s protocol: %r',
                 name, e)
             if e.status:
                 raise e
-        except AbortedByUserException as e:
+        except AbortedByUserException, e:
             raise
-        except VersionException as e:
+        except VersionException, e:
             raise
 
     # TODO(toyoshim): Add a test to cover the case all handshakers fail.

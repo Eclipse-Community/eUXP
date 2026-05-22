@@ -11,5 +11,5 @@ def WebIDLTest(parser, harness):
 
     # There should be no duplicate interfaces in the result.
     expectedNames = sorted(['Foo', 'Bar'])
-    actualNames = sorted([iface.identifier.name for iface in results])
+    actualNames = sorted(map(lambda iface: iface.identifier.name, results))
     harness.check(actualNames, expectedNames, "Parser shouldn't output duplicate names.")

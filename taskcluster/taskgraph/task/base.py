@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import abc
 
 
-class Task(object, metaclass=abc.ABCMeta):
+class Task(object):
     """
     Representation of a task in a TaskGraph.  Each Task has, at creation:
 
@@ -26,6 +26,7 @@ class Task(object, metaclass=abc.ABCMeta):
     path from which it draws its task configuration.  The instance is free to
     store as much local state as it needs.
     """
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self, kind, label, attributes, task):
         self.kind = kind

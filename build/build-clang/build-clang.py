@@ -34,7 +34,7 @@ def symlink(source, link_name):
 def check_run(args):
     global DEBUG
     if DEBUG:
-        print(' '.join(args), file=sys.stderr)
+        print >> sys.stderr, ' '.join(args)
     r = subprocess.call(args)
     assert r == 0
 
@@ -43,11 +43,11 @@ def run_in(path, args):
     d = os.getcwd()
     global DEBUG
     if DEBUG:
-        print('cd "%s"' % path, file=sys.stderr)
+        print >> sys.stderr, 'cd "%s"' % path
     os.chdir(path)
     check_run(args)
     if DEBUG:
-        print('cd "%s"' % d, file=sys.stderr)
+        print >> sys.stderr, 'cd "%s"' % d
     os.chdir(d)
 
 
@@ -377,7 +377,7 @@ if __name__ == "__main__":
         extra_cflags2 = ["-fPIC"]
         extra_cxxflags2 = ["-fPIC", "-static-libstdc++"]
 
-        if 'LD_LIBRARY_PATH' in os.environ:
+        if os.environ.has_key('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
         else:
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir

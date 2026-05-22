@@ -359,7 +359,7 @@ class HTTPResponse(io.IOBase):
 
         if not isinstance(headers, HTTPHeaderDict):
             if PY3:  # Python 3
-                headers = HTTPHeaderDict(list(headers.items()))
+                headers = HTTPHeaderDict(headers.items())
             else:  # Python 2
                 headers = HTTPHeaderDict.from_httplib(headers)
 

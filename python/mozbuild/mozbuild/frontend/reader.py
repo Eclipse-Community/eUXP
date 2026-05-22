@@ -39,7 +39,6 @@ from mozbuild.util import (
     HierarchicalStringList,
     memoize,
     ReadOnlyDefaultDict,
-    EnumStringComparisonError,
 )
 
 from mozbuild.testing import (
@@ -80,37 +79,15 @@ from .context import (
 )
 
 from mozbuild.base import ExecutionSummary
-from functools import reduce
 
 
 if sys.version_info.major == 2:
-    text_type = str
-    type_type = type
+    text_type = unicode
+    type_type = types.TypeType
 else:
     text_type = str
     type_type = type
 
-def make_str_node(value, c):
-    if hasattr(ast, "Constant"):
-        return c(ast.Constant(value=value))
-    return c(ast.Str(s=value))
-
-def make_slice_node(expr, c):
-    if hasattr(ast, "Index"):
-        return c(ast.Index(value=expr))
-    return expr
-
-def get_str_value(node):
-    if isinstance(node, ast.Constant):
-        return node.value
-    if isinstance(node, ast.Str):
-        return node.s
-    raise TypeError("Unexpected string node type: %s" % (type(node),))
-
-def get_slice_value(subscript):
-    if hasattr(ast, "Index") and isinstance(subscript.slice, ast.Index):
-        return subscript.slice.value
-    return subscript.slice
 
 def log(logger, level, action, params, formatter):
     logger.log(level, formatter, extra={'action': action, 'params': params})
@@ -139,16 +116,16 @@ class EmptyConfig(object):
         self.substs = self.PopulateOnGetDict(EmptyValue, {
             # These 2 variables are used semi-frequently and it isn't worth
             # changing all the instances.
-            'MOZ_APP_NAME': 'empty',
-            'MOZ_CHILD_PROCESS_NAME': 'empty',
+            b'MOZ_APP_NAME': b'empty',
+            b'MOZ_CHILD_PROCESS_NAME': b'empty',
             # Set manipulations are performed within the moz.build files. But
             # set() is not an exposed symbol, so we can't create an empty set.
-            'NECKO_PROTOCOLS': set(),
+            b'NECKO_PROTOCOLS': set(),
             # Needed to prevent js/src's config.status from loading.
-            'JS_STANDALONE': '1',
+            b'JS_STANDALONE': b'1',
         })
         udict = {}
-        for k, v in list(self.substs.items()):
+        for k, v in self.substs.items():
             if isinstance(v, str):
                 udict[k.decode('utf-8')] = v.decode('utf-8')
             else:
@@ -191,15 +168,9 @@ class SandboxCalledError(SandboxError):
     """Represents an error resulting from calling the error() function."""
 
     def __init__(self, file_stack, message):
-        super(SandboxCalledError, self).__init__(file_stack)
+        SandboxError.__init__(self, file_stack)
         self.message = message
-        self.args = (message,)
 
-    def __str__(self):
-        try:
-            return str(self.message)
-        except Exception:
-            return "<unprintable SandboxCalledError message>"
 
 class MozbuildSandbox(Sandbox):
     """Implementation of a Sandbox tailored for mozbuild files.
@@ -338,7 +309,7 @@ class MozbuildSandbox(Sandbox):
             raise Exception('`template` is a function decorator. You must '
                 'use it as `@template` preceding a function declaration.')
 
-        name = func.__name__
+        name = func.func_name
 
         if name in self.templates:
             raise KeyError(
@@ -417,7 +388,7 @@ class MozbuildSandbox(Sandbox):
             klass = self._context.__class__
             self._context.__class__ = TemplateContext
             # The sandbox will do all the necessary checks for these merges.
-            for key, value in list(context.items()):
+            for key, value in context.items():
                 if isinstance(value, dict):
                     self[key].update(value)
                 elif isinstance(value, (list, HierarchicalStringList)):
@@ -434,14 +405,12 @@ class MozbuildSandbox(Sandbox):
 
 class TemplateFunction(object):
     def __init__(self, func, sandbox):
-        self.path = func.__code__.co_filename
-        self.name = func.__name__
+        self.path = func.func_code.co_filename
+        self.name = func.func_name
 
-        code = func.__code__
+        code = func.func_code
         firstlineno = code.co_firstlineno
         lines = sandbox._current_source.splitlines(True)
-        if lines and isinstance(lines[0], bytes):
-            lines = [l.decode('utf-8') for l in lines]
         lines = inspect.getblock(lines[firstlineno - 1:])
 
         # The code lines we get out of inspect.getsourcelines look like
@@ -459,7 +428,7 @@ class TemplateFunction(object):
         # actually never calls __getitem__ and __setitem__, so we need to
         # modify the AST so that accesses to globals are properly directed
         # to a dict.
-        self._global_name = '_data' # AST wants str for this, not unicode
+        self._global_name = b'_data' # AST wants str for this, not unicode
         # In case '_data' is a name used for a variable in the function code,
         # prepend more underscores until we find an unused name.
         while (self._global_name in code.co_names or
@@ -478,8 +447,8 @@ class TemplateFunction(object):
             compile(func_ast, self.path, 'exec'),
             glob,
             self.name,
-            func.__defaults__,
-            func.__closure__,
+            func.func_defaults,
+            func.func_closure,
         )
         func()
 
@@ -493,11 +462,11 @@ class TemplateFunction(object):
             '__builtins__': sandbox._builtins
         }
         func = types.FunctionType(
-            self._func.__code__,
+            self._func.func_code,
             glob,
             self.name,
-            self._func.__defaults__,
-            self._func.__closure__
+            self._func.func_defaults,
+            self._func.func_closure
         )
         sandbox.exec_function(func, args, kwargs, self.path,
                               becomes_current_path=False)
@@ -513,7 +482,7 @@ class TemplateFunction(object):
         def visit_Str(self, node):
             # String nodes we got from the AST parser are str, but we want
             # unicode literals everywhere, so transform them.
-            node.s = str(node.s)
+            node.s = unicode(node.s)
             return node
 
         def visit_Name(self, node):
@@ -527,7 +496,7 @@ class TemplateFunction(object):
 
             return c(ast.Subscript(
                 value=c(ast.Name(id=self._global_name, ctx=ast.Load())),
-                slice=make_slice_node(make_str_node(node.id, c), c),
+                slice=c(ast.Index(value=c(ast.Str(s=node.id)))),
                 ctx=node.ctx
             ))
 
@@ -553,9 +522,8 @@ class SandboxValidationError(Exception):
         s.write('The error occurred when validating the result of ')
         s.write('the execution. The reported error is:\n')
         s.write('\n')
-        message = self.args[0] if self.args else ""
         s.write(''.join('    %s\n' % l
-                        for l in message.splitlines()))
+                        for l in self.message.splitlines()))
         s.write('\n')
 
         return s.getvalue()
@@ -614,16 +582,6 @@ class BuildReaderError(Exception):
             self.sandbox_called_error
 
     def __str__(self):
-        try:
-            return self._render()
-        except Exception as e:
-            return (
-            "ERROR PROCESSING MOZBUILD FILE\n"
-            "An internal error occurred while formatting the exception:\n"
-                "    %s: %s\n" % (type(e).__name__, e)
-            )
-
-    def _render(self):
         s = StringIO()
 
         delim = '=' * 30
@@ -657,7 +615,7 @@ class BuildReaderError(Exception):
 
             for l in traceback.format_exception(type(self.other), self.other,
                 self.trace):
-                s.write(str(l))
+                s.write(unicode(l))
 
         return s.getvalue()
 
@@ -671,10 +629,7 @@ class BuildReaderError(Exception):
         trace = getattr(self.sandbox_error, 'trace', None)
         frames = []
         if trace:
-            try:
-                frames = traceback.extract_tb(trace)
-            except Exception:
-                frames = []
+            frames = traceback.extract_tb(trace)
         for frame in frames:
             if frame[0] == self.actual_file:
                 script_frame = frame
@@ -758,15 +713,6 @@ class BuildReaderError(Exception):
 
         inner = self.sandbox_exec.exc_value
 
-        if isinstance(inner, EnumStringComparisonError):
-            s.write("The underlying problem is an invalid EnumString comparison.\n")
-            s.write("\n")
-            s.write("The error as reported by Python is:\n")
-            s.write("\n")
-            s.write("    %r\n" % inner)
-            s.write("\n")
-            return
-
         if isinstance(inner, SyntaxError):
             s.write('The underlying problem is a Python syntax error ')
             s.write('on line %d:\n' % inner.lineno)
@@ -819,7 +765,7 @@ class BuildReaderError(Exception):
             s.write('    %s\n' % inner.args[2])
             s.write('\n')
             close_matches = difflib.get_close_matches(inner.args[2],
-                                                      list(VARIABLES.keys()), 2)
+                                                      VARIABLES.keys(), 2)
             if close_matches:
                 s.write('Maybe you meant %s?\n' % ' or '.join(close_matches))
                 s.write('\n')
@@ -1014,8 +960,9 @@ class BuildReader(object):
 
             key = None
             if isinstance(target, ast.Subscript):
-                value_node = get_slice_value(target)
-                key = get_str_value(value_node)
+                assert isinstance(target.slice, ast.Index)
+                assert isinstance(target.slice.value, ast.Str)
+                key = target.slice.value.s
 
             return name, key
 
@@ -1023,9 +970,11 @@ class BuildReader(object):
             value = node.value
             if isinstance(value, ast.List):
                 for v in value.elts:
-                    yield get_str_value(v)
+                    assert isinstance(v, ast.Str)
+                    yield v.s
             else:
-                yield get_str_value(value)
+                assert isinstance(value, ast.Str)
+                yield value.s
 
         assignments = []
 
@@ -1048,7 +997,7 @@ class BuildReader(object):
             assignments[:] = []
             full = os.path.join(self.config.topsrcdir, p)
 
-            with open(full, 'r', encoding='utf-8') as fh:
+            with open(full, 'rb') as fh:
                 source = fh.read()
 
             tree = ast.parse(source, full)
@@ -1180,7 +1129,7 @@ class BuildReader(object):
                         context)
                 non_unified_sources.add(source)
             action_overrides = {}
-            for action, script in gyp_dir.action_overrides.items():
+            for action, script in gyp_dir.action_overrides.iteritems():
                 action_overrides[action] = SourcePath(context, script)
             time_start = time.time()
             for gyp_context in read_from_gyp(context.config,
@@ -1224,7 +1173,7 @@ class BuildReader(object):
 
                 recurse_info[d][key] = dict(sandbox.metadata[key])
 
-        for path, child_metadata in list(recurse_info.items()):
+        for path, child_metadata in recurse_info.items():
             child_path = path.join('moz.build').full_path
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
@@ -1316,7 +1265,7 @@ class BuildReader(object):
         # There is room to improve this code (and the code in
         # _find_relevant_mozbuilds) to better handle multiple files in the same
         # directory. Bug 1136966 tracks.
-        for path, mbpaths in list(relevants.items()):
+        for path, mbpaths in relevants.items():
             path_mozbuilds[path] = [mozpath.join(topsrcdir, p) for p in mbpaths]
 
             for i, mbpath in enumerate(mbpaths[0:-1]):
@@ -1353,7 +1302,7 @@ class BuildReader(object):
             all_contexts.append(context)
 
         result = {}
-        for path, paths in list(path_mozbuilds.items()):
+        for path, paths in path_mozbuilds.items():
             result[path] = reduce(lambda x, y: x + y, (contexts[p] for p in paths), [])
 
         return result, all_contexts
@@ -1380,7 +1329,7 @@ class BuildReader(object):
 
         r = {}
 
-        for path, ctxs in list(paths.items()):
+        for path, ctxs in paths.items():
             flags = Files(Context())
 
             for ctx in ctxs:

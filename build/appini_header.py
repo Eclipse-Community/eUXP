@@ -5,11 +5,11 @@
 '''Parses a given application.ini file and outputs the corresponding
    XULAppData structure as a C++ header file'''
 
-import configparser
+import ConfigParser
 import sys
 
 def main(output, file):
-    config = configparser.RawConfigParser()
+    config = ConfigParser.RawConfigParser()
     config.read(file)
     flags = set()
     try:
@@ -27,7 +27,8 @@ def main(output, file):
                 'App:id', 'Gecko:minversion', 'Gecko:maxversion')
     missing = [var for var in expected if var not in appdata]
     if missing:
-        print("Missing values in %s: %s" % (file, ', '.join(missing)), file=sys.stderr)
+        print >>sys.stderr, \
+            "Missing values in %s: %s" % (file, ', '.join(missing))
         sys.exit(1)
 
     if not 'Crash Reporter:serverurl' in appdata:
@@ -56,4 +57,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 1:
         main(sys.stdout, sys.argv[1])
     else:
-        print("Usage: %s /path/to/application.ini" % sys.argv[0], file=sys.stderr)
+        print >>sys.stderr, "Usage: %s /path/to/application.ini" % sys.argv[0]

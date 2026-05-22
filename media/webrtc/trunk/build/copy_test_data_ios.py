@@ -93,11 +93,11 @@ def DoMain(argv):
 def main(argv):
   try:
     result = DoMain(argv[1:])
-  except WrongNumberOfArgumentsException as e:
-    print(e, file=sys.stderr)
+  except WrongNumberOfArgumentsException, e:
+    print >>sys.stderr, e
     return 1
   if result:
-    print(result)
+    print result
   return 0
 
 if __name__ == '__main__':

@@ -52,7 +52,7 @@ class DotProperties:
         if not prefix.endswith('.'):
             prefix = prefix + '.'
         indexes = []
-        for k, v in self._properties.items():
+        for k, v in self._properties.iteritems():
             if not k.startswith(prefix):
                 continue
             key = k[len(prefix):]
@@ -73,7 +73,7 @@ class DotProperties:
         if not prefix.endswith('.'):
             prefix = prefix + '.'
 
-        D = dict((k[len(prefix):], v) for k, v in self._properties.items()
+        D = dict((k[len(prefix):], v) for k, v in self._properties.iteritems()
                  if k.startswith(prefix) and '.' not in k[len(prefix):])
 
         for required_key in required_keys:
