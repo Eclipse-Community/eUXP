@@ -279,9 +279,12 @@ bool ScreenCapturerWinGdi::CaptureImage() {
     BOOL enabled;
     (*composition_enabled_func_)(&enabled);
     if (!enabled) {
-      // Aero disabled
+      // Vista or Windows 7, Aero disabled
       rop |= CAPTUREBLT;
     }
+  } else {
+    // Windows XP, required to get layered windows
+    rop |= CAPTUREBLT;
   }
   if (previous_object != NULL) {
     BitBlt(memory_dc_,
