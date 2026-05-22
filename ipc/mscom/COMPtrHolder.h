@@ -37,7 +37,7 @@ public:
     return mPtr.get();
   }
 
-  [[nodiscard]] Interface* Release()
+  MOZ_MUST_USE Interface* Release()
   {
     return mPtr.release();
   }
