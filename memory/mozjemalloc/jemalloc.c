@@ -5869,11 +5869,7 @@ MOZ_MEMORY_API
 void *
 MEMALIGN(size_t alignment, size_t size)
 {
-#if defined(MOZ_MEMORY_DARWIN) && !defined(HAVE_POSIX_MEMALIGN)
-	// If we don't have memalign, like on 10.5 just use malloc
-	// it should be 16 byte aligned and jemalloc is not enabled. 
-	return malloc(size);
-#else
+#if defined(MOZ_MEMORY_DARWIN) && !defined(__ppc__)
 	DARWIN_ONLY(return (szone->memalign)(szone, alignment, size));
 #endif
 
