@@ -426,6 +426,7 @@ protected:
                      nsIDocShell** aDocShell,
                      nsIRequest** aRequest,
                      bool aIsNewWindowTarget,
+                     bool aBypassClassifier,
                      bool aForceAllowCookies,
                      const nsAString& aSrcdoc,
                      nsIURI* aBaseURI,
@@ -433,7 +434,8 @@ protected:
   nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
                                nsIChannel* aChannel);
   nsresult DoChannelLoad(nsIChannel* aChannel,
-                         nsIURILoader* aURILoader);
+                         nsIURILoader* aURILoader,
+                         bool aBypassClassifier);
 
   nsresult ScrollToAnchor(bool aCurHasRef,
                           bool aNewHasRef,

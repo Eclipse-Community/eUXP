@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1618,7 +1619,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                                               contentPolicyType,
                                               loadGroup,
                                               nullptr,   // aCallbacks
-                                              nsIChannel::LOAD_NORMAL);
+                                              nsIChannel::LOAD_NORMAL |
+                                              nsIChannel::LOAD_CLASSIFY_URI);
   }
   else {
     // either we are loading something inside a document, in which case
@@ -1632,7 +1634,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                        contentPolicyType,
                        loadGroup,
                        nullptr,   // aCallbacks
-                       nsIChannel::LOAD_NORMAL);
+                       nsIChannel::LOAD_NORMAL |
+                       nsIChannel::LOAD_CLASSIFY_URI);
   }
 
   if (NS_FAILED(rv)) {

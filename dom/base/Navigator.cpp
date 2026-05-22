@@ -942,7 +942,8 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
     return false;
   }
 
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
+    nsIChannel::LOAD_CLASSIFY_URI;
 
   // No need to use CORS for sendBeacon unless it's a BLOB
   nsSecurityFlags securityFlags = aType == eBeaconTypeBlob
