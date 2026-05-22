@@ -274,9 +274,9 @@ struct PerformanceMonitoring {
 // Temporary disable untested code path. Issue #2255
 #if 0 // WINVER >= 0x0600
 struct cpuid_t {
-    uint16_t group_;
-    uint8_t number_;
-    cpuid_t(uint16_t group, uint8_t number)
+    WORD group_;
+    BYTE number_;
+    cpuid_t(WORD group, BYTE number)
         : group_(group),
           number_(number)
     { }

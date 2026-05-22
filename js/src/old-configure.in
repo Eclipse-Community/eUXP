@@ -140,7 +140,8 @@ MOZ_TOOL_VARIABLES
 dnl Special win32 checks
 dnl ========================================================
 
-WINVER=601
+# Target the Windows 8.1 SDK by default
+WINVER=502
 
 case "$target" in
 *-mingw*)
