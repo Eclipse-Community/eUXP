@@ -43,9 +43,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventListenerManager.h"
 #include "prenv.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginFrame.h"
-#endif
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "CounterStyleManager.h"
@@ -981,11 +979,11 @@ nsPresContext::DetachShell()
 
   if (IsRoot()) {
     nsRootPresContext* thisRoot = static_cast<nsRootPresContext*>(this);
-#ifdef MOZ_ENABLE_NPAPI
+
     // Have to cancel our plugin geometry timer, because the
     // callback for that depends on a non-null presshell.
     thisRoot->CancelApplyPluginGeometryTimer();
-#endif
+
     // The did-paint timer also depends on a non-null pres shell.
     thisRoot->CancelDidPaintTimer();
   }
@@ -2823,15 +2821,12 @@ nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
 {
 }
 
-
 nsRootPresContext::~nsRootPresContext()
 {
-  CancelDidPaintTimer();
-#ifdef MOZ_ENABLE_NPAPI
   NS_ASSERTION(mRegisteredPlugins.Count() == 0,
                "All plugins should have been unregistered");
+  CancelDidPaintTimer();
   CancelApplyPluginGeometryTimer();
-#endif
 }
 
 /* virtual */ void
@@ -2841,7 +2836,7 @@ nsRootPresContext::Detach()
   // XXXmats maybe also CancelApplyPluginGeometryTimer(); ?
   nsPresContext::Detach();
 }
-#ifdef MOZ_ENABLE_NPAPI
+
 void
 nsRootPresContext::RegisterPluginForGeometryUpdates(nsIContent* aPlugin)
 {
@@ -2937,7 +2932,6 @@ nsRootPresContext::CancelApplyPluginGeometryTimer()
     mApplyPluginGeometryTimer = nullptr;
   }
 }
-
 
 #ifndef XP_MACOSX
 
@@ -3088,7 +3082,7 @@ nsRootPresContext::CollectPluginGeometryUpdates(LayerManager* aLayerManager)
   PluginDidSetGeometry(mRegisteredPlugins);
 #endif  // #ifndef XP_MACOSX
 }
-#endif // MOZ_ENABLE_NPAPI
+
 static void
 NotifyDidPaintForSubtreeCallback(nsITimer *aTimer, void *aClosure)
 {

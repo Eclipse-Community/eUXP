@@ -36,9 +36,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "FrameLayerBuilder.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginFrame.h"
-#endif
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
@@ -1048,10 +1046,8 @@ BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*)
       ::DestroyDisplayItemDataForFrames(rootFrame);
     }
   }
-#ifdef MOZ_ENABLE_NPAPI
   aDocument->EnumerateActivityObservers(
     nsPluginFrame::BeginSwapDocShells, nullptr);
-#endif
   aDocument->EnumerateSubDocuments(BeginSwapDocShellsForDocument, nullptr);
   return true;
 }
@@ -1146,10 +1142,9 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
       cv = prev;
     }
   }
-#ifdef MOZ_ENABLE_NPAPI
+
   aDocument->EnumerateActivityObservers(
     nsPluginFrame::EndSwapDocShells, nullptr);
-#endif
   aDocument->EnumerateSubDocuments(EndSwapDocShellsForDocument, nullptr);
   return true;
 }

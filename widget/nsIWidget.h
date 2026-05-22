@@ -45,11 +45,9 @@ namespace mozilla {
 namespace dom {
 class TabChild;
 } // namespace dom
-#ifdef MOZ_ENABLE_NPAPI
 namespace plugins {
 class PluginWidgetChild;
 } // namespace plugins
-#endif
 namespace layers {
 class AsyncDragMetrics;
 class Composer2D;
@@ -1891,11 +1889,9 @@ public:
      * this call creates the base object, it does not create the widget. Use
      * nsIWidget's Create to do this.
      */
-#ifdef MOZ_ENABLE_NPAPI
     static already_AddRefed<nsIWidget>
     CreatePluginProxyWidget(TabChild* aTabChild,
                             mozilla::plugins::PluginWidgetChild* aActor);
-#endif
 
     /**
      * Reparent this widget's native widget.

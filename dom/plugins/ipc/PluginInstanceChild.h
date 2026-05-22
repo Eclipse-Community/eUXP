@@ -10,12 +10,10 @@
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PPluginSurfaceChild.h"
-#endif
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "nsRefPtrHashtable.h"
-#if defined(OS_WIN) && defined (MOZ_ENABLE_NPAPI)
+#if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(MOZ_WIDGET_COCOA)
 #include "PluginUtilsOSX.h"
@@ -115,7 +113,7 @@ protected:
     DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                      const NPRemoteWindow& aWindow,
                      bool aIsAsync);
-#ifdef MOZ_ENABLE_NPAPI
+
     virtual PPluginSurfaceChild*
     AllocPPluginSurfaceChild(const WindowsSharedMemoryHandle&,
                              const gfx::IntSize&, const bool&) override {
@@ -126,7 +124,6 @@ protected:
         delete s;
         return true;
     }
-#endif
 
     virtual bool
     AnswerPaint(const NPRemoteEvent& event, int16_t* handled) override
@@ -280,7 +277,7 @@ public:
                    const NativeEventData& aKeyEventData,
                    const bool& aIsConsumed) override;
 
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_WIN)
     NPError DefaultAudioDeviceChanged(NPAudioDeviceChangeDetails& details);
 #endif
 
@@ -624,7 +621,7 @@ private:
     // alpha recovery otherwise.
     RefPtr<gfxASurface> mBackground;
 
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_WIN
     // These actors mirror mCurrentSurface/mBackSurface
     PPluginSurfaceChild* mCurrentSurfaceActor;
     PPluginSurfaceChild* mBackSurfaceActor;

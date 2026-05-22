@@ -6,9 +6,7 @@
 
 interface MimeType {
   readonly attribute DOMString description;
-#ifdef MOZ_ENABLE_NPAPI
   readonly attribute Plugin? enabledPlugin;
-#endif
   readonly attribute DOMString suffixes;
   readonly attribute DOMString type;
 };

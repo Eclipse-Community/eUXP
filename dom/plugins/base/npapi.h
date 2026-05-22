@@ -265,7 +265,7 @@ typedef struct
 
 #endif /* XP_UNIX */
 
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_WIN)
 /*
  * Windows specific structures and definitions
  */
@@ -408,7 +408,7 @@ typedef enum {
 #endif
   /* Notification that the plugin just started or stopped playing audio */
   , NPPVpluginIsPlayingAudio = 4000
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#if defined(XP_WIN)
   /* Notification that the plugin requests notification when the default audio device has changed */
   , NPPVpluginRequiresAudioDeviceChanges = 4001
 #endif

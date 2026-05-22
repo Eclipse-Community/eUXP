@@ -2940,7 +2940,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
     // Try to get a parent widget, on some platforms widget creation will fail without
     // a parent.
     nsCOMPtr<nsIWidget> parentWidget;
-#ifdef MOZ_ENABLE_NPAPI
     nsIDocument *doc = nullptr;
     nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
     if (content) {
@@ -2964,7 +2963,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       }
 #endif // XP_MACOSX
     }
-#endif // MOZ_ENABLE_NPAPI
 
 #ifndef XP_MACOSX
     // A failure here is terminal since we can't fall back on the non-e10s code

@@ -12,9 +12,7 @@
 #include "prlink.h"
 #include "prclist.h"
 #include "nsIPluginTag.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginsDir.h"
-#endif
 #include "nsPluginDirServiceProvider.h"
 #include "nsWeakPtr.h"
 #include "nsIPrompt.h"
@@ -40,24 +38,16 @@ class PluginTag;
 } // namespace plugins
 } // namespace mozilla
 
-#ifdef MOZ_ENABLE_NPAPI
 class nsNPAPIPlugin;
-#endif
 class nsIFile;
 class nsIChannel;
-#ifdef MOZ_ENABLE_NPAPI
 class nsPluginNativeWindow;
-#endif
 class nsObjectLoadingContent;
-#ifdef MOZ_ENABLE_NPAPI
 class nsPluginInstanceOwner;
-#endif
 class nsPluginUnloadRunnable;
 class nsNPAPIPluginInstance;
-#ifdef MOZ_ENABLE_NPAPI
 class nsNPAPIPluginStreamListener;
 class nsIPluginInstanceOwner;
-#endif
 class nsIInputStream;
 class nsIStreamListener;
 #ifndef npapi_h_
@@ -92,9 +82,8 @@ class nsPluginHost final : public nsIPluginHost,
 
 public:
   nsPluginHost();
-#ifdef MOZ_ENABLE_NPAPI
+
   static already_AddRefed<nsPluginHost> GetInst();
-#endif
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -105,11 +94,11 @@ public:
 
   nsresult LoadPlugins();
   nsresult UnloadPlugins();
-#ifdef MOZ_ENABLE_NPAPI
+
   nsresult SetUpPluginInstance(const nsACString &aMimeType,
                                nsIURI *aURL,
                                nsPluginInstanceOwner *aOwner);
-#endif
+
   // Acts like a bitfield
   enum PluginFilter {
     eExcludeNone     = nsIPluginHost::EXCLUDE_NONE,
@@ -124,7 +113,7 @@ public:
   bool HavePluginForExtension(const nsACString & aExtension,
                               /* out */ nsACString & aMimeType,
                               PluginFilter aFilter = eExcludeDisabled);
-#ifdef MOZ_ENABLE_NPAPI
+
   void GetPlugins(nsTArray<nsCOMPtr<nsIInternalPluginTag>>& aPluginArray,
                   bool aIncludeDisabled = false);
 
@@ -151,7 +140,6 @@ public:
                    bool forceJSEnabled,
                    uint32_t postHeadersLength,
                    const char* postHeaders);
-#endif
 
   nsresult FindProxyForURL(const char* url, char* *result);
   nsresult UserAgent(const char **retstring);
@@ -160,18 +148,17 @@ public:
                                        char **outPostData,
                                        uint32_t *outPostDataLen);
   nsresult CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile);
-#ifdef MOZ_ENABLE_NPAPI
   nsresult NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
 
   void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, bool isVisible);
   void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame);
-#endif
+
   nsresult GetPluginName(nsNPAPIPluginInstance *aPluginInstance,
                          const char** aPluginName);
   nsresult StopPluginInstance(nsNPAPIPluginInstance* aInstance);
   nsresult GetPluginTagForInstance(nsNPAPIPluginInstance *aPluginInstance,
                                    nsIPluginTag **aPluginTag);
-#ifdef MOZ_ENABLE_NPAPI
+
   nsresult
   NewPluginURLStream(const nsString& aURL,
                      nsNPAPIPluginInstance *aInstance,
@@ -190,7 +177,6 @@ public:
                     bool forceJSEnabled = false,
                     uint32_t getHeadersLength = 0,
                     const char* getHeaders = nullptr);
-#endif
 
   nsresult
   AddHeadersToChannel(const char *aHeadersData, uint32_t aHeadersDataLen,
@@ -206,7 +192,7 @@ public:
   // parent process. It checks the plugin.load_in_parent_process.<mime> pref.
   // Always returns false if plugin.load_in_parent_process.<mime> is not set.
   static bool ShouldLoadTypeInParent(const nsACString& aMimeType);
-#ifdef MOZ_ENABLE_NPAPI
+
   // checks whether aType is a type we recognize for potential special handling
   enum SpecialType { eSpecialType_None,
                      // Needed to whitelist for async init support
@@ -225,15 +211,12 @@ public:
                      // Native widget quirks
                      eSpecialType_Unity };
   static SpecialType GetSpecialType(const nsACString & aMIMEType);
-#endif
 
   static nsresult PostPluginUnloadEvent(PRLibrary* aLibrary);
 
-#ifdef MOZ_ENABLE_NPAPI
   void PluginCrashed(nsNPAPIPlugin* plugin,
                      const nsAString& pluginDumpID,
                      const nsAString& browserDumpID);
-#endif
 
   nsNPAPIPluginInstance *FindInstance(const char *mimetype);
   nsNPAPIPluginInstance *FindOldestStoppedInstance();
@@ -244,7 +227,6 @@ public:
   // Return the tag for |aLibrary| if found, nullptr if not.
   nsPluginTag* FindTagForLibrary(PRLibrary* aLibrary);
 
-#ifdef MOZ_ENABLE_NPAPI
   // The last argument should be false if we already have an in-flight stream
   // and don't need to set up a new stream.
   nsresult InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aURL,
@@ -253,22 +235,19 @@ public:
 
   // Does not accept nullptr and should never fail.
   nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
-#endif
 
   nsPluginTag* PluginWithId(uint32_t aId);
 
-#ifdef MOZ_ENABLE_NPAPI
   nsresult GetPlugin(const nsACString &aMimeType, nsNPAPIPlugin** aPlugin);
   nsresult GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPlugin);
-#endif
   void NotifyContentModuleDestroyed(uint32_t aPluginId);
 
   nsresult NewPluginStreamListener(nsIURI* aURL,
                                    nsNPAPIPluginInstance* aInstance,
                                    nsIStreamListener **aStreamListener);
-#ifdef MOZ_ENABLE_NPAPI
+
   void CreateWidget(nsPluginInstanceOwner* aOwner);
-#endif
+
   nsresult EnumerateSiteData(const nsACString& domain,
                              const InfallibleTArray<nsCString>& sites,
                              InfallibleTArray<nsCString>& result,
@@ -282,10 +261,9 @@ private:
   // Writes updated plugins settings to disk and unloads the plugin
   // if it is now disabled. Should only be called by the plugin tag in question
   void UpdatePluginInfo(nsPluginTag* aPluginTag);
-#ifdef MOZ_ENABLE_NPAPI
+
   nsresult TrySetUpPluginInstance(const nsACString &aMimeType, nsIURI *aURL,
                                   nsPluginInstanceOwner *aOwner);
-#endif
 
   // FIXME-jsplugins comment here about when things may be fake
   nsPluginTag*
@@ -320,7 +298,7 @@ private:
   nsPluginTag* FindNativePluginForExtension(const nsACString & aExtension,
                                             /* out */ nsACString & aMimeType,
                                             bool aCheckEnabled);
-#ifdef MOZ_ENABLE_NPAPI
+
   nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
@@ -328,7 +306,7 @@ private:
 
   nsresult
   FindPlugins(bool aCreatePluginList, bool * aPluginsChanged);
-#endif
+
   // FIXME revisit, no ns prefix
   // Registers or unregisters the given mime type with the category manager
   enum nsRegisterType { ePluginRegister,
@@ -373,9 +351,9 @@ private:
 
   // Returns the first plugin at |path|
   nsPluginTag* FirstPluginWithPath(const nsCString& path);
-#ifdef MOZ_ENABLE_NPAPI
+
   nsresult EnsurePrivateDirServiceProvider();
-#endif
+
   void OnPluginInstanceDestroyed(nsPluginTag* aPluginTag);
 
   // To be used by the chrome process whenever the set of plugins changes.
@@ -447,11 +425,8 @@ private:
 class PluginDestructionGuard : protected PRCList
 {
 public:
-#ifdef MOZ_ENABLE_NPAPI
   explicit PluginDestructionGuard(nsNPAPIPluginInstance *aInstance);
-
   explicit PluginDestructionGuard(mozilla::plugins::PluginAsyncSurrogate *aSurrogate);
-#endif
   explicit PluginDestructionGuard(NPP npp);
 
   ~PluginDestructionGuard();
@@ -459,7 +434,6 @@ public:
   static bool DelayDestroy(nsNPAPIPluginInstance *aInstance);
 
 protected:
-#ifdef MOZ_ENABLE_NPAPI
   void Init()
   {
     NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
@@ -481,12 +455,11 @@ protected:
     // that they appear to be at the bottom of the stack
     PR_INSERT_AFTER(this, &sListHead);
   }
-#endif
+
   RefPtr<nsNPAPIPluginInstance> mInstance;
   bool mDelayedDestroy;
 
   static PRCList sListHead;
-
 };
 
 #endif // nsPluginHost_h_

@@ -19,9 +19,7 @@
 #include "nsTArray.h"
 #include "nsWeakPtr.h"
 
-#ifdef MOZ_ENABLE_NPAPI
 class nsPluginArray;
-#endif
 class nsMimeTypeArray;
 class nsPIDOMWindowInner;
 class nsIDOMNavigatorSystemMessages;
@@ -129,9 +127,7 @@ public:
   void RegisterContentHandler(const nsAString& aMIMEType, const nsAString& aURL,
                               const nsAString& aTitle, ErrorResult& aRv);
   nsMimeTypeArray* GetMimeTypes(ErrorResult& aRv);
-#ifdef MOZ_ENABLE_NPAPI
   nsPluginArray* GetPlugins(ErrorResult& aRv);
-#endif
   Permissions* GetPermissions(ErrorResult& aRv);
   bool GlobalPrivacyControl();
   Geolocation* GetGeolocation(ErrorResult& aRv);
@@ -268,9 +264,7 @@ private:
                           ErrorResult& aRv);
 
   RefPtr<nsMimeTypeArray> mMimeTypes;
-#ifdef MOZ_ENABLE_NPAPI
   RefPtr<nsPluginArray> mPlugins;
-#endif
   RefPtr<Permissions> mPermissions;
   RefPtr<Geolocation> mGeolocation;
   RefPtr<DesktopNotificationCenter> mNotification;

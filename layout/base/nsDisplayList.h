@@ -236,7 +236,6 @@ public:
                        bool aBuildCaret);
   ~nsDisplayListBuilder();
 
-#ifdef MOZ_ENABLE_NPAPI
   void SetWillComputePluginGeometry(bool aWillComputePluginGeometry)
   {
     mWillComputePluginGeometry = aWillComputePluginGeometry;
@@ -247,7 +246,7 @@ public:
     NS_ASSERTION(mWillComputePluginGeometry, "Should have signalled this in advance");
     mMode = nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
   }
-#endif
+
   mozilla::layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr);
 
   /**
@@ -266,12 +265,10 @@ public:
    * @return true if the display list is being built to compute geometry
    * for plugins.
    */
-#ifdef MOZ_ENABLE_NPAPI
   bool IsForPluginGeometry()
   {
     return mMode == nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
   }
-#endif
 
   /**
    * @return true if the display list is being built for painting.
@@ -307,9 +304,8 @@ public:
   {
     return mMode == nsDisplayListBuilderMode::PAINTING_SELECTION_BACKGROUND;
   }
-#ifdef MOZ_ENABLE_NPAPI
+
   bool WillComputePluginGeometry() { return mWillComputePluginGeometry; }
-#endif
   /**
    * @return true if "painting is suppressed" during page load and we
    * should paint only the background of the document.
@@ -418,7 +414,6 @@ public:
    */
   void SetAccurateVisibleRegions() { mAccurateVisibleRegions = true; }
   bool GetAccurateVisibleRegions() { return mAccurateVisibleRegions; }
-
   /**
    * @return Returns true if we should include the caret in any display lists
    * that we make.
@@ -1083,10 +1078,9 @@ public:
   }
   bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem);
 
-#ifdef MOZ_ENABLE_NPAPI
   void SetContainsPluginItem() { mContainsPluginItem = true; }
   bool ContainsPluginItem() { return mContainsPluginItem; }
-#endif
+
   /**
    * mContainsBlendMode is true if we processed a display item that
    * has a blend mode attached. We do this so we can insert a 

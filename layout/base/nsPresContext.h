@@ -57,9 +57,7 @@ class nsIRunnable;
 class gfxUserFontEntry;
 class gfxUserFontSet;
 class gfxTextPerfMetrics;
-#ifdef MOZ_ENABLE_NPAPI
 class nsPluginFrame;
-#endif
 class nsTransitionManager;
 class nsAnimationManager;
 class nsRefreshDriver;
@@ -1467,7 +1465,7 @@ public:
       mNotifyDidPaintTimer = nullptr;
     }
   }
-#ifdef MOZ_ENABLE_NPAPI
+
   /**
    * Registers a plugin to receive geometry updates (position and clip
    * region) so it can update its widget.
@@ -1511,7 +1509,6 @@ public:
    * reflow, data is shipped over with layer updates. e10s specific.
    */
   void CollectPluginGeometryUpdates(mozilla::layers::LayerManager* aLayerManager);
-#endif
 
   virtual bool IsRoot() override { return true; }
 
@@ -1545,7 +1542,6 @@ public:
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 protected:
-#ifdef MOZ_ENABLE_NPAPI
   /**
    * Start a timer to ensure we eventually run ApplyPluginGeometryUpdates.
    */
@@ -1554,7 +1550,7 @@ protected:
    * Cancel the timer that ensures we eventually run ApplyPluginGeometryUpdates.
    */
   void CancelApplyPluginGeometryTimer();
-#endif
+
   class RunWillPaintObservers : public mozilla::Runnable {
   public:
     explicit RunWillPaintObservers(nsRootPresContext* aPresContext) : mPresContext(aPresContext) {}
@@ -1573,10 +1569,8 @@ protected:
   friend class nsPresContext;
 
   nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
-#ifdef MOZ_ENABLE_NPAPI
   nsCOMPtr<nsITimer> mApplyPluginGeometryTimer;
   nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
-#endif
   nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;
   nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
   uint32_t mDOMGeneration;

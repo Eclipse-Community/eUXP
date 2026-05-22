@@ -19,9 +19,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginWidgetChild.h"
-#endif
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/layers/APZChild.h"
@@ -2928,7 +2926,7 @@ TabChild::RecvSetFreshProcess()
   mIsFreshProcess = true;
   return true;
 }
-#ifdef MOZ_ENABLE_NPAPI
+
 mozilla::plugins::PPluginWidgetChild*
 TabChild::AllocPPluginWidgetChild()
 {
@@ -2972,7 +2970,6 @@ TabChild::CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut)
   pluginWidget.forget(aOut);
   return rv;
 }
-#endif // MOZ_ENABLE_NPAPI
 
 ScreenIntSize
 TabChild::GetInnerSize()

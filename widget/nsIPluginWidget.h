@@ -10,9 +10,7 @@
   { 0xEB9207E0, 0xD8F1, 0x44B9, \
     { 0xB7, 0x52, 0xAF, 0x8E, 0x9F, 0x8E, 0xBD, 0xF7 } }
 
-#ifdef MOZ_ENABLE_NPAPI
 class nsIPluginInstanceOwner;
-#endif
 
 /**
  * This is used by Mac only.
@@ -29,9 +27,7 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
 
   NS_IMETHOD EndDrawPlugin(void) = 0;
 
-#ifdef MOZ_ENABLE_NPAPI
   NS_IMETHOD SetPluginInstanceOwner(nsIPluginInstanceOwner* pluginInstanceOwner) = 0;
-#endif
 
   NS_IMETHOD SetPluginEventModel(int inEventModel) = 0;
 

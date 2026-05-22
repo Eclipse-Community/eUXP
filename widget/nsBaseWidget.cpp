@@ -35,9 +35,7 @@
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "npapi.h"
-#endif
 #include "X11UndefineNone.h"
 #include "base/thread.h"
 #include "prdtoa.h"

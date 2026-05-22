@@ -19,9 +19,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginWidgetParent.h"
-#endif
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -369,7 +367,6 @@ TabParent::DestroyInternal()
     frame->Destroy();
   }
 
-#ifdef MOZ_ENABLE_NPAPI
   // Let all PluginWidgets know we are tearing down. Prevents
   // these objects from sending async events after the child side
   // is shut down.
@@ -379,7 +376,6 @@ TabParent::DestroyInternal()
     static_cast<mozilla::plugins::PluginWidgetParent*>(
        iter.Get()->GetKey())->ParentDestroy();
   }
-#endif
 }
 
 void
@@ -2829,7 +2825,6 @@ TabParent::RecvRemotePaintIsReady()
   return true;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 mozilla::plugins::PPluginWidgetParent*
 TabParent::AllocPPluginWidgetParent()
 {
@@ -2842,7 +2837,6 @@ TabParent::DeallocPPluginWidgetParent(mozilla::plugins::PPluginWidgetParent* aAc
   delete aActor;
   return true;
 }
-#endif
 
 nsresult
 TabParent::HandleEvent(nsIDOMEvent* aEvent)
