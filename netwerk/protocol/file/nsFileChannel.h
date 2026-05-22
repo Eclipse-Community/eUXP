@@ -28,13 +28,13 @@ protected:
   // method also returns a best guess at the content-type for the data stream.
   // NOTE: If the channel has a type hint set, contentType will be left
   // untouched. The caller should not use it in that case.
-  [[nodiscard]] nsresult MakeFileInputStream(nsIFile *file,
-                                             nsCOMPtr<nsIInputStream> &stream,
-                                             nsCString &contentType, bool async);
+  MOZ_MUST_USE nsresult MakeFileInputStream(nsIFile *file,
+                                            nsCOMPtr<nsIInputStream> &stream,
+                                            nsCString &contentType, bool async);
 
-  [[nodiscard]] virtual nsresult OpenContentStream(bool async,
-                                                   nsIInputStream **result,
-                                                   nsIChannel** channel) override;
+  virtual MOZ_MUST_USE nsresult OpenContentStream(bool async,
+                                                  nsIInputStream **result,
+                                                  nsIChannel** channel) override;
 
 private:
   nsCOMPtr<nsIInputStream> mUploadStream;
