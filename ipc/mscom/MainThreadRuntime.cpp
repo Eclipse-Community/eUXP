@@ -59,8 +59,11 @@ MainThreadRuntime::MainThreadRuntime()
     return;
   }
 
-  // Use the strictest policy available.
-  ULONG_PTR exceptionSetting = COMGLB_EXCEPTION_DONOT_HANDLE_ANY;
+  // Windows 7 has a policy that is even more strict. We should use that one
+  // whenever possible.
+  ULONG_PTR exceptionSetting = IsWin7OrLater() ?
+                               COMGLB_EXCEPTION_DONOT_HANDLE_ANY :
+                               COMGLB_EXCEPTION_DONOT_HANDLE;
   mInitResult = globalOpts->Set(COMGLB_EXCEPTION_HANDLING, exceptionSetting);
   MOZ_ASSERT(SUCCEEDED(mInitResult));
 }
