@@ -153,6 +153,13 @@ MOZ_SAFE_BROWSING:
   false,
 #endif
 
+  MOZ_GRAPHENE:
+#ifdef MOZ_GRAPHENE
+  true,
+#else
+  false,
+#endif
+
   MOZ_PLACES:
 #ifdef MOZ_PLACES
   true,

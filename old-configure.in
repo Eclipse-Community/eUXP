@@ -931,10 +931,16 @@ case "$target" in
             CXXFLAGS="$CXXFLAGS -utf-8"
         fi
         if test "$CPU_ARCH" = "x86"; then
-            changequote(,)
             dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
-            dnl more recent, so no need to set it explicitly in the default
-            dnl case.
+            dnl more recent, so set that explicitly here unless another
+            dnl target arch has already been set.
+            changequote(,)
+            if test -z `echo $CFLAGS | grep -i [-/]arch:`; then
+              CFLAGS="$CFLAGS -arch:SSE2"
+            fi
+            if test -z `echo $CXXFLAGS | grep -i [-/]arch:`; then
+              CXXFLAGS="$CXXFLAGS -arch:SSE2"
+            fi
             changequote([,])
             SSE_FLAGS="-arch:SSE"
             SSE2_FLAGS="-arch:SSE2"
@@ -1050,18 +1056,15 @@ case "$target" in
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         MOZ_FIX_LINK_PATHS=
-        AC_MSG_CHECKING(for optimal linker configuration)
-        num_cores=$($PYTHON -c 'import multiprocessing; print(multiprocessing.cpu_count())')
-        icf_iters=$($PYTHON -c 'import multiprocessing; print(min(16,multiprocessing.cpu_count()))')
-        cgthreads=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
-        AC_MSG_RESULT("CG:${cgthreads}/ICF:${icf_iters}/${num_cores}c")
-        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT -DYNAMICBASE -OPT:REF -OPT:ICF=${icf_iters} -CGTHREADS:${cgthreads}"
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+        num_cores=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
+        cgthreads="-CGTHREADS:${num_cores}"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT -PogoSafeMode $cgthreads"
         dnl XXX: PGO builds can fail with warnings treated as errors,
         dnl specifically "no profile data available" appears to be
         dnl treated as an error sometimes. This might be a consequence
@@ -1072,11 +1075,19 @@ case "$target" in
         PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
         dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
         dnl Probably also a compiler bug, but what can you do?
-        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE $cgthreads"
+        LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
-        dnl Minimum required VS version supports SSSE3, SSE4.1 and AVX2.
+        if test "$CC_VERSION" = "18.00.31101"; then
+            dnl Use MaxILKSize as a workaround for LNK1248 in VS2013update4
+            dnl See https://connect.microsoft.com/VisualStudio/feedback/details/1044914/fatal-error-lnk1248
+            LDFLAGS="$LDFLAGS -MaxILKSize:0x7FF00000"
+        fi
+        dnl Minimum reqiurement of Gecko is VS2010 or later which supports
+        dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
+        dnl allow AVX2 code from VS2012
         HAVE_X86_AVX2=1
     fi
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -2112,6 +2123,7 @@ MOZ_NECKO_WIFI=1
 NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
+MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_AUDIO_CHANNEL_MANAGER=
@@ -2185,6 +2197,11 @@ WITH_APP_BASENAME=$withval,
 
 if test -n "$WITH_APP_BASENAME" ; then
     MOZ_APP_BASENAME="$WITH_APP_BASENAME"
+fi
+
+# Graphene is a desktop runtime for running applications with a HTML UI.
+if test -n "$MOZ_GRAPHENE"; then
+    AC_DEFINE(MOZ_GRAPHENE)
 fi
 
 # Allow someone to change the xulrunner-stub name in mozconfig
@@ -2550,6 +2567,15 @@ dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
 if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
     AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
+fi
+
+dnl ========================================================
+dnl = Include install tracking on Android
+dnl ========================================================
+if test -n "$MOZ_INSTALL_TRACKING"; then
+    if test -z "$MOZ_ADJUST_SDK_KEY"; then
+        AC_MSG_ERROR([Must specify --with-adjust-sdk-keyfile when MOZ_INSTALL_TRACKING is defined!])
+    fi
 fi
 
 dnl ========================================================
@@ -4844,6 +4870,7 @@ AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL_PATH)
 
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
+AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)

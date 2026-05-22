@@ -44,6 +44,9 @@
 # define access _access
 
 # define putenv _putenv
+# if defined(_MSC_VER) && _MSC_VER < 1900
+#  define stat _stat
+# endif
 # define DELETE_DIR L"tobedeleted"
 # define CALLBACK_BACKUP_EXT L".moz-callback"
 
