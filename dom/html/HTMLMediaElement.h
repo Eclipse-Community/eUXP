@@ -18,6 +18,9 @@
 #include "mozilla/dom/TextTrackManager.h"
 #include "mozilla/WeakPtr.h"
 #include "MediaDecoder.h"
+#ifdef MOZ_EME
+#include "mozilla/dom/MediaKeys.h"
+#endif
 #include "mozilla/StateWatching.h"
 #include "nsGkAtoms.h"
 #include "PrincipalChangeObserver.h"
@@ -615,6 +618,30 @@ public:
   }
 
   // XPCOM MozPreservesPitch() is OK
+
+#ifdef MOZ_EME
+  MediaKeys* GetMediaKeys() const;
+
+  already_AddRefed<Promise> SetMediaKeys(MediaKeys* mediaKeys,
+                                         ErrorResult& aRv);
+
+  mozilla::dom::EventHandlerNonNull* GetOnencrypted();
+  void SetOnencrypted(mozilla::dom::EventHandlerNonNull* aCallback);
+
+  mozilla::dom::EventHandlerNonNull* GetOnwaitingforkey();
+  void SetOnwaitingforkey(mozilla::dom::EventHandlerNonNull* aCallback);
+
+  void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
+                         const nsAString& aInitDataType) override;
+
+  bool IsEventAttributeName(nsIAtom* aName) override;
+
+  // Returns the principal of the "top level" document; the origin displayed
+  // in the URL bar of the browser window.
+  already_AddRefed<nsIPrincipal> GetTopLevelPrincipal();
+
+  bool ContainsRestrictedContent();
+#endif // MOZ_EME
 
   void CannotDecryptWaitingForKey();
 
@@ -1454,6 +1481,11 @@ protected:
   // Timer used for updating progress events.
   nsCOMPtr<nsITimer> mProgressTimer;
 
+#ifdef MOZ_EME
+  // Encrypted Media Extension media keys.
+  RefPtr<MediaKeys> mMediaKeys;
+#endif
+
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
 
@@ -1606,6 +1638,11 @@ protected:
 
   // Listens for waitingForKey events from the owned decoder.
   MediaEventListener mWaitingForKeyListener;
+
+#ifdef MOZ_EME
+  // Init Data that needs to be sent in 'encrypted' events in MetadataLoaded().
+  EncryptionInfo mPendingEncryptedInitData;
+#endif
 
   // True if the media's channel's download has been suspended.
   Watchable<bool> mDownloadSuspendedByCache;

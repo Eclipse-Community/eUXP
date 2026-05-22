@@ -90,6 +90,11 @@
 #endif
 #include "mozilla/dom/ContentChild.h"
 
+#ifdef MOZ_EME
+#include "mozilla/EMEUtils.h"
+#include "mozilla/DetailedPromise.h"
+#endif
+
 namespace mozilla {
 namespace dom {
 
@@ -192,6 +197,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+#ifdef MOZ_EME
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
+#endif
 #ifdef MOZ_GAMEPAD
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepadServiceTest)
 #endif
@@ -251,6 +259,13 @@ Navigator::Invalidate()
   }
 
   mServiceWorkerContainer = nullptr;
+
+#ifdef MOZ_EME
+  if (mMediaKeySystemAccessManager) {
+    mMediaKeySystemAccessManager->Shutdown();
+    mMediaKeySystemAccessManager = nullptr;
+  }
+#endif
 
 #ifdef MOZ_GAMEPAD
   if (mGamepadServiceTest) {
@@ -1516,6 +1531,132 @@ Navigator::Webdriver()
   // We don't support Selenium or marionette, so this is always false.
   return false;
 }
+
+#ifdef MOZ_EME
+static nsCString
+ToCString(const nsString& aString)
+{
+  nsCString str("'");
+  str.Append(NS_ConvertUTF16toUTF8(aString));
+  str.AppendLiteral("'");
+  return str;
+}
+
+static nsCString
+ToCString(const MediaKeysRequirement aValue)
+{
+  nsCString str("'");
+  str.Append(nsDependentCString(MediaKeysRequirementValues::strings[static_cast<uint32_t>(aValue)].value));
+  str.AppendLiteral("'");
+  return str;
+}
+
+static nsCString
+ToCString(const MediaKeySystemMediaCapability& aValue)
+{
+  nsCString str;
+  str.AppendLiteral("{contentType=");
+  str.Append(ToCString(aValue.mContentType));
+  str.AppendLiteral(", robustness=");
+  str.Append(ToCString(aValue.mRobustness));
+  str.AppendLiteral("}");
+  return str;
+}
+
+template<class Type>
+static nsCString
+ToCString(const Sequence<Type>& aSequence)
+{
+  nsCString str;
+  str.AppendLiteral("[");
+  for (size_t i = 0; i < aSequence.Length(); i++) {
+    if (i != 0) {
+      str.AppendLiteral(",");
+    }
+    str.Append(ToCString(aSequence[i]));
+  }
+  str.AppendLiteral("]");
+  return str;
+}
+
+template<class Type>
+static nsCString
+ToCString(const Optional<Sequence<Type>>& aOptional)
+{
+  nsCString str;
+  if (aOptional.WasPassed()) {
+    str.Append(ToCString(aOptional.Value()));
+  } else {
+    str.AppendLiteral("[]");
+  }
+  return str;
+}
+
+static nsCString
+ToCString(const MediaKeySystemConfiguration& aConfig)
+{
+  nsCString str;
+  str.AppendLiteral("{label=");
+  str.Append(ToCString(aConfig.mLabel));
+
+  str.AppendLiteral(", initDataTypes=");
+  str.Append(ToCString(aConfig.mInitDataTypes));
+
+  str.AppendLiteral(", audioCapabilities=");
+  str.Append(ToCString(aConfig.mAudioCapabilities));
+
+  str.AppendLiteral(", videoCapabilities=");
+  str.Append(ToCString(aConfig.mVideoCapabilities));
+
+  str.AppendLiteral(", distinctiveIdentifier=");
+  str.Append(ToCString(aConfig.mDistinctiveIdentifier));
+
+  str.AppendLiteral(", persistentState=");
+  str.Append(ToCString(aConfig.mPersistentState));
+
+  str.AppendLiteral(", sessionTypes=");
+  str.Append(ToCString(aConfig.mSessionTypes));
+
+  str.AppendLiteral("}");
+
+  return str;
+}
+
+static nsCString
+RequestKeySystemAccessLogString(const nsAString& aKeySystem,
+                                const Sequence<MediaKeySystemConfiguration>& aConfigs)
+{
+  nsCString str;
+  str.AppendPrintf("Navigator::RequestMediaKeySystemAccess(keySystem='%s' options=",
+                   NS_ConvertUTF16toUTF8(aKeySystem).get());
+  str.Append(ToCString(aConfigs));
+  str.AppendLiteral(")");
+  return str;
+}
+
+already_AddRefed<Promise>
+Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
+                                       const Sequence<MediaKeySystemConfiguration>& aConfigs,
+                                       ErrorResult& aRv)
+{
+  EME_LOG("%s", RequestKeySystemAccessLogString(aKeySystem, aConfigs).get());
+
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  RefPtr<DetailedPromise> promise =
+    DetailedPromise::Create(go, aRv,
+      NS_LITERAL_CSTRING("navigator.requestMediaKeySystemAccess"));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (!mMediaKeySystemAccessManager) {
+    mMediaKeySystemAccessManager = new MediaKeySystemAccessManager(mWindow);
+  }
+
+  mMediaKeySystemAccessManager->Request(promise, aKeySystem, aConfigs);
+  return promise.forget();
+}
+#endif
 
 } // namespace dom
 } // namespace mozilla

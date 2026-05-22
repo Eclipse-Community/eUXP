@@ -24,6 +24,9 @@
 
 namespace mozilla {
 
+#ifdef MOZ_EME
+class CDMProxy;
+#endif
 class MediaDecoderReader;
 
 struct WaitForDataRejectValue
@@ -184,6 +187,10 @@ public:
   // activate the decoder if necessary. The state machine only needs to know
   // when to call SetIdle().
   virtual void SetIdle() {}
+
+#ifdef MOZ_EME
+  virtual void SetCDMProxy(CDMProxy* aProxy) {}
+#endif
 
   // Tell the reader that the data decoded are not for direct playback, so it
   // can accept more files, in particular those which have more channels than
