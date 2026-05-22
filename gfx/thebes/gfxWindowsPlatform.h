@@ -49,6 +49,7 @@ class FeatureState;
 class DeviceManagerDx;
 }
 namespace layers {
+class DeviceManagerD3D9;
 class ReadbackManagerD3D11;
 }
 }
