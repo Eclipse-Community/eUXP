@@ -48,7 +48,7 @@ dnl ========================================================
 MOZJPEG=62
 MOZPNG=10625
 NSPR_VERSION=4
-NSPR_MINVER=4.35
+NSPR_MINVER=4.20
 NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
@@ -264,35 +264,8 @@ case "$target" in
 
         unset _MSVC_VER_FILTER
 
-        AC_CACHE_CHECK(for overridable _RAISE,
-                       ac_cv_have__RAISE,
-            [
-                AC_LANG_SAVE
-                AC_LANG_CPLUSPLUS
-                _SAVE_CXXFLAGS="$CXXFLAGS"
-                CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
-                AC_TRY_COMPILE([#include <xstddef>
-                                #undef _RAISE
-                                #define _RAISE(x) externallyDefinedFunction((x).what())
-                                #include <vector>
-                               ],
-                               [std::vector<int> v; return v.at(1);],
-                               ac_cv_have__RAISE="no",
-                               ac_cv_have__RAISE="yes")
-                CXXFLAGS="$_SAVE_CXXFLAGS"
-                AC_LANG_RESTORE
-            ])
-        if test "$ac_cv_have__RAISE" = "yes"; then
-            WRAP_STL_INCLUDES=1
-            MOZ_MSVC_STL_WRAP_RAISE=1
-            AC_DEFINE(MOZ_MSVC_STL_WRAP_RAISE)
-        else
-            AC_MSG_ERROR([Gecko exception wrapping doesn't understand your your MSVC/SDK.  Please file a bug describing this error and your build configuration.])
-        fi
-
-        if test "$WRAP_STL_INCLUDES" = "1"; then
-            STL_FLAGS="-I${DIST}/stl_wrappers"
-        fi
+        WRAP_STL_INCLUDES=1
+        STL_FLAGS="-I${DIST}/stl_wrappers"
         CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
         CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
     else
@@ -379,7 +352,6 @@ AC_SUBST(GNU_CXX)
 
 AC_SUBST(STL_FLAGS)
 AC_SUBST(WRAP_STL_INCLUDES)
-AC_SUBST(MOZ_MSVC_STL_WRAP_RAISE)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -740,7 +712,7 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
-
+ 
 *)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
@@ -2195,16 +2167,6 @@ fi
 if test -n "$MOZ_GRAPHENE"; then
     AC_DEFINE(MOZ_GRAPHENE)
 fi
-
-# Allow someone to change the xulrunner-stub name in mozconfig
-MOZ_ARG_WITH_STRING(xulrunner-stub-name,
-[  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
-  XULRUNNER_STUB_NAME=$withval)
-
-if test -z "$XULRUNNER_STUB_NAME"; then
-  XULRUNNER_STUB_NAME=xulrunner-stub
-fi
-AC_SUBST(XULRUNNER_STUB_NAME)
 
 dnl ========================================================
 dnl =
@@ -4526,6 +4488,19 @@ dnl = Compiler Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Compiler Options)
+
+dnl ========================================================
+dnl Check for gcc -pipe support
+dnl ========================================================
+AC_MSG_CHECKING([for -pipe support])
+if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
+    dnl Any gcc that supports firefox supports -pipe.
+    CFLAGS="$CFLAGS -pipe"
+    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
 
 dnl ========================================================
 dnl Profile guided optimization (gcc checks)

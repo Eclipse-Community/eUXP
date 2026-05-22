@@ -1112,14 +1112,8 @@ class L10n_Package(MachCommandBase):
 
     @Command('langpack', category='post-build',
         description='Build and package l10n as a language pack.')
-    @CommandArgument('-v', '--verbose', action='store_true',
-        help='Verbose output for what commands the packaging process is running.')
-    def l10n_package(self, verbose=False):
-        ret = self._run_make(directory=".", target='l10n-package',
-                             silent=not verbose, ensure_exit_code=False)
-        if ret == 0:
-            self.notify('Packaging complete')
-        return ret
+    def l10n_package(self):
+        return self._run_make(directory=".", target='l10n-package', ensure_exit_code=False)
 
 @CommandProvider
 class Package(MachCommandBase):

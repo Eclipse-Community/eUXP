@@ -32,7 +32,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.c 366426 2020-10-04 15:37:34Z tuexen $");
 #endif
@@ -335,7 +335,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 	if ((Err = GetAdaptersAddresses(AF_INET, 0, NULL, pAdapterAddrs, &AdapterAddrsSize)) != ERROR_SUCCESS) {
 		SCTP_PRINTF("GetAdaptersV4Addresses() failed with error code %d\n", Err);
 		if (pAdapterAddrs)
-			GlobalFree(pAdapterAddrs); 
+			GlobalFree(pAdapterAddrs);
 		return;
 	}
 	/* Enumerate through each returned adapter and save its information */
@@ -533,13 +533,13 @@ sctp_init_ifns_for_vrf(int vrfid)
 			} else {
 				ifa_flags = 0;
 			}
-			snprintf(name, SCTP_IFNAMSIZ, "%s%d", ifnet_name(ifn), ifnet_unit(ifn));
+			SCTP_SNPRINTF(name, SCTP_IFNAMSIZ, "%s%d", ifnet_name(ifn), ifnet_unit(ifn));
 			sctp_ifa = sctp_add_addr_to_vrf(vrfid,
-			                                (void *)ifn,
+			                                (void *)ifn, /* XXX */
 			                                ifnet_index(ifn),
 			                                ifnet_type(ifn),
 			                                name,
-			                                (void *)ifa,
+			                                (void *)ifa, /* XXX */
 			                                ifa->ifa_addr,
 			                                ifa_flags,
 			                                0);
@@ -716,7 +716,6 @@ sctp_addr_change(struct ifaddr *ifa, int cmd)
 #endif
 		                           (void *)ifa, ifa->ifa_addr, ifa_flags, 1);
 	} else {
-
 		sctp_del_addr_from_vrf(SCTP_DEFAULT_VRFID, ifa->ifa_addr,
 #if defined(__APPLE__) && !defined(__Userspace__)
 		                       ifnet_index(ifa->ifa_ifp),
@@ -735,7 +734,7 @@ sctp_addr_change(struct ifaddr *ifa, int cmd)
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 void
-ssctp_addr_change_event_handler(void *arg __unused, struct ifaddr *ifa, int cmd) {
+sctp_addr_change_event_handler(void *arg __unused, struct ifaddr *ifa, int cmd) {
 	sctp_addr_change(ifa, cmd);
 }
 #endif
@@ -771,7 +770,7 @@ struct mbuf *
 sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 		      int how, int allonebuf, int type)
 {
-    struct mbuf *m = NULL;
+	struct mbuf *m = NULL;
 #if defined(__FreeBSD__) || defined(__Userspace__)
 #if defined(__Userspace__)
 	m =  m_getm2(NULL, space_needed, how, type, want_header ? M_PKTHDR : 0, allonebuf);
@@ -799,6 +798,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 #else
 	int mbuf_threshold;
 	unsigned int size;
+
 	if (want_header) {
 		MGETHDR(m, how, type);
 		size = MHLEN;

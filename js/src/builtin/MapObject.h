@@ -109,8 +109,8 @@ class MapObject : public NativeObject {
 
     static MOZ_MUST_USE bool getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
                                             JS::MutableHandle<GCVector<JS::Value>> entries);
-    static bool entries(JSContext* cx, unsigned argc, Value* vp);
-    static bool has(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool entries(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
     static MapObject* create(JSContext* cx, HandleObject proto = nullptr);
 
     // Publicly exposed Map calls for JSAPI access (webidl maplike/setlike

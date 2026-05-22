@@ -21,7 +21,7 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
-    else: # Linux, BSDs, etc.
+    else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
 elif CONFIG['CPU_ARCH'] == 'x86':
@@ -33,7 +33,7 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
-    else: # Linux, BSDs, etc.
+    else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
 elif CONFIG['CPU_ARCH'] == 'arm':
