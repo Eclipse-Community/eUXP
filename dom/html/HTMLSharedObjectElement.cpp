@@ -10,9 +10,7 @@
 #include "mozilla/dom/ElementInlines.h"
 
 #include "nsIDocument.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsIPluginDocument.h"
-#endif
 #include "nsIDOMDocument.h"
 #include "nsThreadUtils.h"
 #include "nsIScriptError.h"
@@ -134,11 +132,8 @@ HTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
   // Don't kick off load from being bound to a plugin document - the plugin
   // document will call nsObjectLoadingContent::InitializeFromChannel() for the
   // initial load.
-#ifdef MOZ_ENABLE_NPAPI
   nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(aDocument);
-#else
-  bool pluginDoc = false;
-#endif
+
   // If we already have all the children, start the load.
   if (mIsDoneAddingChildren && !pluginDoc) {
     void (HTMLSharedObjectElement::*start)() =
@@ -397,7 +392,6 @@ HTMLSharedObjectElement::CopyInnerTo(Element* aDest)
 JSObject*
 HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-#ifdef MOZ_ENABLE_NPAPI
   JSObject* obj;
   if (mNodeInfo->Equals(nsGkAtoms::applet)) {
     obj = HTMLAppletElementBinding::Wrap(aCx, this, aGivenProto);
@@ -411,9 +405,6 @@ HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   JS::Rooted<JSObject*> rootedObj(aCx, obj);
   SetupProtoChain(aCx, rootedObj);
   return rootedObj;
-#else
-  return HTMLEmbedElementBinding::Wrap(aCx, this, aGivenProto);
-#endif
 }
 
 nsContentPolicyType

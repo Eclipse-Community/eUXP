@@ -77,10 +77,8 @@
 #include "AppProcessChecker.h"
 #include "ContentParent.h"
 #include "TabParent.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "../plugins/ipc/PluginWidgetParent.h"
-#endif
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
@@ -1157,7 +1155,6 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   aOther->mRemoteBrowser->SetBrowserDOMWindow(browserDOMWindow);
   mRemoteBrowser->SetBrowserDOMWindow(otherBrowserDOMWindow);
 
-#ifdef MOZ_ENABLE_NPAPI
   // Native plugin windows used by this remote content need to be reparented.
   if (nsPIDOMWindowOuter* newWin = ourDoc->GetWindow()) {
     RefPtr<nsIWidget> newParent = nsGlobalWindow::Cast(newWin)->GetMainWidget();
@@ -1167,7 +1164,6 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
       static_cast<mozilla::plugins::PluginWidgetParent*>(iter.Get()->GetKey())->SetParent(newParent);
     }
   }
-#endif // MOZ_ENABLE_NPAPI
 
   MaybeUpdatePrimaryTabParent(eTabParentRemoved);
   aOther->MaybeUpdatePrimaryTabParent(eTabParentRemoved);

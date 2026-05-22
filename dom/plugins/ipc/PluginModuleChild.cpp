@@ -44,9 +44,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#ifdef MOZ_ENABLE_NPAPI
 #include "PluginInterposeOSX.h"
-#endif // MOZ_ENABLE_NPAPI
 #include "PluginUtilsOSX.h"
 #endif
 
@@ -135,7 +133,7 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
         gChromeInstance = this;
     }
 
-#if defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_MACOSX
     if (aIsChrome) {
       mac_plugin_interposing::child::SetUpCocoaInterposing();
     }
@@ -2550,7 +2548,6 @@ PluginModuleChild::ProcessNativeEvents() {
 }
 #endif
 
-#ifdef MOZ_ENABLE_NPAPI
 NPError
 PluginModuleChild::PluginRequiresAudioDeviceChanges(
                           PluginInstanceChild* aInstance,
@@ -2609,4 +2606,3 @@ PluginModuleChild::RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
     return false;
 #endif
 }
-#endif // MOZ_ENABLE_NPAPI

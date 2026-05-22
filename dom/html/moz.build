@@ -210,11 +210,10 @@ UNIFIED_SOURCES += [
     'VideoDocument.cpp',
 ]
 
-if CONFIG['MOZ_ENABLE_NPAPI']:
-    SOURCES += [
-        # Includes npapi.h.
-        'PluginDocument.cpp',
-    ]
+SOURCES += [
+    # Includes npapi.h.
+    'PluginDocument.cpp',
+]
 
 EXTRA_COMPONENTS += [
     'htmlMenuBuilder.js',

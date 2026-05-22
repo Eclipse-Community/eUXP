@@ -200,14 +200,12 @@ interface MozObjectLoadingContent {
   [ChromeOnly]
   readonly attribute unsigned long pluginFallbackType;
 
-#ifdef MOZ_ENABLE_NPAPI
   /**
    * If this object currently owns a running plugin, regardless of whether or
    * not one is pending spawn/despawn.
    */
   [ChromeOnly]
   readonly attribute boolean hasRunningPlugin;
-#endif
 
   [ChromeOnly, Throws]
   readonly attribute unsigned long runID;

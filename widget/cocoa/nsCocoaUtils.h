@@ -10,9 +10,7 @@
 
 #include "nsRect.h"
 #include "imgIContainer.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "npapi.h"
-#endif
 #include "nsTArray.h"
 #include "Units.h"
 
@@ -348,12 +346,11 @@ public:
    */
   static NSEvent* MakeNewCocoaEventWithType(NSEventType aEventType,
                                             NSEvent *aEvent);
-#ifdef MOZ_ENABLE_NPAPI
+
   /**
    * Initializes aNPCocoaEvent.
    */
   static void InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent);
-#endif
 
   /**
    * Initializes WidgetInputEvent for aNativeEvent or aModifiers.

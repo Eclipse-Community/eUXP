@@ -2388,9 +2388,8 @@ public:
 
   virtual nsresult AddPlugin(nsIObjectLoadingContent* aPlugin) = 0;
   virtual void RemovePlugin(nsIObjectLoadingContent* aPlugin) = 0;
-#ifdef MOZ_ENABLE_NPAPI
   virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) = 0;
-#endif
+
   virtual nsresult AddResponsiveContent(nsIContent* aContent) = 0;
   virtual void RemoveResponsiveContent(nsIContent* aContent) = 0;
   virtual void NotifyMediaFeatureValuesChanged() = 0;

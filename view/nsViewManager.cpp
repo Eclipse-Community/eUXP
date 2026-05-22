@@ -14,9 +14,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsRegion.h"
 #include "nsCOMArray.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsIPluginWidget.h"
-#endif
 #include "nsXULPopupManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"

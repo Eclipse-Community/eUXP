@@ -114,10 +114,8 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
-#endif
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsStyleSheetService.h"
@@ -8660,7 +8658,7 @@ PresShell::WillPaintWindow()
     return;
   }
 
-#if !defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
+#ifndef XP_MACOSX
   rootPresContext->ApplyPluginGeometryUpdates();
 #endif
 }
@@ -8756,7 +8754,6 @@ PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet)
   return mStyleSet->RemoveStyleSheet(SheetType::Override, aSheet->AsConcrete());
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 static void
 FreezeElement(nsISupports *aSupports, void * /* unused */)
 {
@@ -8765,7 +8762,6 @@ FreezeElement(nsISupports *aSupports, void * /* unused */)
     olc->StopPluginInstance();
   }
 }
-#endif
 
 static bool
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
@@ -8784,9 +8780,7 @@ PresShell::Freeze()
 
   MaybeReleaseCapturingContent();
 
-#ifdef MOZ_ENABLE_NPAPI
   mDocument->EnumerateActivityObservers(FreezeElement, nullptr);
-#endif
 
   if (mCaret) {
     SetCaretEnabled(false);
@@ -8833,7 +8827,7 @@ PresShell::FireOrClearDelayedEvents(bool aFireEvents)
     }
   }
 }
-#ifdef MOZ_ENABLE_NPAPI
+
 static void
 ThawElement(nsISupports *aSupports, void *aShell)
 {
@@ -8842,7 +8836,6 @@ ThawElement(nsISupports *aSupports, void *aShell)
     olc->AsyncStartPluginInstance();
   }
 }
-#endif
 
 static bool
 ThawSubDocument(nsIDocument *aDocument, void *aData)
@@ -8862,9 +8855,9 @@ PresShell::Thaw()
       presContext->RefreshDriver()->GetPresContext() == presContext) {
     presContext->RefreshDriver()->Thaw();
   }
-#ifdef MOZ_ENABLE_NPAPI
+
   mDocument->EnumerateActivityObservers(ThawElement, this);
-#endif
+
   if (mDocument)
     mDocument->EnumerateSubDocuments(ThawSubDocument, nullptr);
 
@@ -10667,7 +10660,6 @@ SetExternalResourceIsActive(nsIDocument* aDocument, void* aClosure)
   return true;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 static void
 SetPluginIsActive(nsISupports* aSupports, void* aClosure)
 {
@@ -10682,7 +10674,6 @@ SetPluginIsActive(nsISupports* aSupports, void* aClosure)
     objectFrame->SetIsDocumentActive(*static_cast<bool*>(aClosure));
   }
 }
-#endif
 
 nsresult
 PresShell::SetIsActive(bool aIsActive)
@@ -10700,10 +10691,8 @@ PresShell::SetIsActive(bool aIsActive)
   // Propagate state-change to my resource documents' PresShells
   mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
                                         &aIsActive);
-#ifdef MOZ_ENABLE_NPAPI
   mDocument->EnumerateActivityObservers(SetPluginIsActive,
                                         &aIsActive);
-#endif
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY
   if (aIsActive) {

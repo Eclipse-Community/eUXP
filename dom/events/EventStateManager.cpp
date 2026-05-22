@@ -51,9 +51,7 @@
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
 #include "nsITabChild.h"
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginFrame.h"
-#endif
 #include "nsMenuPopupFrame.h"
 
 #include "nsIDOMXULElement.h"
@@ -2442,7 +2440,6 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     // hasn't moved.
     nsIFrame* lastScrollFrame = WheelTransaction::GetTargetFrame();
     if (lastScrollFrame) {
-#ifdef MOZ_ENABLE_NPAPI
       if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
         nsPluginFrame* pluginFrame = do_QueryFrame(lastScrollFrame);
         if (pluginFrame &&
@@ -2450,7 +2447,6 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
           return lastScrollFrame;
         }
       }
-#endif
       nsIScrollableFrame* scrollableFrame =
         lastScrollFrame->GetScrollTargetFrame();
       if (scrollableFrame) {
@@ -2480,7 +2476,6 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     // Check whether the frame wants to provide us with a scrollable view.
     nsIScrollableFrame* scrollableFrame = scrollFrame->GetScrollTargetFrame();
     if (!scrollableFrame) {
-#ifdef MOZ_ENABLE_NPAPI
       // If the frame is a plugin frame, then, the plugin content may handle
       // wheel events.  Only when the caller computes the scroll target for
       // default action handling, we should assume the plugin frame as
@@ -2493,7 +2488,6 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
           return scrollFrame;
         }
       }
-#endif
       nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(scrollFrame);
       if (menuPopupFrame) {
         return nullptr;
@@ -3219,13 +3213,11 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       nsIFrame* frameToScroll =
         ComputeScrollTarget(mCurrentTarget, wheelEvent,
                             COMPUTE_DEFAULT_ACTION_TARGET);
-#ifdef MOZ_ENABLE_NPAPI
       nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
-#endif
+
       // When APZ is enabled, the actual scroll animation might be handled by
       // the compositor.
       WheelPrefs::Action action;
-#ifdef MOZ_ENABLE_NPAPI
       if (pluginFrame) {
         MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
         action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
@@ -3238,7 +3230,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 #ifdef MOZ_ENABLE_NPAPI
       }
-#endif
       switch (action) {
         case WheelPrefs::ACTION_HSCROLL: {
           // Swap axes and fall through
@@ -3301,7 +3292,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           DoScrollZoom(mCurrentTarget, intDelta);
           break;
         }
-#ifdef MOZ_ENABLE_NPAPI
         case WheelPrefs::ACTION_SEND_TO_PLUGIN:
           MOZ_ASSERT(pluginFrame);
 
@@ -3319,7 +3309,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
           pluginFrame->HandleWheelEventAsDefaultAction(wheelEvent);
           break;
-#endif
         case WheelPrefs::ACTION_NONE:
         default:
           bool allDeltaOverflown = false;

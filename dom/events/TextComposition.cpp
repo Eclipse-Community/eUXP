@@ -21,9 +21,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/TabParent.h"
 
-#ifdef MOZ_ENABLE_NPAPI
 #include "nsPluginInstanceOwner.h"
-#endif
 
 using namespace mozilla::widget;
 
@@ -136,10 +134,9 @@ TextComposition::DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
                                EventDispatchingCallback* aCallBack,
                                const WidgetCompositionEvent *aOriginalEvent)
 {
-#ifdef MOZ_ENABLE_NPAPI
   nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent,
                                              aDispatchEvent);
-#endif
+
   EventDispatcher::Dispatch(mNode, mPresContext,
                             aDispatchEvent, nullptr, aStatus, aCallBack);
 

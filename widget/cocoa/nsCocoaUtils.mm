@@ -619,14 +619,12 @@ nsCocoaUtils::MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent *aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 // static
 void
 nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent)
 {
   memset(aNPCocoaEvent, 0, sizeof(NPCocoaEvent));
 }
-#endif
 
 // static
 void

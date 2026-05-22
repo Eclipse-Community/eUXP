@@ -22,14 +22,12 @@
 #include "nsTArray.h"
 #include "mozilla/Logging.h"
 #include "nsHashKeys.h"
-#ifdef MOZ_ENABLE_NPAPI
 #ifdef XP_MACOSX
 #include "PluginInterposeOSX.h"
 #else
 namespace mac_plugin_interposing { class NSCursorInfo { }; }
 #endif
 using mac_plugin_interposing::NSCursorInfo;
-#endif // MOZ_ENABLE_NPAPI
 
 namespace mozilla {
 namespace plugins {
@@ -97,19 +95,16 @@ struct NPRemoteWindow
 #endif
 };
 
-
 // This struct is like NPAudioDeviceChangeDetails, only it uses a
 // std::wstring instead of a const wchar_t* for the defaultDevice.
 // This gives us the necessary memory-ownership semantics without
 // requiring C++ objects in npapi.h.
-#ifdef MOZ_ENABLE_NPAPI
 struct NPAudioDeviceChangeDetailsIPC
 {
   int32_t flow;
   int32_t role;
   std::wstring defaultDevice;
 };
-#endif
 
 #ifdef XP_WIN
 typedef HWND NativeWindowHandle;
@@ -165,7 +160,7 @@ NPPVariableToString(NPPVariable aVar)
         VARSTR(NPPVpluginEventModel);
 #endif
 
-#if defined(XP_WIN) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_WIN
         VARSTR(NPPVpluginRequiresAudioDeviceChanges);
 #endif
 
@@ -426,7 +421,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
   }
 };
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 template <>
 struct ParamTraits<NPNSString*>
 {
@@ -501,7 +496,7 @@ struct ParamTraits<NPNSString*>
 };
 #endif
 
-#if defined(XP_MACOSX) && defined(MOZ_ENABLE_NPAPI)
+#ifdef XP_MACOSX
 template <>
 struct ParamTraits<NSCursorInfo>
 {
@@ -580,7 +575,7 @@ struct ParamTraits<NSCursorInfo>
                               typeName, hotSpotX, hotSpotY, dataLength, data));
   }
 };
-#elif defined(MOZ_ENABLE_NPAPI)
+#else
 template<>
 struct ParamTraits<NSCursorInfo>
 {
@@ -693,7 +688,6 @@ struct ParamTraits<NPCoordinateSpace>
   }
 };
 
-#ifdef MOZ_ENABLE_NPAPI
 template <>
 struct ParamTraits<mozilla::plugins::NPAudioDeviceChangeDetailsIPC>
 {
@@ -727,7 +721,6 @@ struct ParamTraits<mozilla::plugins::NPAudioDeviceChangeDetailsIPC>
                               aParam.defaultDevice.c_str()));
   }
 };
-#endif
 
 } /* namespace IPC */
 
