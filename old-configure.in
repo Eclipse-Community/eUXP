@@ -59,7 +59,6 @@ GLIB_VERSION=2.22
 GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
 GIO_VERSION=2.22
 CAIRO_VERSION=1.10
-PANGO_VERSION=1.22.0
 GTK2_VERSION=2.18.0
 GTK3_VERSION=3.4.0
 GDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_4
@@ -70,7 +69,6 @@ GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.50.1
-FONTCONFIG_VERSION=2.7.0
 
 dnl Set various checks
 dnl ========================================================
@@ -2141,14 +2139,6 @@ dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
 
-gtk3)
-    USE_FC_FREETYPE=1
-    ;;
-
-gtk2)
-    USE_FC_FREETYPE=1
-    ;;
-
 cocoa)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     # Use -Wl as a trick to avoid -framework and framework names from
@@ -2338,15 +2328,6 @@ fi
 
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
-
- dnl ========================================================
- dnl = Pango
- dnl ========================================================
-if test "$MOZ_ENABLE_GTK"
-then
-    PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
-fi
 
 dnl ========================================================
 dnl = GIO and GConf support module
@@ -4435,9 +4416,8 @@ AC_SUBST_LIST(GLIB_GMODULE_LIBS)
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
         dnl ========================================================
-        dnl = Check for freetype2 and its functionality
+        dnl = Check for freetype2 functionality
         dnl ========================================================
-        PKG_CHECK_MODULES(FT2, freetype2 >= 6.1.0, _HAVE_FREETYPE2=1, _HAVE_FREETYPE2=)
         if test "$_HAVE_FREETYPE2" -a -z "$MOZ_TREE_FREETYPE"; then
             _SAVE_LIBS="$LIBS"
             _SAVE_CFLAGS="$CFLAGS"
@@ -4473,15 +4453,7 @@ if test "$USE_FC_FREETYPE"; then
         MOZ_CHECK_HEADERS([fontconfig/fcfreetype.h], ,
             [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)], [#include <fontconfig/fontconfig.h>])
         CPPFLAGS="$_SAVE_CPPFLAGS"
-    else
-        AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
     fi
-
-    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig >= $FONTCONFIG_VERSION,
-    [
-        FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
-        FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
-    ])
 fi
 
 dnl ========================================================
