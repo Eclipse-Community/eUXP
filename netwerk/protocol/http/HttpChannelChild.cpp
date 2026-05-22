@@ -19,6 +19,7 @@
 
 #include "AltDataOutputStreamChild.h"
 #include "nsISupportsPrimitives.h"
+#include "nsChannelClassifier.h"
 #include "nsStringStream.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
