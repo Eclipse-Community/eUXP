@@ -370,6 +370,12 @@ this.Download.prototype = {
                                 message: "Cannot start after finalization."}));
     }
 
+    if (this.error && this.error.becauseBlockedByReputationCheck) {
+      return Promise.reject(new DownloadError({
+                                message: "Cannot start after being blocked " +
+                                         "by a reputation check."}));
+    }
+
     // Initialize all the status properties for a new or restarted download.
     this.stopped = false;
     this.canceled = false;
@@ -1527,6 +1533,7 @@ this.DownloadError = function (aProperties)
     this.message = aProperties.message;
   } else if (aProperties.becauseBlocked ||
              aProperties.becauseBlockedByParentalControls ||
+             aProperties.becauseBlockedByReputationCheck ||
              aProperties.becauseBlockedByRuntimePermissions) {
     this.message = "Download blocked.";
   } else {
@@ -1551,6 +1558,10 @@ this.DownloadError = function (aProperties)
   if (aProperties.becauseBlockedByParentalControls) {
     this.becauseBlocked = true;
     this.becauseBlockedByParentalControls = true;
+  } else if (aProperties.becauseBlockedByReputationCheck) {
+    this.becauseBlocked = true;
+    this.becauseBlockedByReputationCheck = true;
+    this.reputationCheckVerdict = aProperties.reputationCheckVerdict || "";
   } else if (aProperties.becauseBlockedByRuntimePermissions) {
     this.becauseBlocked = true;
     this.becauseBlockedByRuntimePermissions = true;
@@ -1564,6 +1575,16 @@ this.DownloadError = function (aProperties)
 
   this.stack = new Error().stack;
 }
+
+/**
+ * These constants are used by the reputationCheckVerdict property and indicate
+ * the detailed reason why a download is blocked.
+ *
+ * @note These values should not be changed because they can be serialized.
+ */
+this.DownloadError.BLOCK_VERDICT_MALWARE = "Malware";
+this.DownloadError.BLOCK_VERDICT_POTENTIALLY_UNWANTED = "PotentiallyUnwanted";
+this.DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
 
 this.DownloadError.prototype = {
   __proto__: Error.prototype,
@@ -1596,12 +1617,27 @@ this.DownloadError.prototype = {
   becauseBlockedByParentalControls: false,
 
   /**
+   * Indicates the download was blocked because it failed the reputation check
+   * and may be malware.
+   */
+  becauseBlockedByReputationCheck: false,
+
+  /**
    * Indicates the download was blocked because a runtime permission required to
    * download files was not granted.
    *
    * This does not apply to all systems.
    */
   becauseBlockedByRuntimePermissions: false,
+
+  /**
+   * If becauseBlockedByReputationCheck is true, indicates the detailed reason
+   * why the download was blocked, according to the "BLOCK_VERDICT_" constants.
+   *
+   * If the download was not blocked or the reason for the block is unknown,
+   * this will be an empty string.
+   */
+  reputationCheckVerdict: "",
 
   /**
    * If this DownloadError was caused by an exception this property will
@@ -1624,7 +1660,9 @@ this.DownloadError.prototype = {
       becauseTargetFailed: this.becauseTargetFailed,
       becauseBlocked: this.becauseBlocked,
       becauseBlockedByParentalControls: this.becauseBlockedByParentalControls,
+      becauseBlockedByReputationCheck: this.becauseBlockedByReputationCheck,
       becauseBlockedByRuntimePermissions: this.becauseBlockedByRuntimePermissions,
+      reputationCheckVerdict: this.reputationCheckVerdict,
     };
 
     serializeUnknownProperties(this, serializable);
@@ -1649,7 +1687,9 @@ this.DownloadError.fromSerializable = function (aSerializable) {
     property != "becauseTargetFailed" &&
     property != "becauseBlocked" &&
     property != "becauseBlockedByParentalControls" &&
-    property != "becauseBlockedByRuntimePermissions");
+    property != "becauseBlockedByReputationCheck" &&
+    property != "becauseBlockedByRuntimePermissions" &&
+    property != "reputationCheckVerdict");
 
   return e;
 };
