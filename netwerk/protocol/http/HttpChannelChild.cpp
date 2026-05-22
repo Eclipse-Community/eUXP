@@ -1471,6 +1471,13 @@ HttpChannelChild::RecvFlushedForDiversion()
   return true;
 }
 
+bool
+HttpChannelChild::RecvNotifyTrackingProtectionDisabled()
+{
+  nsChannelClassifier::NotifyTrackingProtectionDisabled(this);
+  return true;
+}
+
 void
 HttpChannelChild::FlushedForDiversion()
 {
