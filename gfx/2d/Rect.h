@@ -166,7 +166,7 @@ struct IntRectTyped :
     // Same as Union(), but in the cases where aRect is non-empty, the union is
     // done while guarding against overflow. If an overflow is detected, Nothing
     // is returned.
-    [[nodiscard]] Maybe<Self> SafeUnion(const Self& aRect) const
+    MOZ_MUST_USE Maybe<Self> SafeUnion(const Self& aRect) const
     {
       if (this->IsEmpty()) {
         return aRect.Overflows() ? Nothing() : Some(aRect);
@@ -179,7 +179,7 @@ struct IntRectTyped :
 
     // Same as UnionEdges, but guards against overflow. If an overflow is detected,
     // Nothing is returned.
-    [[nodiscard]] Maybe<Self> SafeUnionEdges(const Self& aRect) const
+    MOZ_MUST_USE Maybe<Self> SafeUnionEdges(const Self& aRect) const
     {
       if (this->Overflows() || aRect.Overflows()) {
         return Nothing();
