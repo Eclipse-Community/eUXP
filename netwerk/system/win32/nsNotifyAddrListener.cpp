@@ -18,7 +18,6 @@
 #include <objbase.h>
 #include <winsock2.h>
 #include <ws2ipdef.h>
-#include <ws2tcpip.h>
 #include <tcpmib.h>
 #include <iphlpapi.h>
 #include <netioapi.h>
@@ -197,11 +196,10 @@ bool nsNotifyAddrListener::findMac(char *gateway)
                     continue;
                 }
 
-                void *addr = &(pIpNetTable->table[i].dwAddr);
-                char ipStr[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, addr, (PSTR)ipStr, sizeof(ipStr));
+                struct in_addr addr;
+                addr.s_addr = pIpNetTable->table[i].dwAddr;
 
-                if (!strcmp(gateway, ipStr)) {
+                if (!strcmp(gateway, inet_ntoa(addr))) {
                     LOG(("networkid: MAC %s\n", hw));
                     nsAutoCString mac(hw);
                     // This 'addition' could potentially be a
@@ -253,13 +251,15 @@ static bool defaultgw(char *aGateway, size_t aGatewayLen)
     if (retVal == NO_ERROR) {
         for (unsigned int i = 0; i < pIpForwardTable->dwNumEntries; ++i) {
             // Convert IPv4 addresses to strings
-            void *ipAddr = &(pIpForwardTable->table[i].dwForwardDest);
-            char ipStr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, ipAddr, (PSTR)ipStr, sizeof(ipStr));
+            struct in_addr IpAddr;
+            IpAddr.S_un.S_addr = static_cast<u_long>
+                (pIpForwardTable->table[i].dwForwardDest);
+            char *ipStr = inet_ntoa(IpAddr);
             if (ipStr && !strcmp("0.0.0.0", ipStr)) {
                 // Default gateway!
-                ipAddr = &(pIpForwardTable->table[i].dwForwardNextHop);
-                inet_ntop(AF_INET, ipAddr, (PSTR)ipStr, sizeof(ipStr));
+                IpAddr.S_un.S_addr = static_cast<u_long>
+                    (pIpForwardTable->table[i].dwForwardNextHop);
+                ipStr = inet_ntoa(IpAddr);
                 if (ipStr) {
                     strcpy_s(aGateway, aGatewayLen, ipStr);
                     return true;
