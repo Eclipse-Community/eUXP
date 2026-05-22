@@ -1,8 +1,7 @@
 $$ -*- mode: c++; -*-
 $var n = 50  $$ Maximum length of Values arguments we want to support.
 $var maxtuple = 10  $$ Maximum number of Combine arguments we want to support.
-// Copyright 2008, Google Inc.
-// Copyright 2023, Moonchild Productions
+// Copyright 2008 Google Inc.
 // All Rights Reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -129,9 +128,9 @@ $range k 2..i
 
 template <$for j, [[typename T$j]]>
 class CartesianProductGenerator$i
-    : public ParamGeneratorInterface< ::std::tuple<$for j, [[T$j]]> > {
+    : public ParamGeneratorInterface< ::std::tr1::tuple<$for j, [[T$j]]> > {
  public:
-  typedef ::std::tuple<$for j, [[T$j]]> ParamType;
+  typedef ::std::tr1::tuple<$for j, [[T$j]]> ParamType;
 
   CartesianProductGenerator$i($for j, [[const ParamGenerator<T$j>& g$j]])
       : $for j, [[g$(j)_(g$j)]] {}
@@ -270,8 +269,8 @@ class CartesianProductHolder$i {
 CartesianProductHolder$i($for j, [[const Generator$j& g$j]])
       : $for j, [[g$(j)_(g$j)]] {}
   template <$for j, [[typename T$j]]>
-  operator ParamGenerator< ::std::tuple<$for j, [[T$j]]> >() const {
-    return ParamGenerator< ::std::tuple<$for j, [[T$j]]> >(
+  operator ParamGenerator< ::std::tr1::tuple<$for j, [[T$j]]> >() const {
+    return ParamGenerator< ::std::tr1::tuple<$for j, [[T$j]]> >(
         new CartesianProductGenerator$i<$for j, [[T$j]]>(
 $for j,[[
 

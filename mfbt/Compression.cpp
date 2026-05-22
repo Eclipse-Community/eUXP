@@ -11,9 +11,17 @@
 // corecrt_memory.h.
 #include <string>
 
-#include "lz4.h"
-
 using namespace mozilla::Compression;
+
+namespace {
+
+extern "C" {
+
+#include "lz4.c"
+
+}
+
+}/* anonymous namespace */
 
 /* Our wrappers */
 
