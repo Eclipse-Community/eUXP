@@ -15,7 +15,7 @@ ifndef JS_STANDALONE
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 include $(topsrcdir)/toolkit/mozapps/installer/upload-files.mk
 
-# Clear out DIST_FILES if it was set
+# Clear out DIST_FILES if it was set by upload-files.mk (for Android builds)
 DIST_FILES =
 endif
 

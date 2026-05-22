@@ -62,7 +62,8 @@ bits
 buildapp
    The path to the XUL application being built.
 
-   For desktop Firefox, this is ``browser``.
+   For desktop Firefox, this is ``browser``. For Fennec, it's
+   ``mobile/android``. For B2G, it's ``b2g``.
 
 crashreporter
    Whether the crash reporter is enabled for this build.
@@ -92,9 +93,9 @@ nightly_build
 
 os
    The operating system the build is produced for. Values for tier-1
-   supported platforms are ``linux`` and ``win``. For other platforms,
-   the value is the lowercase version of the ``OS_TARGET`` variable
-   from ``config.status``.
+   supported platforms are ``linux``, ``win``, ``mac``, ``b2g``, and
+   ``android``. For other platforms, the value is the lowercase version
+   of the ``OS_TARGET`` variable from ``config.status``.
 
    Always defined.
 

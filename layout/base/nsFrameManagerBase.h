@@ -58,14 +58,13 @@ protected:
   bool                            mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
 
   // The frame tree generation number
-  // Unfortunately, this is static to match
+  // We use this to avoid unnecessary screenshotting
+  // on Android. Unfortunately, this is static to match
   // the single consumer which is also static. Keeping
   // this the same greatly simplifies lifetime issues and
   // makes sure we always using the correct number.
   // A per PresContext generation number is available
   // via nsPresContext::GetDOMGeneration
-  // XXXMC: This was introduced for issues on Android. Can potentially
-  // be removed.
   static uint32_t                 sGlobalGenerationNumber;
 };
 

@@ -33,6 +33,7 @@ integrated development environment (IDE)
 .. toctree::
    :maxdepth: 1
 
+   androideclipse
    cppeclipse
    visualstudio
 
