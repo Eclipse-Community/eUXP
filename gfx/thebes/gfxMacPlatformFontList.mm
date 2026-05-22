@@ -278,17 +278,6 @@ MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBo
 }
 
 bool
-MacOSFontEntry::HasVariations()
-{
-    if (!mHasVariationsInitialized) {
-        mHasVariationsInitialized = true;
-        mHasVariations = HasFontTable(TRUETYPE_TAG('f','v','a','r'));
-    }
-
-    return mHasVariations;
-}
-
-bool
 MacOSFontEntry::IsCFF()
 {
     if (!mIsCFFInitialized) {
@@ -315,9 +304,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mContainerRef(NULL),
       mATSFontRefInitialized(false),
 #endif
-      mIsCFFInitialized(false),
-      mHasVariations(false),
-      mHasVariationsInitialized(false)
+      mIsCFFInitialized(false)
 {
     mWeight = aWeight;
 }
@@ -341,9 +328,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mFontRefInitialized(false),
       mRequiresAAT(false),
       mIsCFF(false),
-      mIsCFFInitialized(false),
-      mHasVariations(false),
-      mHasVariationsInitialized(false)
+      mIsCFFInitialized(false)
 {
 #if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
     mFontRef = aFontRef;
@@ -866,8 +851,8 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
                  " with style: %s weight: %d stretch: %d"
                  " (apple-weight: %d macTraits: %8.8x)",
-                 NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
-                 NS_ConvertUTF16toUTF8(Name()).get(),
+                 NS_ConvertUTF16toUTF8(fontEntry->Name()).get(), 
+                 NS_ConvertUTF16toUTF8(Name()).get(), 
                  fontEntry->IsItalic() ? "italic" : "normal",
                  cssWeight, fontEntry->Stretch(),
                  appKitWeight, macTraits));
@@ -1122,6 +1107,8 @@ gfxMacPlatformFontList::InitFontListForPlatform()
     mATSGeneration = currentGeneration;
 #endif
     mSystemFontFamilies.Clear();
+
+    // iterate over available families
     InitSystemFontNames();
 
 #if defined(MAC_OS_X_VERSION_10_6) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
@@ -1583,7 +1570,7 @@ gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t aCh,
         uint32_t aCmapCount = 0;
         // Try calling GlobalFontFallback once in case we were called
         // directly.  Then stop and return nullptr so GlobalFontCallback
-        // will search the internal font table.
+        // will search the internal font table. 
         recursing = true;
         retval = gfxPlatformFontList::GlobalFontFallback(aCh,
                                                          aRunScript,
