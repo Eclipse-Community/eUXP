@@ -44,7 +44,7 @@ public:
   // This method should be called only when the string is really needed because
   // it can cause the duplication of the strings in case the loading of the XHR
   // is not completed yet.
-  [[nodiscard]] bool GetAsString(nsAString& aString) const;
+  MOZ_MUST_USE bool GetAsString(nsAString& aString) const;
 
   size_t SizeOfThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -121,7 +121,7 @@ public:
     return !mLength;
   }
 
-  [[nodiscard]] bool GetAsString(DOMString& aString) const;
+  MOZ_MUST_USE bool GetAsString(DOMString& aString) const;
 
 private:
   XMLHttpRequestStringSnapshot(const XMLHttpRequestStringSnapshot&) = delete;
@@ -193,7 +193,7 @@ public:
     mData.Append(aString);
   }
 
-  [[nodiscard]] bool
+  MOZ_MUST_USE bool
   GetAsString(nsAString& aString)
   {
     MutexAutoLock lock(mMutex);
@@ -206,7 +206,7 @@ public:
     return mData.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
-  [[nodiscard]] bool
+  MOZ_MUST_USE bool
   GetAsString(DOMString& aString, uint32_t aLength)
   {
     MutexAutoLock lock(mMutex);

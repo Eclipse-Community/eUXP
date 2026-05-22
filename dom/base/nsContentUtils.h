@@ -1630,10 +1630,9 @@ public:
    * @param aResult the result. Out param.
    * @return false on out of memory errors, true otherwise.
    */
-  [[nodiscard]] static bool GetNodeTextContent(nsINode* aNode,
-                                               bool aDeep,
-                                               nsAString& aResult,
-                                               const mozilla::fallible_t&);
+  MOZ_MUST_USE
+  static bool GetNodeTextContent(nsINode* aNode, bool aDeep,
+                                 nsAString& aResult, const mozilla::fallible_t&);
 
   static void GetNodeTextContent(nsINode* aNode, bool aDeep,
                                  nsAString& aResult);
@@ -1991,29 +1990,28 @@ public:
    */
   static bool CanAccessNativeAnon();
 
-  [[nodiscard]] static nsresult WrapNative(JSContext* cx,
-                                           nsISupports* native,
-                                           const nsIID* aIID,
-                                           JS::MutableHandle<JS::Value> vp,
-                                           bool aAllowWrapping = true)
+  MOZ_MUST_USE
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
+                             const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
+                             bool aAllowWrapping = true)
   {
     return WrapNative(cx, native, nullptr, aIID, vp, aAllowWrapping);
   }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
-  [[nodiscard]] static nsresult WrapNative(JSContext* cx,
-                                           nsISupports* native,
-                                           JS::MutableHandle<JS::Value> vp,
-                                           bool aAllowWrapping = true)
+  MOZ_MUST_USE
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
+                             JS::MutableHandle<JS::Value> vp,
+                             bool aAllowWrapping = true)
   {
     return WrapNative(cx, native, nullptr, nullptr, vp, aAllowWrapping);
   }
 
-  [[nodiscard]] static nsresult WrapNative(JSContext* cx,
-                                           nsISupports* native,
-                                           nsWrapperCache* cache,
-                                           JS::MutableHandle<JS::Value> vp,
-                                           bool aAllowWrapping = true)
+  MOZ_MUST_USE
+  static nsresult WrapNative(JSContext *cx, nsISupports *native,
+                             nsWrapperCache *cache,
+                             JS::MutableHandle<JS::Value> vp,
+                             bool aAllowWrapping = true)
   {
     return WrapNative(cx, native, cache, nullptr, vp, aAllowWrapping);
   }
@@ -2037,8 +2035,9 @@ public:
    * @param aString the string to convert the newlines inside [in/out]
    */
   static void PlatformToDOMLineBreaks(nsString &aString);
-  [[nodiscard]] static bool PlatformToDOMLineBreaks(nsString &aString,
-                                                    const mozilla::fallible_t&);
+  MOZ_MUST_USE
+  static bool PlatformToDOMLineBreaks(nsString &aString,
+                                      const mozilla::fallible_t&);
 
   /**
    * Populates aResultString with the contents of the string-buffer aBuf, up

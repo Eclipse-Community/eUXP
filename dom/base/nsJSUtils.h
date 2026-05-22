@@ -143,7 +143,7 @@ public:
     // After getting a notification that an off-thread compilation terminated,
     // this function will take the result of the parser and move it to the main
     // thread.
-    [[nodiscard]] nsresult JoinCompile(void** aOffThreadToken);
+    MOZ_MUST_USE nsresult JoinCompile(void** aOffThreadToken);
 
     // Compile a script contained in a SourceText.
     nsresult Compile(JS::CompileOptions& aCompileOptions,
@@ -170,7 +170,7 @@ public:
     JSScript* GetScript();
 
     // Execute the compiled script and ignore the return value.
-    [[nodiscard]] nsresult ExecScript();
+    MOZ_MUST_USE nsresult ExecScript();
 
     // Execute the compiled script a get the return value.
     //
@@ -183,10 +183,10 @@ public:
     // compartment given as argument to the ExecutionContext constructor. If the
     // caller is in a different compartment, then the out-param value should be
     // wrapped by calling |JS_WrapValue|.
-    [[nodiscard]] nsresult
+    MOZ_MUST_USE nsresult
     ExtractReturnValue(JS::MutableHandle<JS::Value> aRetValue);
 
-    [[nodiscard]] nsresult ExecScript(JS::MutableHandle<JS::Value> aRetValue);
+    MOZ_MUST_USE nsresult ExecScript(JS::MutableHandle<JS::Value> aRetValue);
   };
 
   static nsresult CompileModule(JSContext* aCx,

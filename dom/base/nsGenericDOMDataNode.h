@@ -141,8 +141,9 @@ public:
   virtual bool TextIsOnlyWhitespace() override;
   virtual bool HasTextForTranslation() override;
   virtual void AppendTextTo(nsAString& aResult) override;
-  [[nodiscard]] virtual bool AppendTextTo(nsAString& aResult,
-                                          const mozilla::fallible_t&) override;
+  MOZ_MUST_USE
+  virtual bool AppendTextTo(nsAString& aResult,
+                            const mozilla::fallible_t&) override;
   virtual void SaveSubtreeState() override;
 
 #ifdef DEBUG
