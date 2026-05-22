@@ -561,7 +561,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVSupportsXEmbedBool:
     case NPNVSupportsWindowless:
         NS_NOTREACHED("NPNVariable should be handled in PluginModuleChild.");
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 #endif
 
     default:

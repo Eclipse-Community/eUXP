@@ -653,7 +653,7 @@ nsTableRowFrame::CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
         break;
       }
       // Fall through to the coord case
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case eStyleUnit_Coord: {
       // In quirks mode, table cell isize should be content-box, but bsize

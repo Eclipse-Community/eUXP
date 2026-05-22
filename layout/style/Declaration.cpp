@@ -785,7 +785,7 @@ Declaration::GetPropertyValueInternal(
       }
       // tweak aProperty and fall through
       aProperty = eCSSProperty_border_top;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case eCSSProperty_border_top:
     case eCSSProperty_border_right:
@@ -1407,7 +1407,7 @@ Declaration::GetPropertyValueInternal(
         return;
       }
       // Fall through to eCSSProperty_grid_template (syntax #1)
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case eCSSProperty_grid_template: {
       const nsCSSValue& areasValue =
@@ -1553,7 +1553,7 @@ Declaration::GetPropertyValueInternal(
           !justify || !IsSingleValue(*justify)) {
         return; // Not serializable, bail.
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case eCSSProperty_inset_block:
     case eCSSProperty_inset_inline:

@@ -178,7 +178,7 @@ WebGLQuery::GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const
                 gl->fGetQueryObjectui64v(mGLName, pname, &val);
                 break;
             }
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
 
         default:
             gl->fGetQueryObjectuiv(mGLName, LOCAL_GL_QUERY_RESULT, (GLuint*)&val);

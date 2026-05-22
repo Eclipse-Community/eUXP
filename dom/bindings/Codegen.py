@@ -7909,7 +7909,7 @@ class CGCase(CGList):
         self.append(CGGeneric("case " + expression + ": {\n"))
         bodyList = CGList([body])
         if fallThrough:
-            bodyList.append(CGGeneric("[[fallthrough]];\n"))
+            bodyList.append(CGGeneric("MOZ_FALLTHROUGH;\n"))
         else:
             bodyList.append(CGGeneric("break;\n"))
         self.append(CGIndenter(bodyList))

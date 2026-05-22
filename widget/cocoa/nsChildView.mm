@@ -1737,7 +1737,7 @@ nsChildView::GetInputContext()
         break;
       }
       // If mTextInputHandler is null, set CLOSED instead...
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     default:
       mInputContext.mIMEState.mOpen = IMEState::CLOSED;
       break;

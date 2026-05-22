@@ -242,7 +242,7 @@ nsRuleNode::EnsureBlockDisplay(StyleDisplay& display,
       display = StyleDisplay::Block;
       break;
     } // else, fall through to share the 'break' for non-changing display vals
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   case StyleDisplay::None:
   case StyleDisplay::Contents:
     // never change display:none or display:contents *ever*

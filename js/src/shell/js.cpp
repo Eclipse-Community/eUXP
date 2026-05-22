@@ -1555,7 +1555,7 @@ ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
         return true;
 
       default:
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case JS::TranscodeResult_Failure:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "generic warning");

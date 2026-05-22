@@ -6893,7 +6893,7 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
       if (!aIter.IsTableIEndMost() && (relColIndex > 0)) {
         col = aIter.mBlockDirInfo[relColIndex - 1].mCol;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eColGroupOwner:
       if (col) {
         owner = col->GetParent();
@@ -6904,13 +6904,13 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
       if (!aIter.IsTableIEndMost() && (relColIndex > 0)) {
         col = aIter.mBlockDirInfo[relColIndex - 1].mCol;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eColOwner:
       owner = col;
       break;
     case eAjaRowGroupOwner:
       NS_ERROR("a neighboring rowgroup can never own a vertical border");
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eRowGroupOwner:
       NS_ASSERTION(aIter.IsTableIStartMost() || aIter.IsTableIEndMost(),
                   "row group can own border only at table edge");
@@ -6918,7 +6918,7 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
       break;
     case eAjaRowOwner:
       NS_ERROR("program error");
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eRowOwner:
       NS_ASSERTION(aIter.IsTableIStartMost() || aIter.IsTableIEndMost(),
                    "row can own border only at table edge");
@@ -6927,7 +6927,7 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
     case eAjaCellOwner:
       side = eLogicalSideIEnd;
       cell = mAjaCell;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eCellOwner:
       owner = cell;
       break;
@@ -7104,7 +7104,7 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter, DrawTarget& aDrawTarget)
       break;
     case eAjaColGroupOwner:
       NS_ERROR("neighboring colgroups can never own an inline-dir border");
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eColGroupOwner:
       NS_ASSERTION(aIter.IsTableBStartMost() || aIter.IsTableBEndMost(),
                    "col group can own border only at the table edge");
@@ -7114,7 +7114,7 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter, DrawTarget& aDrawTarget)
       break;
     case eAjaColOwner:
       NS_ERROR("neighboring column can never own an inline-dir border");
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eColOwner:
       NS_ASSERTION(aIter.IsTableBStartMost() || aIter.IsTableBEndMost(),
                    "col can own border only at the table edge");
@@ -7123,14 +7123,14 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter, DrawTarget& aDrawTarget)
     case eAjaRowGroupOwner:
       side = eLogicalSideBEnd;
       rg = (aIter.IsTableBEndMost()) ? aIter.mRg : aIter.mPrevRg;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eRowGroupOwner:
       owner = rg;
       break;
     case eAjaRowOwner:
       side = eLogicalSideBEnd;
       row = (aIter.IsTableBEndMost()) ? aIter.mRow : aIter.mPrevRow;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eRowOwner:
       owner = row;
       break;
@@ -7139,7 +7139,7 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter, DrawTarget& aDrawTarget)
       // if this is null due to the damage area origin-y > 0, then the border
       // won't show up anyway
       cell = mAjaCell;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case eCellOwner:
       owner = cell;
       break;

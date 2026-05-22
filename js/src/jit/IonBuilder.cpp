@@ -1596,7 +1596,7 @@ IonBuilder::traverseBytecode()
                 MOZ_ASSERT(i == 0);
                 if (current->peek(-1) == popped[0])
                     break;
-                [[fallthrough]];
+                MOZ_FALLTHROUGH;
 
               default:
                 MOZ_ASSERT(popped[i]->isImplicitlyUsed() ||
@@ -2032,7 +2032,7 @@ IonBuilder::inspectOpcode(JSOp op)
             }
         }
         // Fall through to JSOP_BINDNAME
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case JSOP_BINDNAME:
         return jsop_bindname(info().getName(pc));
 

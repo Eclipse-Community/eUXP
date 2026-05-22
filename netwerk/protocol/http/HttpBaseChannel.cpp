@@ -1576,7 +1576,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
         // No URL, so fall through to truncating the path and any query/ref off
         // as well.
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
       default: // (Pref limited to [0,2] enforced by clamp, MOZ_CRASH overkill.)
       case 2: // scheme+host+port+/
         spec.AppendLiteral("/");

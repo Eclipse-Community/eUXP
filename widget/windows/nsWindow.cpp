@@ -3531,7 +3531,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
       if (pseudoIMEContext) {
         return pseudoIMEContext;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case NS_NATIVE_TSF_THREAD_MGR:
     case NS_NATIVE_TSF_CATEGORY_MGR:
@@ -7670,7 +7670,7 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
         // compatibility mouse events will do it instead.
         return false;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:

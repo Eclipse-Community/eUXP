@@ -352,14 +352,14 @@ cvt_f(SprintfState* aState, double aDouble, int aWidth, int aPrec,
       break;
     case 'E':
       exp = 'E';
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 'e':
       numdigits = aPrec + 1;
       mode = 2;
       break;
     case 'G':
       exp = 'E';
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 'g':
       if (aPrec == 0) {
         aPrec = 1;

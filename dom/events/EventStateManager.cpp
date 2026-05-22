@@ -656,7 +656,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         StopTrackingDragGesture();
         sNormalLMouseEventInProcess = false;
         // then fall through...
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case WidgetMouseEvent::eRightButton:
       case WidgetMouseEvent::eMiddleButton:
         SetClickCount(mouseEvent, aStatus);
@@ -710,7 +710,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       aEvent->mMessage = eVoidEvent;
       break;
     }
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   case eMouseMove:
   case ePointerDown:
   case ePointerMove: {
@@ -776,7 +776,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       }
     }
     // then fall through...
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   case eBeforeKeyDown:
   case eKeyDown:
   case eAfterKeyDown:
@@ -3159,7 +3159,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     }
     // After firing the pointercancel event, a user agent must also fire a
     // pointerout event followed by a pointerleave event.
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   }
   case ePointerUp: {
     WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
@@ -4282,7 +4282,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
       // Update the last known mRefPoint with the current mRefPoint.
       sLastRefPoint = aMouseEvent->mRefPoint;
     }
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   case ePointerMove:
   case ePointerDown:
   case ePointerGotCapture:

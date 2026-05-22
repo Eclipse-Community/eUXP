@@ -186,7 +186,7 @@ ParseClockValue(RangedPtr<const char16_t>& aIter,
           !ParseColon(iter, aEnd)) {
         return false;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case PARTIAL_CLOCK_VALUE:
       if (!ParseSecondsOrMinutes(iter, aEnd, minutes) ||
           !ParseColon(iter, aEnd) ||

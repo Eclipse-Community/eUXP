@@ -1668,7 +1668,7 @@ nsHttpTransaction::HandleContentStart()
         switch (mResponseHead->Status()) {
         case 101:
             mPreserveStream = true;
-            [[fallthrough]]; // to other no content cases:
+            MOZ_FALLTHROUGH; // to other no content cases:
         case 204:
         case 205:
         case 304:

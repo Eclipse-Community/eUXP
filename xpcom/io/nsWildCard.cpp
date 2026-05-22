@@ -80,7 +80,7 @@ _valid_subexp(const T* aExpr, T aStop1, T aStop2)
           return INVALID_SXP;
         }
         ++tld;
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       case '*':
       case '?':
       case '$':
@@ -396,7 +396,7 @@ _shexp_match(const T* aStr, const T* aExpr, bool aCaseInsensitive,
         return ABORTED;
       case '\\':
         ++y;
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       default:
         if (aCaseInsensitive) {
           if (::upper(aStr[x]) != ::upper(aExpr[y])) {

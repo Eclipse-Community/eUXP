@@ -2428,7 +2428,7 @@ IonBuilder::inlineIsTypedArrayHelper(CallInfo& callInfo, WrappingBehavior wrappi
             }
         }
 
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
 
       case TemporaryTypeSet::ForAllResult::EMPTY:
         result = false;

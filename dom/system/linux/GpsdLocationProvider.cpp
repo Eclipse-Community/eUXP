@@ -255,7 +255,7 @@ protected:
           if (!IsNaN(gpsData.fix.altitude)) {
             alt = gpsData.fix.altitude;
           }
-          [[fallthrough]];
+          MOZ_FALLTHROUGH;
         case MODE_2D:
           if (!IsNaN(gpsData.fix.latitude)) {
             lat = gpsData.fix.latitude;
@@ -308,13 +308,13 @@ protected:
   {
     switch (aErrno) {
       case EACCES:
-          [[fallthrough]];
+          MOZ_FALLTHROUGH;
       case EPERM:
-          [[fallthrough]];
+          MOZ_FALLTHROUGH;
       case EROFS:
         return nsIDOMGeoPositionError::PERMISSION_DENIED;
       case ETIME:
-          [[fallthrough]];
+          MOZ_FALLTHROUGH;
       case ETIMEDOUT:
         return nsIDOMGeoPositionError::TIMEOUT;
       default:

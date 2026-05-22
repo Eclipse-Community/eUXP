@@ -987,7 +987,7 @@ RegExpParser<CharT>::ParseClassEscape(char16_t* char_class, widechar *value,
               }
               return true;
             }
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           default:
             if (!ParseClassCharacterEscape(value))
                 return false;
@@ -1981,7 +1981,7 @@ RegExpParser<CharT>::ParseDisjunction()
                     Advance(2);
                     break;
                 }
-                [[fallthrough]];
+                MOZ_FALLTHROUGH;
               }
               case '0': {
                 if (unicode_) {
@@ -2094,7 +2094,7 @@ RegExpParser<CharT>::ParseDisjunction()
             int dummy;
             if (ParseIntervalQuantifier(&dummy, &dummy))
                 return ReportError(JSMSG_NOTHING_TO_REPEAT);
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           }
           default:
             if (unicode_) {

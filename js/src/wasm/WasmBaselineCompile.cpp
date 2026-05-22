@@ -3488,7 +3488,7 @@ class BaseCompiler
           case Scalar::Uint16:
           case Scalar::Uint32: {
             isSigned = false;
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           case Scalar::Int8:
           case Scalar::Int16:
           case Scalar::Int32:
@@ -3625,15 +3625,15 @@ class BaseCompiler
 
         switch (access.type()) {
           case Scalar::Uint8:
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           case Scalar::Uint16:
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           case Scalar::Int8:
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           case Scalar::Int16:
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           case Scalar::Int32:
-            [[fallthrough]];
+            MOZ_FALLTHROUGH;
           case Scalar::Uint32: {
             Register rt = src.tag == AnyReg::I64 ? src.i64().reg.low : src.i32().reg;
             storeI32(access, ptr, rt);
