@@ -39,6 +39,9 @@ class RemoteDecoderModule;
 class MediaDataDecoder;
 class MediaDataDecoderCallback;
 class TaskQueue;
+#ifdef MOZ_EME
+class CDMProxy;
+#endif
 
 static LazyLogModule sPDMLog("PlatformDecoderModule");
 
