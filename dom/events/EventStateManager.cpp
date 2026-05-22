@@ -3227,14 +3227,10 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       if (pluginFrame) {
         MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
         action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
+      } else if (wheelEvent->mFlags.mHandledByAPZ) {
+        action = WheelPrefs::ACTION_NONE;
       } else {
-#endif
-        if (wheelEvent->mFlags.mHandledByAPZ) {
-          action = WheelPrefs::ACTION_NONE;
-        } else {
-          action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
-        }
-#ifdef MOZ_ENABLE_NPAPI
+        action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
       }
       switch (action) {
         case WheelPrefs::ACTION_HSCROLL: {
