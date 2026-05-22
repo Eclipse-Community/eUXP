@@ -2789,6 +2789,9 @@ pref("dom.always_stop_slow_scripts", false);
 // Stop all scripts in a compartment when the "stop script" dialog is used.
 pref("dom.global_stop_script", true);
 
+// If true, ArchiveReader will be enabled
+pref("dom.archivereader.enabled", false);
+
 // Time (milliseconds) between throttled idle callbacks.
 pref("dom.idle_period.throttled_length", 10000);
 
