@@ -21,7 +21,7 @@ using namespace mozilla;
   "/System/Library/Frameworks/ApplicationServices.framework/Frameworks/" \
   "CoreGraphics.framework/CoreGraphics"
 #define COREVIDEO_FRAMEWORK_PATH \
-  "/System/Library/Frameworks/" \
+  "/System/Library/Frameworks/ApplicationServices.framework/Frameworks/" \
   "CoreVideo.framework/CoreVideo"
 
 #define GET_CONST(const_name) \
