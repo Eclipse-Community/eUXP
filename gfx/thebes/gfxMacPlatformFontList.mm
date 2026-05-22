@@ -204,7 +204,7 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
                 }
 
                 // We check for GSUB here, as GPOS alone would not be ok.
-                if (hasGSUB && SupportsScriptInGSUB(sr->tags, sr->numTags)) {
+                if (hasGSUB && SupportsScriptInGSUB(sr->tags)) {
                     continue;
                 }
 

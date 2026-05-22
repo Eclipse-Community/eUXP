@@ -233,9 +233,7 @@ uint16_t gfxFontEntry::GetUVSGlyph(uint32_t aCh, uint32_t aVS)
     return 0;
 }
 
-bool
-gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags,
-                                   uint32_t aNumTags)
+bool gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags)
 {
     hb_face_t *face = GetHBFace();
     if (!face) {
@@ -244,9 +242,9 @@ gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags,
 
     unsigned int index;
     hb_tag_t     chosenScript;
-    bool found = hb_ot_layout_table_select_script(
-        face, TRUETYPE_TAG('G', 'S', 'U', 'B'), aNumTags, aScriptTags, &index,
-        &chosenScript);
+    bool found =
+        hb_ot_layout_table_choose_script(face, TRUETYPE_TAG('G','S','U','B'),
+                                         aScriptTags, &index, &chosenScript);
     hb_face_destroy(face);
 
     return found && chosenScript != TRUETYPE_TAG('D','F','L','T');
@@ -825,22 +823,27 @@ gfxFontEntry::SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
             gfxHarfBuzzShaper::GetHBScriptUsedForShaping(aScript);
 
         // Get the OpenType tag(s) that match this script code
-        unsigned int scriptCount = 4;
-        hb_tag_t scriptTags[4];
-        hb_ot_tags_from_script_and_language(hbScript, HB_LANGUAGE_INVALID,
-                                            &scriptCount, scriptTags, nullptr,
-                                            nullptr);
+        hb_tag_t scriptTags[4] = {
+            HB_TAG_NONE,
+            HB_TAG_NONE,
+            HB_TAG_NONE,
+            HB_TAG_NONE
+        };
+        hb_ot_tags_from_script(hbScript, &scriptTags[0], &scriptTags[1]);
 
-        // Append DEFAULT to the returned tags, if room
-        if (scriptCount < 4) {
-          scriptTags[scriptCount++] = HB_OT_TAG_DEFAULT_SCRIPT;
+        // Replace the first remaining NONE with DEFAULT
+        hb_tag_t* scriptTag = &scriptTags[0];
+        while (*scriptTag != HB_TAG_NONE) {
+            ++scriptTag;
         }
+        *scriptTag = HB_OT_TAG_DEFAULT_SCRIPT;
 
         // Now check for 'smcp' under the first of those scripts that is present
         const hb_tag_t kGSUB = HB_TAG('G','S','U','B');
-        for (unsigned int i = 0; i < scriptCount; i++) {
+        scriptTag = &scriptTags[0];
+        while (*scriptTag != HB_TAG_NONE) {
             unsigned int scriptIndex;
-            if (hb_ot_layout_table_find_script(face, kGSUB, scriptTags[i],
+            if (hb_ot_layout_table_find_script(face, kGSUB, *scriptTag,
                                                &scriptIndex)) {
                 if (hb_ot_layout_language_find_feature(face, kGSUB,
                                                        scriptIndex,
@@ -850,6 +853,7 @@ gfxFontEntry::SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
                 }
                 break;
             }
+            ++scriptTag;
         }
     }
 
@@ -886,17 +890,20 @@ gfxFontEntry::InputsForOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
             gfxHarfBuzzShaper::GetHBScriptUsedForShaping(aScript);
 
         // Get the OpenType tag(s) that match this script code
-        unsigned int scriptCount = 4;
-        hb_tag_t scriptTags[5];  // space for null terminator
-        hb_ot_tags_from_script_and_language(hbScript, HB_LANGUAGE_INVALID,
-                                            &scriptCount, scriptTags, nullptr,
-                                            nullptr);
+        hb_tag_t scriptTags[4] = {
+            HB_TAG_NONE,
+            HB_TAG_NONE,
+            HB_TAG_NONE,
+            HB_TAG_NONE
+        };
+        hb_ot_tags_from_script(hbScript, &scriptTags[0], &scriptTags[1]);
 
-        // Append DEFAULT to the returned tags, if room
-        if (scriptCount < 4) {
-          scriptTags[scriptCount++] = HB_OT_TAG_DEFAULT_SCRIPT;
+        // Replace the first remaining NONE with DEFAULT
+        hb_tag_t* scriptTag = &scriptTags[0];
+        while (*scriptTag != HB_TAG_NONE) {
+            ++scriptTag;
         }
-        scriptTags[scriptCount++] = 0;
+        *scriptTag = HB_OT_TAG_DEFAULT_SCRIPT;
 
         const hb_tag_t kGSUB = HB_TAG('G','S','U','B');
         hb_tag_t features[2] = { aFeatureTag, HB_TAG_NONE };
