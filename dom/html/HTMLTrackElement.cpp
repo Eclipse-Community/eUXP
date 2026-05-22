@@ -345,7 +345,7 @@ HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener)
                            nsIContentPolicy::TYPE_INTERNAL_TRACK,
                            loadGroup,
                            nullptr,   // aCallbacks
-                           nsIRequest::LOAD_NORMAL);
+                           nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
         NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
         channel->SetNotificationCallbacks(self->mListener);

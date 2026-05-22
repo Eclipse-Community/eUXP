@@ -3245,7 +3245,7 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
                      nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
                      nullptr,  // aLoadGroup
                      listenerPeer,
-                     nsIRequest::LOAD_NORMAL |
+                     nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI |
                      nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
   NS_ENSURE_SUCCESS(rv, rv);
 
