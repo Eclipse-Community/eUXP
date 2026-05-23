@@ -8,5 +8,5 @@ if CONFIG['MOZ_EXTENSIONS']:
     DIRS += ['/extensions']
 
 DIRS += [
-    '/xulrunner',
+    '/application/xulrunner',
 ]

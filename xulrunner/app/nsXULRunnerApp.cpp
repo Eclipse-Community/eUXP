@@ -60,7 +60,7 @@ static void Output(bool isError, const char *fmt, ... )
     flags |= MB_ICONERROR;
   else
     flags |= MB_ICONINFORMATION;
-
+    
   MessageBoxW(nullptr, msg, L"XULRunner", flags);
 #else
   vfprintf(stderr, fmt, ap);
