@@ -4154,7 +4154,7 @@ enum {
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
-  // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
+  kE10sDisabledForOperatingSystem = 10,
 };
 
 const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
