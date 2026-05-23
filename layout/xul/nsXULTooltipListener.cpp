@@ -421,7 +421,7 @@ nsXULTooltipListener::ShowTooltip()
                                            this, false, false);
 
     // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at document level
-    doc = sourceNode->GetComposedDoc();
+    nsIDocument* doc = sourceNode->GetComposedDoc();
     if (doc) {
       // Probably, we should listen to untrusted events for hiding tooltips
       // on content since tooltips might disturb something of web
