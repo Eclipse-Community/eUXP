@@ -5,6 +5,7 @@
 
 EXTRA_JS_MODULES.addons += [
     'AddonLogging.jsm',
+    'AddonRepository.jsm',
     'AddonRepository_SQLiteMigrator.jsm',
     'Content.js',
     'LightweightThemeImageOptimizer.jsm',
@@ -19,7 +20,6 @@ if CONFIG['MOZ_GMP']:
     ]
 
 EXTRA_PP_JS_MODULES.addons += [
-    'AddonRepository.jsm',
     'AddonUpdateChecker.jsm',
     'XPIProvider.jsm',
     'XPIProviderUtils.js',
