@@ -87,11 +87,11 @@
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define GPC_HEADER_ENABLED      "privacy.GPCheader.enabled"
-#define H2MANDATORY_SUITE       "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256"
-#define ALLOW_EXPERIMENTS       "network.allow-experiments"
-#define SAFE_HINT_HEADER_VALUE  "safeHint.enabled"
-#define SECURITY_PREFIX         "security."
-#define NEW_TAB_REMOTE_MODE     "browser.newtabpage.remote.mode"
+#define H2MANDATORY_SUITE        "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256"
+#define ALLOW_EXPERIMENTS        "network.allow-experiments"
+#define SAFE_HINT_HEADER_VALUE   "safeHint.enabled"
+#define SECURITY_PREFIX          "security."
+#define NEW_TAB_REMOTE_MODE           "browser.newtabpage.remote.mode"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref

@@ -13,7 +13,6 @@ import os
 import subprocess
 import sys
 import time
-import random
 
 from argparse import ArgumentParser
 
@@ -143,38 +142,8 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
     log_manager.add_terminal_logging(level=log_level)
     log_manager.enable_unstructured()
 
-    STATUS_MESSAGES = [
-        'Walking the dog',
-        'Feeding the hatchlings',
-        'Inserting floppy disk',
-        'Initializing Stacker volume',
-        'Spinning yarn',
-        'Adjusting flux capacitor',
-        'Granting wishes',
-        'Auditing the taxes',
-        'Twiddling thumbs',
-        'Consulting the manual',
-        'Brewing coffee',
-        'Inserting coin',
-        'Deriving optimal formula',
-        'Deleting junk mail',
-        'Warming caches',
-        'Popping bubble wrap',
-        'Pausing for fika',
-        'Oiling the hamster wheel',
-        'Ordering a pizza',
-        'Unclogging the Internet tubes',
-        'Testing your patience',
-        'Watching cat videos',
-        'Rescuing dragon from princess',
-        'Judging things by the spoon',
-        'Nailing down the files',
-        'Whistling in the dark',
-    ]
-
-    print('{0}...'.format(random.choice(STATUS_MESSAGES)), file=sys.stderr)
+    print('Feeding the hatchlings...', file=sys.stderr)
     sys.stderr.flush()
-
     if len(selected_backends) > 1:
         definitions = list(definitions)
 
