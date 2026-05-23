@@ -857,7 +857,7 @@
                 <xul:label anonid="name" class="name" crop="end" flex="1"
                            xbl:inherits="value=name,tooltiptext=name"/>
                 <xul:label anonid="version" class="version"/>
-#ifdef UXP_APPCOMPAT_GUID
+#ifdef MOZ_PHOENIX_EXTENSIONS
                 <xul:label class="nativeIndicator nativeAddon" value="●" tooltiptext="&addon.nativeAddon;"/>
                 <xul:label class="nativeIndicator compatAddon" value="●" tooltiptext="&addon.compatAddon;"/>
 #endif
@@ -1343,7 +1343,7 @@
 #endif
             } else {
               this.removeAttribute("notification");
-#ifdef UXP_APPCOMPAT_GUID
+#ifdef MOZ_PHOENIX_EXTENSIONS
               if (this.mAddon.type == "extension")
                 this.setAttribute("native", this.mAddon.native);
 #endif

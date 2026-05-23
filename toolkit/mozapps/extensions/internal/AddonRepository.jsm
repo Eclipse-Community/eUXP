@@ -63,7 +63,7 @@ const BLANK_DB = function() {
 }
 
 const TOOLKIT_ID     = "toolkit@mozilla.org";
-#ifdef UXP_APPCOMPAT_GUID
+#ifdef MOZ_PHOENIX_EXTENSIONS
 const APPCOMPATID    = Services.prefs.getCharPref("extensions.guid.appCompatId");
 #endif
 Cu.import("resource://gre/modules/Log.jsm");
@@ -1253,7 +1253,7 @@ this.AddonRepository = {
     let results = [];
 
     function isSameApplication(aAppNode) {
-#ifdef UXP_APPCOMPAT_GUID
+#ifdef MOZ_PHOENIX_EXTENSIONS
       if (self._getTextContent(aAppNode) == Services.appinfo.ID ||
           self._getTextContent(aAppNode) == APPCOMPATID) {
 #else
