@@ -5839,6 +5839,7 @@ nsHttpChannel::HandleBeginConnectContinue()
 nsresult
 nsHttpChannel::BeginConnectContinue()
 {
+    nsresult rv;
     // Check if request was cancelled during suspend AFTER on-modify-request or
     // on-useragent.
     if (mCanceled) {
