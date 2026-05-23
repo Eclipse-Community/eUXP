@@ -385,7 +385,7 @@ pref("media.play-stand-alone", true);
 
 // Whether we should play wave files opened in a "media document", i.e. wave
 // audio opened as top-level documents, as opposed to inside a media element.
-pref("media.wave.play-stand-alone", true);
+pref("media.wave.play-stand-alone", false);
 
 pref("media.hardware-video-decoding.enabled", true);
 pref("media.hardware-video-decoding.force-enabled", false);
@@ -594,7 +594,7 @@ pref("media.mediasource.webm.enabled", true);
 pref("media.mediasource.webm.audio.enabled", true);
 
 #ifdef MOZ_AV1
-pref("media.av1.enabled", false);
+pref("media.av1.enabled", true);
 #endif
 
 // Use new MediaFormatReader architecture for plain ogg.
@@ -3993,7 +3993,7 @@ pref("browser.drag_out_of_frame_style", 1);
 
 // Middle-mouse handling
 pref("middlemouse.paste", true);
-pref("middlemouse.contentLoadURL", false);
+pref("middlemouse.contentLoadURL", true);
 pref("middlemouse.openNewWindow", true);
 pref("middlemouse.scrollbarPosition", true);
 
@@ -5321,5 +5321,3 @@ pref("media.sourceErrorDetails.enabled", false);
 pref("dom.events.asyncClipboard", true);
 // Whether arbitrary data transfer methods (not plaintext) are allowed.
 pref("dom.events.asyncClipboard.dataTransfer", true);
-// Whether to use ClipboardItem spec or not.
-pref("dom.events.asyncClipboard.clipboardItem", false);
