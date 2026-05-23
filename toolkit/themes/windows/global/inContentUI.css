@@ -24,7 +24,8 @@ html|html {
   font: message-box;
 }
 
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
+       (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   *|*:root {
     color: #000;
     background-color: #CCD9EA;
@@ -75,7 +76,8 @@ html|html {
 }
 
 %ifdef XP_WIN
-@media (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
 %endif
   *|*.main-content {
     border-radius: 5px;
