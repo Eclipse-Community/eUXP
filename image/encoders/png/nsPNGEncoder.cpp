@@ -11,6 +11,24 @@
 #include "prprf.h"
 #include "mozilla/CheckedInt.h"
 
+#ifdef PNG_APNG_SUPPORTED
+#  ifndef PNG_DISPOSE_OP_NONE
+#    define PNG_DISPOSE_OP_NONE 0
+#  endif
+#  ifndef PNG_DISPOSE_OP_BACKGROUND
+#    define PNG_DISPOSE_OP_BACKGROUND 1
+#  endif
+#  ifndef PNG_DISPOSE_OP_PREVIOUS
+#    define PNG_DISPOSE_OP_PREVIOUS 2
+#  endif
+#  ifndef PNG_BLEND_OP_SOURCE
+#    define PNG_BLEND_OP_SOURCE 0
+#  endif
+#  ifndef PNG_BLEND_OP_OVER
+#    define PNG_BLEND_OP_OVER 1
+#  endif
+#endif
+
 using namespace mozilla;
 
 static LazyLogModule sPNGEncoderLog("PNGEncoder");
