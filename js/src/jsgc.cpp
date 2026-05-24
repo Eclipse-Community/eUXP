@@ -889,7 +889,8 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     startedCompacting(false),
     relocatedArenasToRelease(nullptr),
     interFrameGC(false),
-    defaultTimeBudget_(SliceBudget::UnlimitedTimeBudget),
+    // Keep GC incremental slices short by default to reduce long main-thread pauses.
+    defaultTimeBudget_(5),
     incrementalAllowed(true),
     generationalDisabled(0),
     compactingEnabled(true),
@@ -6171,14 +6172,22 @@ GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
     };
 
     if (millis == 0) {
+        // Clamp internally-triggered slices to a small budget to preserve
+        // UI responsiveness when JS/GC pressure is high on the main thread.
+        int64_t responsiveBudget = defaultSliceBudget();
+        if (responsiveBudget == SliceBudget::UnlimitedTimeBudget)
+            responsiveBudget = 5;
+        if (responsiveBudget > 5)
+            responsiveBudget = 5;
+
         if (isTabCloseReason(reason))
             millis = 3;
         else if (reason == JS::gcreason::ALLOC_TRIGGER)
-            millis = defaultSliceBudget();
+            millis = responsiveBudget;
         else if (schedulingState.inHighFrequencyGCMode() && tunables.isDynamicMarkSliceEnabled())
-            millis = defaultSliceBudget() * IGC_MARK_SLICE_MULTIPLIER;
+            millis = responsiveBudget * IGC_MARK_SLICE_MULTIPLIER;
         else
-            millis = defaultSliceBudget();
+            millis = responsiveBudget;
     }
 
     return SliceBudget(TimeBudget(millis));

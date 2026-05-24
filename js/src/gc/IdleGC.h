@@ -28,7 +28,7 @@ namespace gc {
  *
  * Key characteristics:
  *  - Tracks JavaScript activity via hooks in the execution engine
- *  - Configurable idle time threshold (default: 100ms)
+ *  - Configurable idle time threshold (default: 200ms)
  *  - Can be disabled per-zone or globally
  *  - Works with both incremental and non-incremental GC modes
  *  - Respects critical GC reasons that override idle checking
@@ -64,8 +64,8 @@ class IdleGCManager
     uint64_t idleTimeSinceLastExecution() const;
 
     /*
-     * Set the idle threshold - minimum idle time before GC is permitted.
-     * Time is in milliseconds. Default is 100ms.
+    * Set the idle threshold - minimum idle time before GC is permitted.
+    * Time is in milliseconds. Default is 200ms.
      */
     void setIdleThresholdMs(uint64_t thresholdMs) {
         idleThresholdMs_ = thresholdMs;

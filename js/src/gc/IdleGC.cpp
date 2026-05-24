@@ -175,7 +175,7 @@ namespace gc {
 IdleGCManager::IdleGCManager()
   : lastExecutionTime_(mozilla::TimeStamp::Now()),
     idleGCEnabled_(true),
-    idleThresholdMs_(100),  // 100ms default idle threshold
+        idleThresholdMs_(200),  // 200ms default idle threshold
     isExecuting_(false)
 {
 }

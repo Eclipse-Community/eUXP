@@ -11,12 +11,13 @@
 #include "webp/demux.h"
 #include "StreamingLexer.h"
 #include "SurfacePipe.h"
+#include "src/ThreadedImageDecoder.h"
 
 namespace mozilla {
 namespace image {
 class RasterImage;
 
-class nsWebPDecoder final : public Decoder
+class nsWebPDecoder final : public Decoder, public ThreadedImageDecoder
 {
 public:
   virtual ~nsWebPDecoder();
