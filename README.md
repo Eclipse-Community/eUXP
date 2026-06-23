@@ -12,6 +12,8 @@ It's easy to swap your XUL app to use eUXP. Swap the platform URL in .gitmodules
 
 <a href="https://2012r2.nishi.boats/~wuggy/">Dactyloidae 13.2 nightly (Windows 64-bit)</a>
 
+<a href="https://github.com/Eclipse-Community/eUXP/actions">Snake browser (GitHub Actions for eUXP)</a>
+
 ### Unofficial binaries
 
 <a href="http://osol.space/">osol.space (OpenSolaris)</a>
