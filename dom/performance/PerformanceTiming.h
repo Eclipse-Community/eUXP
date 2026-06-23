@@ -260,7 +260,7 @@ public:
 
   DOMTimeMilliSec UnloadEventStart()
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() || !mTimingData->AllRedirectsSameOrigin()) {
       return 0;
     }
     return TimerClamping::ReduceMsTimeValue(GetDOMTiming()->GetUnloadEventStart());
@@ -268,7 +268,7 @@ public:
 
   DOMTimeMilliSec UnloadEventEnd()
   {
-    if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() || !mTimingData->AllRedirectsSameOrigin()) {
       return 0;
     }
     return TimerClamping::ReduceMsTimeValue(GetDOMTiming()->GetUnloadEventEnd());

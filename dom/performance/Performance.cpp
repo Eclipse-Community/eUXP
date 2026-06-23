@@ -262,12 +262,6 @@ already_AddRefed<PerformanceMark> Performance::Mark(
   const PerformanceMarkOptions& aMarkOptions,
   ErrorResult& aRv)
 {
-  // Clear the buffer if it is full and throw an error informing the web dev.
-  if (mUserEntries.Length() >= mResourceTimingBufferSize) {
-    aRv.Throw(NS_ERROR_DOM_UT_QUOTA_ERR);
-    mUserEntries.Clear();
-  }
-
   nsCOMPtr<nsIGlobalObject> parent = GetParentObject();
   if (!parent || parent->IsDying() || !parent->GetGlobalJSObject()) {
     aRv.Throw(NS_ERROR_DOM_UT_UNAVAILABLE_GLOBAL_OBJECT);
@@ -496,12 +490,6 @@ Performance::Measure(JSContext* aCx,
     return nullptr;
   }
 
-  // Clear the buffer if it is full and throw an error informing the web dev.
-  if (mUserEntries.Length() >= mResourceTimingBufferSize) {
-    aRv.Throw(NS_ERROR_DOM_UT_QUOTA_ERR);
-    mUserEntries.Clear();
-  }
-
   // Maybe is more readable than using the union type directly.
   Maybe<const PerformanceMeasureOptions&> options;
   if (aStartOrMeasureOptions.IsPerformanceMeasureOptions()) {
@@ -561,7 +549,7 @@ Performance::Measure(JSContext* aCx,
   }
 
   RefPtr<PerformanceMeasure> performanceMeasure = new PerformanceMeasure(
-      GetAsISupports(), aName, startTime, endTime, detail);
+      GetParentObject(), aName, startTime, endTime, detail);
   InsertUserEntry(performanceMeasure);
 
   return performanceMeasure.forget();
@@ -777,6 +765,12 @@ Performance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
                             NS_LITERAL_CSTRING("dom.enable_performance_observer"));
 
   return runnable->Dispatch() && runnable->IsEnabled();
+}
+
+void
+Performance::MemoryPressure()
+{
+  mUserEntries.Clear();
 }
 
 } // dom namespace

@@ -70,11 +70,6 @@ public:
 protected:
   ~PerformanceWorker();
 
-  nsISupports* GetAsISupports() override
-  {
-    return nullptr;
-  }
-
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
   void DispatchBufferFullEvent() override
