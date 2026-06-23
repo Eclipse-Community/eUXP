@@ -10,7 +10,7 @@ It's easy to swap your XUL app to use eUXP. Swap the platform URL in .gitmodules
 
 ### Official binaries
 
-<a href="https://repo.dactyloidae.xyz/">Dactyloidae 13.2 nightly (Windows 64-bit)</a>
+<a href="https://2012r2.nishi.boats/~wuggy/">Dactyloidae 13.2 nightly (Windows 64-bit)</a>
 
 ### Unofficial binaries
 
