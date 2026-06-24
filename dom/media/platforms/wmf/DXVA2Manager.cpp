@@ -13,6 +13,7 @@
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h"
+#include "WMF.h"
 #include "mfapi.h"
 #include "gfxPrefs.h"
 #include "MFTDecoder.h"
@@ -29,6 +30,9 @@ const CLSID CLSID_VideoProcessorMFT =
 };
 
 const GUID MF_XVP_PLAYBACK_MODE =
+// The size we use for our synchronization surface.
+// 16x16 is the size recommended by Microsoft (in the D3D9ExDXGISharedSurf sample) that works
+// best to avoid driver bugs.
 {
   0x3c5d293f,
   0xad67,
@@ -512,6 +516,7 @@ DXVA2Manager::CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
   return nullptr;
 }
 
+#if WINVER >= 0x0601
 class D3D11DXVA2Manager : public DXVA2Manager
 {
 public:
@@ -625,7 +630,7 @@ IUnknown*
 D3D11DXVA2Manager::GetDXVADeviceManager()
 {
   MutexAutoLock lock(mLock);
-  return mDXGIDeviceManager;
+  return static_cast<IUnknown*>(mDXGIDeviceManager.get());
 }
 
 HRESULT
@@ -900,11 +905,14 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   return S_OK;
 }
 
+#endif // WINVER >= 0x0601
+
 /* static */
 DXVA2Manager*
 DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
                               nsACString& aFailureReason)
 {
+#if WINVER >= 0x0601
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
   uint32_t dxvaLimit = gfxPrefs::PDMWMFMaxDXVAVideos();
@@ -919,6 +927,10 @@ DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return manager.forget();
+#else
+  aFailureReason.AssignLiteral("D3D11 DXVA is not available on Windows Vista");
+  return nullptr;
+#endif
 }
 
 DXVA2Manager::DXVA2Manager()

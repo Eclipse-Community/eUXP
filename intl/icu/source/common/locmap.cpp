@@ -1074,7 +1074,10 @@ uprv_convertToPosix(uint32_t hostid, char *posixID, int32_t posixIDCapacity, UEr
         char16_t windowsLocaleName[LOCALE_NAME_MAX_LENGTH] = {};
 
         // Note: LOCALE_ALLOW_NEUTRAL_NAMES was enabled in Windows7+, prior versions did not handle neutral (no-region) locale names.
-        tmpLen = GetLocaleInfoA(hostid, LOCALE_SNAME, (LPSTR)locName, UPRV_LENGTHOF(locName));
+    #ifndef LOCALE_ALLOW_NEUTRAL_NAMES
+    #define LOCALE_ALLOW_NEUTRAL_NAMES 0
+    #endif
+        tmpLen = LCIDToLocaleName(hostid, (PWSTR)windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
         if (tmpLen > 1) {
             /* Windows locale name may contain sorting variant, such as "es-ES_tradnl".
             In such case, we need special mapping data found in the hardcoded table

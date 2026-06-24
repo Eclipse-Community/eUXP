@@ -212,6 +212,27 @@ public:
     void* operator new(size_t) = delete;
 
     // requirements for C++ BasicLockable, allows UMutex to work with std::lock_guard
+#if defined(_WIN32)
+    U_COMMON_API void lock();
+    U_COMMON_API void unlock();
+
+    U_COMMON_API static void cleanup();
+
+private:
+    std::atomic<void *> fMutex { nullptr };
+
+    /** All initialized UMutexes are kept in a linked list, so that they can be found,
+     * and the underlying Windows mutex object destructed, by u_cleanup().
+     */
+    UMutex *fListLink { nullptr };
+    static UMutex *gListHead;
+
+    /** Out-of-line function to lazily initialize a UMutex on first use.
+     * Initial fast check is inline, in lock().  The returned value may never
+     * be nullptr.
+     */
+    void *getMutex();
+#else
     U_COMMON_API void lock() {
         std::mutex *m = fMutex.load(std::memory_order_acquire);
         if (m == nullptr) { m = getMutex(); }
@@ -236,6 +257,7 @@ private:
      * be nullptr.
      */
     std::mutex *getMutex();
+#endif
 };
 
 

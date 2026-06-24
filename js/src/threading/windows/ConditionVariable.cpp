@@ -53,8 +53,8 @@ js::ConditionVariable::notify_all()
 void
 js::ConditionVariable::wait(UniqueLock<Mutex>& lock)
 {
-  SRWLOCK* srwlock = &lock.lock.platformData()->lock;
-  bool r = SleepConditionVariableSRW(&platformData()->cv_, srwlock, INFINITE, 0);
+  CRITICAL_SECTION* critical_section = &lock.lock.platformData()->lock;
+  bool r = SleepConditionVariableCS(&platformData()->cv_, critical_section, INFINITE);
   MOZ_RELEASE_ASSERT(r);
 }
 
@@ -69,7 +69,7 @@ js::CVStatus
 js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
                                 const mozilla::TimeDuration& rel_time)
 {
-  SRWLOCK* srwlock = &lock.lock.platformData()->lock;
+  CRITICAL_SECTION* critical_section = &lock.lock.platformData()->lock;
 
   // Note that DWORD is unsigned, so we have to be careful to clamp at 0.
   // If rel_time is Forever, then ToMilliseconds is +inf, which evaluates as
@@ -81,7 +81,7 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
                  ? INFINITE
                  : static_cast<DWORD>(msecd);
 
-  BOOL r = SleepConditionVariableSRW(&platformData()->cv_, srwlock, msec, 0);
+  BOOL r = SleepConditionVariableCS(&platformData()->cv_, critical_section, msec);
   if (r)
     return CVStatus::NoTimeout;
   MOZ_RELEASE_ASSERT(GetLastError() == ERROR_TIMEOUT);

@@ -74,9 +74,31 @@ SetWindowAppUserModelProp(mozIDOMWindow *aParent,
   if (!toplevelHWND)
     return NS_ERROR_INVALID_ARG;
 
+  // SHGetPropertyStoreForWindow is Windows 7+, not available on Vista
+  // Use runtime lookup to fail gracefully on Vista
+  typedef HRESULT(WINAPI* SHGetPropertyStoreForWindowFn)(
+      HWND hwnd, REFIID riid, void** ppv);
+  
+  static SHGetPropertyStoreForWindowFn fn = nullptr;
+  static bool tried_load = false;
+  
+  if (!tried_load) {
+    tried_load = true;
+    HMODULE shell32 = ::GetModuleHandleW(L"shell32.dll");
+    if (shell32) {
+      fn = reinterpret_cast<SHGetPropertyStoreForWindowFn>(
+          ::GetProcAddress(shell32, "SHGetPropertyStoreForWindow"));
+    }
+  }
+  
+  if (!fn) {
+    // Vista doesn't have this API, skip it gracefully
+    return NS_OK;
+  }
+
   RefPtr<IPropertyStore> pPropStore;
-  if (FAILED(SHGetPropertyStoreForWindow(toplevelHWND, IID_IPropertyStore,
-                                         getter_AddRefs(pPropStore)))) {
+  if (FAILED(fn(toplevelHWND, IID_IPropertyStore,
+                getter_AddRefs(pPropStore)))) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -322,7 +344,18 @@ WinTaskbar::RegisterAppUserModelID() {
   if (!GetAppUserModelID(uid))
     return false;
 
-  return SUCCEEDED(SetCurrentProcessExplicitAppUserModelID(uid.get()));
+  HMODULE shell32 = ::LoadLibraryW(L"shell32.dll");
+  if (!shell32) {
+    return false;
+  }
+
+  auto setAppId = reinterpret_cast<SetCurrentProcessExplicitAppUserModelIDPtr>(
+    ::GetProcAddress(shell32, "SetCurrentProcessExplicitAppUserModelID"));
+  if (!setAppId) {
+    return false;
+  }
+
+  return SUCCEEDED(setAppId(uid.get()));
 }
 
 NS_IMETHODIMP

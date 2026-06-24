@@ -1341,7 +1341,19 @@ MouseScrollHandler::Device::Elantech::IsHelperWindow(HWND aWnd)
 
   bool result = false;
   wchar_t path[256] = {L'\0'};
-  if (::GetProcessImageFileNameW(hProcess, path, ArrayLength(path))) {
+  typedef DWORD (WINAPI *GetProcessImageFileNameWPtr)(HANDLE, LPWSTR, DWORD);
+  static GetProcessImageFileNameWPtr getProcessImageFileNameW = nullptr;
+
+  if (!getProcessImageFileNameW) {
+    HMODULE psapi = ::LoadLibraryW(L"psapi.dll");
+    if (psapi) {
+      getProcessImageFileNameW = reinterpret_cast<GetProcessImageFileNameWPtr>(
+        ::GetProcAddress(psapi, "GetProcessImageFileNameW"));
+    }
+  }
+
+  if (getProcessImageFileNameW &&
+      getProcessImageFileNameW(hProcess, path, ArrayLength(path))) {
     int pathLength = lstrlenW(path);
     if (pathLength >= filenameSuffixLength) {
       if (lstrcmpiW(path + pathLength - filenameSuffixLength,

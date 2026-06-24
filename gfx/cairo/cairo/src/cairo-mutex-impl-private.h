@@ -144,24 +144,24 @@
 #ifndef WIN32_LEAN_AND_MEAN
 # define WIN32_LEAN_AND_MEAN
 #endif
-/* We require Windows 7 features */
-#if !defined(WINVER) || (WINVER < 0x0601)
-# define WINVER 0x0601
+/* Vista+ compatible implementation */
+#if !defined(WINVER) || (WINVER < 0x0600)
+# define WINVER 0x0600
 #endif
-#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0601)
-# define _WIN32_WINNT 0x0601
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0600)
+# define _WIN32_WINNT 0x0600
 #endif
 
 # include <windows.h>
 
-  typedef SRWLOCK cairo_mutex_impl_t;
+  typedef CRITICAL_SECTION cairo_mutex_impl_t;
 
 # define CAIRO_MUTEX_IMPL_WIN32 1
-# define CAIRO_MUTEX_IMPL_LOCK(mutex) AcquireSRWLockExclusive (&(mutex))
-# define CAIRO_MUTEX_IMPL_UNLOCK(mutex) ReleaseSRWLockExclusive (&(mutex))
-# define CAIRO_MUTEX_IMPL_INIT(mutex) InitializeSRWLock (&(mutex))
-# define CAIRO_MUTEX_IMPL_FINI(mutex) CAIRO_MUTEX_IMPL_NOOP
-# define CAIRO_MUTEX_IMPL_NIL_INITIALIZER SRWLOCK_INIT
+# define CAIRO_MUTEX_IMPL_LOCK(mutex) EnterCriticalSection (&(mutex))
+# define CAIRO_MUTEX_IMPL_UNLOCK(mutex) LeaveCriticalSection (&(mutex))
+# define CAIRO_MUTEX_IMPL_INIT(mutex) InitializeCriticalSection (&(mutex))
+# define CAIRO_MUTEX_IMPL_FINI(mutex) DeleteCriticalSection (&(mutex))
+# define CAIRO_MUTEX_IMPL_NIL_INITIALIZER {0}
 
 #elif defined __OS2__ /******************************************************/
 

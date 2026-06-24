@@ -13,6 +13,8 @@ Windows
 We support building on Windows 7 and newer operating systems using
 Visual Studio 2015 U3.
 
+The compiled browser will run on Windows Vista and newer operating systems.
+
 The following are not fully supported (but may work):
 
 * Building with a *MozillaBuild* Windows development

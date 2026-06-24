@@ -473,8 +473,8 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
  * issues in some cases.
  */
 #if defined(MOZ_MEMORY_WINDOWS)
-#define malloc_mutex_t SRWLOCK
-#define malloc_spinlock_t SRWLOCK
+typedef CRITICAL_SECTION malloc_mutex_t;
+typedef CRITICAL_SECTION malloc_spinlock_t;
 #elif defined(MOZ_MEMORY_DARWIN)
 typedef struct {
 	OSSpinLock	lock;
@@ -1397,7 +1397,7 @@ static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-    InitializeSRWLock(mutex);
+	InitializeCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	mutex->lock = OS_SPINLOCK_INIT;
 #elif defined(MOZ_MEMORY_LINUX)
@@ -1435,7 +1435,7 @@ malloc_mutex_lock(malloc_mutex_t *mutex)
 {
 
 #if defined(MOZ_MEMORY_WINDOWS)
-	AcquireSRWLockExclusive(mutex);
+	EnterCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockLock(&mutex->lock);
 #else
@@ -1448,7 +1448,7 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 {
 
 #if defined(MOZ_MEMORY_WINDOWS)
-	ReleaseSRWLockExclusive(mutex);
+	LeaveCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockUnlock(&mutex->lock);
 #else
@@ -1463,7 +1463,7 @@ static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	InitializeSRWLock(lock);
+	InitializeCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	lock->lock = OS_SPINLOCK_INIT;
 #elif defined(MOZ_MEMORY_LINUX)
@@ -1490,7 +1490,7 @@ malloc_spin_lock(malloc_spinlock_t *lock)
 {
 
 #if defined(MOZ_MEMORY_WINDOWS)
-	AcquireSRWLockExclusive(lock);
+	EnterCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockLock(&lock->lock);
 #else
@@ -1502,7 +1502,7 @@ static inline void
 malloc_spin_unlock(malloc_spinlock_t *lock)
 {
 #if defined(MOZ_MEMORY_WINDOWS)
-	ReleaseSRWLockExclusive(lock);
+	LeaveCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockUnlock(&lock->lock);
 #else

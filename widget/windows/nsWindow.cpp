@@ -842,8 +842,26 @@ nsWindow::Create(nsIWidget* aParent,
   }
 
   if (mIsRTL) {
-    DWORD dwAttribute = TRUE;    
-    DwmSetWindowAttribute(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+    // DwmSetWindowAttribute is Win7+, skip on Vista
+    typedef HRESULT(WINAPI* DwmSetWindowAttributeFn)(
+        HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
+    
+    static DwmSetWindowAttributeFn dwm_set_attr = nullptr;
+    static bool tried_load = false;
+    
+    if (!tried_load) {
+      tried_load = true;
+      HMODULE dwmapi = ::GetModuleHandleW(L"dwmapi.dll");
+      if (dwmapi) {
+        dwm_set_attr = reinterpret_cast<DwmSetWindowAttributeFn>(
+            ::GetProcAddress(dwmapi, "DwmSetWindowAttribute"));
+      }
+    }
+    
+    if (dwm_set_attr) {
+      DWORD dwAttribute = TRUE;    
+      dwm_set_attr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+    }
   }
 
   if (!IsPlugin() &&
@@ -3118,8 +3136,31 @@ void nsWindow::UpdateGlass()
 
   // Extends the window frame behind the client area
   if (nsUXThemeData::CheckForCompositor()) {
-    DwmExtendFrameIntoClientArea(mWnd, &margins);
-    DwmSetWindowAttribute(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+    // Both DwmExtendFrameIntoClientArea and DwmSetWindowAttribute are Win7+
+    typedef HRESULT(WINAPI* DwmExtendFrameIntoClientAreaFn)(HWND hWnd, const MARGINS* pMarInset);
+    typedef HRESULT(WINAPI* DwmSetWindowAttributeFn)(HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
+    
+    static DwmExtendFrameIntoClientAreaFn dwm_extend = nullptr;
+    static DwmSetWindowAttributeFn dwm_set_attr = nullptr;
+    static bool tried_load = false;
+    
+    if (!tried_load) {
+      tried_load = true;
+      HMODULE dwmapi = ::GetModuleHandleW(L"dwmapi.dll");
+      if (dwmapi) {
+        dwm_extend = reinterpret_cast<DwmExtendFrameIntoClientAreaFn>(
+            ::GetProcAddress(dwmapi, "DwmExtendFrameIntoClientArea"));
+        dwm_set_attr = reinterpret_cast<DwmSetWindowAttributeFn>(
+            ::GetProcAddress(dwmapi, "DwmSetWindowAttribute"));
+      }
+    }
+    
+    if (dwm_extend) {
+      dwm_extend(mWnd, &margins);
+    }
+    if (dwm_set_attr) {
+      dwm_set_attr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+    }
   }
 }
 

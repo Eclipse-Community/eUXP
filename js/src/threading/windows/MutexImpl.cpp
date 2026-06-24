@@ -19,7 +19,7 @@ js::detail::MutexImpl::MutexImpl()
   if (!platformData_)
     oom.crash("js::Mutex::Mutex");
 
-  InitializeSRWLock(&platformData()->lock);
+  InitializeCriticalSection(&platformData()->lock);
 }
 
 js::detail::MutexImpl::~MutexImpl()
@@ -27,17 +27,18 @@ js::detail::MutexImpl::~MutexImpl()
   if (!platformData_)
     return;
 
+  DeleteCriticalSection(&platformData()->lock);
   js_delete(platformData());
 }
 
 void
 js::detail::MutexImpl::lock()
 {
-  AcquireSRWLockExclusive(&platformData()->lock);
+  EnterCriticalSection(&platformData()->lock);
 }
 
 void
 js::detail::MutexImpl::unlock()
 {
-  ReleaseSRWLockExclusive(&platformData()->lock);
+  LeaveCriticalSection(&platformData()->lock);
 }

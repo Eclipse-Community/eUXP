@@ -238,8 +238,23 @@ XRE_SetProcessType(const char* aProcessTypeString)
 void
 SetTaskbarGroupId(const nsString& aId)
 {
-    if (FAILED(SetCurrentProcessExplicitAppUserModelID(aId.get()))) {
-        NS_WARNING("SetCurrentProcessExplicitAppUserModelID failed for child process.");
+    typedef HRESULT (WINAPI* SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR);
+    HMODULE shell32 = ::LoadLibraryW(L"shell32.dll");
+    if (!shell32) {
+      NS_WARNING("Failed to load shell32.dll for AppUserModelID.");
+      return;
+    }
+
+    auto setAppId = reinterpret_cast<SetCurrentProcessExplicitAppUserModelIDPtr>(
+      ::GetProcAddress(shell32, "SetCurrentProcessExplicitAppUserModelID"));
+
+    if (!setAppId) {
+      NS_WARNING("SetCurrentProcessExplicitAppUserModelID is unavailable.");
+      return;
+    }
+
+    if (FAILED(setAppId(aId.get()))) {
+      NS_WARNING("SetCurrentProcessExplicitAppUserModelID failed for child process.");
     }
 }
 #endif

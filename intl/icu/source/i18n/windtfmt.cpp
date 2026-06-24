@@ -94,6 +94,76 @@ UnicodeString* Win32DateFormat::getTimeDateFormat(const Calendar *cal, const Loc
     return result;
 }
 
+// TODO: This is copied in both winnmfmt.cpp and windtfmt.cpp, but really should
+// be factored out into a common helper for both.
+static UErrorCode GetEquivalentWindowsLocaleName(const Locale& locale, UnicodeString** buffer)
+{
+    UErrorCode status = U_ZERO_ERROR;
+
+    // Convert from names like "en_CA" and "de_DE@collation=phonebook" to "en-CA" and "de-DE-u-co-phonebk".
+    CharString asciiBCP47Tag = ulocimp_toLanguageTag(locale.getName(), false, status);
+
+    if (U_SUCCESS(status))
+    {
+        // Need it to be UTF-16, not 8-bit
+        // TODO: This seems like a good thing for a helper
+        wchar_t bcp47Tag[LOCALE_NAME_MAX_LENGTH] = {};
+        int32_t i;
+        for (i = 0; i < UPRV_LENGTHOF(bcp47Tag); i++)
+        {
+            if (asciiBCP47Tag[i] == '\0')
+            {
+                break;
+            }
+            else
+            {
+                // normally just copy the character
+                bcp47Tag[i] = static_cast<wchar_t>(asciiBCP47Tag[i]);
+            }
+        }
+
+        // Ensure it's null terminated
+        if (i < (UPRV_LENGTHOF(bcp47Tag) - 1))
+        {
+            bcp47Tag[i] = L'\0';
+        }
+        else
+        {
+            // Ran out of room.
+            bcp47Tag[UPRV_LENGTHOF(bcp47Tag) - 1] = L'\0';
+        }
+
+
+        wchar_t windowsLocaleName[LOCALE_NAME_MAX_LENGTH] = {};
+
+        // Note: On Windows versions below 10, there is no support for locale name aliases.
+        // This means that it will fail for locales where ICU has a completely different
+        // name (like ku vs ckb), and it will also not work for alternate sort locale
+        // names like "de-DE-u-co-phonebk".
+
+        // TODO: We could add some sort of exception table for cases like ku vs ckb.
+
+#ifndef LOCALE_ALLOW_NEUTRAL_NAMES
+#define LOCALE_ALLOW_NEUTRAL_NAMES 0
+#endif
+        int length = 0;
+        LCID lcid = LocaleNameToLCID(bcp47Tag, LOCALE_ALLOW_NEUTRAL_NAMES);
+        if (lcid != 0) {
+            length = LCIDToLocaleName(lcid, windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
+        }
+
+        if (length > 0)
+        {
+            *buffer = new UnicodeString(windowsLocaleName);
+        }
+        else
+        {
+            status = U_UNSUPPORTED_ERROR;
+        }
+    }
+    return status;
+}
+
 // TODO: Range-check timeStyle, dateStyle
 Win32DateFormat::Win32DateFormat(DateFormat::EStyle timeStyle, DateFormat::EStyle dateStyle, const Locale &locale, UErrorCode &status)
   : DateFormat(), fDateTimeMsg(NULL), fTimeStyle(timeStyle), fDateStyle(dateStyle), fLocale(locale), fZoneID()

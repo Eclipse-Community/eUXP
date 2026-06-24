@@ -27,6 +27,10 @@
 #include "ucln_cmn.h"
 #include "cmemory.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 U_NAMESPACE_BEGIN
 
 
@@ -44,8 +48,62 @@ U_NAMESPACE_BEGIN
  *************************************************************************************************/
 
 namespace {
+#if defined(_WIN32)
+struct WindowsMutex {
+    CRITICAL_SECTION cs;
+
+    WindowsMutex() {
+        InitializeCriticalSection(&cs);
+    }
+
+    ~WindowsMutex() {
+        DeleteCriticalSection(&cs);
+    }
+};
+
+struct InitMutex {
+    CRITICAL_SECTION cs;
+
+    InitMutex() {
+        InitializeCriticalSection(&cs);
+    }
+
+    ~InitMutex() {
+        DeleteCriticalSection(&cs);
+    }
+};
+
+struct InitCondition {
+    CONDITION_VARIABLE cv;
+
+    InitCondition() {
+        InitializeConditionVariable(&cv);
+    }
+};
+
+class AutoCriticalSection {
+public:
+    explicit AutoCriticalSection(CRITICAL_SECTION &criticalSection)
+        : criticalSection_(&criticalSection) {
+        EnterCriticalSection(criticalSection_);
+    }
+
+    ~AutoCriticalSection() {
+        LeaveCriticalSection(criticalSection_);
+    }
+
+    CRITICAL_SECTION *get() const { return criticalSection_; }
+
+private:
+    CRITICAL_SECTION *criticalSection_;
+};
+
+InitMutex *initMutex = nullptr;
+InitCondition *initCondition = nullptr;
+#else
 std::mutex *initMutex;
 std::condition_variable *initCondition;
+#endif
 
 // The ICU global mutex.
 // Used when ICU implementation code passes nullptr for the mutex pointer.
@@ -58,8 +116,13 @@ std::once_flag *pInitFlag = &initFlag;
 
 U_CDECL_BEGIN
 static UBool U_CALLCONV umtx_cleanup() {
+#if defined(_WIN32)
+    delete initMutex;
+    delete initCondition;
+#else
     initMutex->~mutex();
     initCondition->~condition_variable();
+#endif
     UMutex::cleanup();
 
     // Reset the once_flag, by destructing it and creating a fresh one in its place.
@@ -70,13 +133,36 @@ static UBool U_CALLCONV umtx_cleanup() {
 }
 
 static void U_CALLCONV umtx_init() {
+#if defined(_WIN32)
+    initMutex = new InitMutex();
+    initCondition = new InitCondition();
+#else
     initMutex = STATIC_NEW(std::mutex);
     initCondition = STATIC_NEW(std::condition_variable);
+#endif
     ucln_common_registerCleanup(UCLN_COMMON_MUTEX, umtx_cleanup);
 }
 U_CDECL_END
 
 
+#if defined(_WIN32)
+void *UMutex::getMutex() {
+    void *retPtr = fMutex.load(std::memory_order_acquire);
+    if (retPtr == nullptr) {
+        std::call_once(*pInitFlag, umtx_init);
+        AutoCriticalSection guard(initMutex->cs);
+        retPtr = fMutex.load(std::memory_order_acquire);
+        if (retPtr == nullptr) {
+            retPtr = new WindowsMutex();
+            fMutex = retPtr;
+            fListLink = gListHead;
+            gListHead = this;
+        }
+    }
+    U_ASSERT(retPtr != nullptr);
+    return retPtr;
+}
+#else
 std::mutex *UMutex::getMutex() {
     std::mutex *retPtr = fMutex.load(std::memory_order_acquire);
     if (retPtr == nullptr) {
@@ -93,13 +179,33 @@ std::mutex *UMutex::getMutex() {
     U_ASSERT(retPtr != nullptr);
     return retPtr;
 }
+#endif
+
+#if defined(_WIN32)
+void UMutex::lock() {
+    WindowsMutex *m = static_cast<WindowsMutex*>(fMutex.load(std::memory_order_acquire));
+    if (m == nullptr) {
+        m = static_cast<WindowsMutex*>(getMutex());
+    }
+    EnterCriticalSection(&m->cs);
+}
+
+void UMutex::unlock() {
+    WindowsMutex *m = static_cast<WindowsMutex*>(fMutex.load(std::memory_order_relaxed));
+    LeaveCriticalSection(&m->cs);
+}
+#endif
 
 UMutex *UMutex::gListHead = nullptr;
 
 void UMutex::cleanup() {
     UMutex *next = nullptr;
     for (UMutex *m = gListHead; m != nullptr; m = next) {
-        (*m->fMutex).~mutex();
+#if defined(_WIN32)
+    delete static_cast<WindowsMutex*>(m->fMutex.load(std::memory_order_relaxed));
+#else
+    (*m->fMutex).~mutex();
+#endif
         m->fMutex = nullptr;
         next = m->fListLink;
         m->fListLink = nullptr;
@@ -144,7 +250,11 @@ umtx_unlock(UMutex* mutex)
 U_COMMON_API UBool U_EXPORT2
 umtx_initImplPreInit(UInitOnce &uio) {
     std::call_once(*pInitFlag, umtx_init);
+#if defined(_WIN32)
+    AutoCriticalSection lock(initMutex->cs);
+#else
     std::unique_lock<std::mutex> lock(*initMutex);
+#endif
     if (umtx_loadAcquire(uio.fState) == 0) {
         umtx_storeRelease(uio.fState, 1);
         return true;      // Caller will next call the init function.
@@ -152,7 +262,11 @@ umtx_initImplPreInit(UInitOnce &uio) {
         while (umtx_loadAcquire(uio.fState) == 1) {
             // Another thread is currently running the initialization.
             // Wait until it completes.
+#if defined(_WIN32)
+            U_ASSERT(SleepConditionVariableCS(&initCondition->cv, lock.get(), INFINITE));
+#else
             initCondition->wait(lock);
+#endif
         }
         U_ASSERT(uio.fState == 2);
         return false;
@@ -169,10 +283,18 @@ umtx_initImplPreInit(UInitOnce &uio) {
 U_COMMON_API void U_EXPORT2
 umtx_initImplPostInit(UInitOnce &uio) {
     {
+#if defined(_WIN32)
+        AutoCriticalSection lock(initMutex->cs);
+#else
         std::unique_lock<std::mutex> lock(*initMutex);
+#endif
         umtx_storeRelease(uio.fState, 2);
     }
+#if defined(_WIN32)
+    WakeAllConditionVariable(&initCondition->cv);
+#else
     initCondition->notify_all();
+#endif
 }
 
 U_NAMESPACE_END
