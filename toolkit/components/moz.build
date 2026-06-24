@@ -23,6 +23,7 @@ DIRS += [
     'cookie',
     'crashmonitor',
     'downloads',
+    'extensions',
     'exthelper',
     'filewatcher',
     'finalizationwitness',
