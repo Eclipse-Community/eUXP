@@ -1,46 +1,19 @@
-# Unified XUL Platform (UXP)
+# eUXP (Extended Unified XUL Platform)
 
-This repository holds the code for a unified application platform for XUL-based
-applications. It is a hard fork from the Mozilla code repository (mozilla-central)
-with an ESR-52 fork point.
+eUXP is, as you guessed it, a fork of UXP.
 
-In addition to further development based on the Mozilla upstream code, and
-selective cherry-picking of directly-applicable patches, this repository has its
-own development and holds the base for a maintained platform to be used by XUL
-applications.
+## How you can use eUXP
 
-## Additional documentation
+Right now, only <a href="https://basilisk-browser.org/">Basilisk (unofficially)</a> and <a href="https://repo.dactyloidae.xyz/dactyloidae/dactyloidae">Dactyloidae</a> use eUXP.
 
-Additional documentation relevant to this source code can be found in the `/docs`
-directory. This will contain relevant documentation regarding contributing,
-using and distributing this code and its binaries.
+It's easy to swap your XUL app to use eUXP. Swap the platform URL in .gitmodules from UXP's to eUXP's. No extra modification needed.
 
-If you are interested in the development and building side of things, some
-information will be available on the [Pale Moon developer site](http://developer.palemoon.org).
-You are also always welcome to get in touch with our community on the [Pale Moon forum](https://forum.palemoon.org/).
+### Official binaries
 
-### Code search
+<a href="https://2012r2.nishi.boats/~wuggy/">Dactyloidae 13.2 nightly (Windows 64-bit)</a>
 
-While our repo has basic code searching capabilities (via `git grep`), you are strongly
-encouraged to instead use the dedicated code search and cross-referencing site:
-[https://xref.palemoon.org/](https://xref.palemoon.org/)
-This repo and a copy of the front-end are amalgamated in the `goanna-central` index.
+<a href="https://github.com/Eclipse-Community/eUXP/actions">Snake browser (GitHub Actions for eUXP) (Windows 32 and 64 bit)</a>
 
-### A note about trademarks and branding
+### Unofficial binaries
 
-Although this repository is primarily licensed under Mozilla Public License v2.0, the
-trademarks and brands contained herein remain the property of their respective
-owners. For more details, please see the notifications in the respective directories.
-
-### Foundation and maintainership
-
-This repository has been founded by Moonchild (M.C. Straver) and is maintained by him
-and other community members.
-If you fork this repository to perform your own work on it, please consider offering
-improvement patches upstream to its origin to mutually improve the platform and build
-a future for XUL.
-
-## Looking for Pale Moon?
-As of [`Issue #969`](https://repo.palemoon.org/MoonchildProductions/UXP/issues/969), release version `28.9.0`,
-applications have been split off into their own dedicated (front-end) repositories, with Pale Moon located at
-[`MoonchildProductions/Pale-Moon`](https://repo.palemoon.org/MoonchildProductions/Pale-Moon).
+<a href="http://osol.space/">osol.space (OpenSolaris)</a>
